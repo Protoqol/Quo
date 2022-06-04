@@ -5,9 +5,9 @@
   "main": "main.js",
   "license": "MIT",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "start": "set env ELECTRON_ENV=development&& electron-forge start",
+    "package": "set env ELECTRON_ENV=production&& electron-forge package",
+    "make": "set env ELECTRON_ENV=production&&npx mix build && electron-forge make"
   },
   "repository": "https://github.com/protoqol/quo-client",
   "keywords": [

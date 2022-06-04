@@ -1,6 +1,4 @@
-const {ipcRenderer} = require("electron");
-
-ipcRenderer.on("quantum", (e, message) => {
+window.quoTunnel.on((e, message) => {
     let variableName = message.detail.variableName;
     let id = message.detail.id;
     let noOfNodes = 0;

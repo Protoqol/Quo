@@ -1,5 +1,5 @@
-const { app, BrowserWindow, globalShortcut, Menu } = require("electron");
-const { Buffer } = require("node:buffer");
+const {app, BrowserWindow, globalShortcut, Menu} = require("electron");
+const {Buffer} = require("node:buffer");
 const path = require("path");
 const http = require("http");
 
@@ -7,30 +7,27 @@ let mainWindow = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1600,
-        height: 900,
-        minWidth: 935,
-        minHeight: 555,
-        icon: path.join(__dirname, "quo.png"),
+        width         : 1600,
+        height        : 900,
+        minWidth      : 935,
+        minHeight     : 555,
+        icon          : path.join(__dirname, "meta/quo.png"),
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-            nodeIntegration: true,
-            contextIsolation: false,
-            enableRemoteModule: true,
+            preload: path.join(__dirname, "initialise.js"),
         },
     });
 
-    mainWindow.loadFile("index.html");
-    mainWindow.webContents.openDevTools();
+    mainWindow.loadFile("main.html");
 
     if (process.env.ELECTRON_ENV === "development") {
+        mainWindow.webContents.openDevTools();
     }
 }
 
 app.whenReady().then(() => {
     createWindow();
 
-    globalShortcut.unregisterAll()
+    globalShortcut.unregisterAll();
     Menu.setApplicationMenu(null);
 
     app.on("activate", function () {
@@ -38,6 +35,9 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
+
+    app.on("new-window-for-tab", () => false);
+    app.on("will-navigate", () => false);
 });
 
 app.on("window-all-closed", function () {
@@ -62,12 +62,11 @@ http.createServer((request, response) => {
     });
 
     request.on("end", () => {
-        console.log(requestData);
         let message = JSON.parse(requestData.replace("null", ""));
         let buff = Buffer.from(message.dump, "base64");
 
-        mainWindow.webContents.send("quantum", {
-            data: buff.toString(),
+        mainWindow.webContents.send("quo-tunnel", {
+            data  : buff.toString(),
             detail: message,
         });
 
