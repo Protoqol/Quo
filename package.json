@@ -1,0 +1,43 @@
+{
+  "name": "quo-client",
+  "version": "1.0.0",
+  "description": "PHP debugger",
+  "main": "main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "repository": "https://github.com/protoqol/quo-client",
+  "keywords": [
+    "protoqol",
+    "quo",
+    "php",
+    "debugging"
+  ],
+  "author": "Protoqol",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.63",
+    "@electron-forge/maker-deb": "^6.0.0-beta.63",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "autoprefixer": "^10.4.7",
+    "electron": "^19.0.1",
+    "electron-reloader": "^1.2.3",
+    "laravel-mix": "^6.0.44",
+    "mix-tailwindcss": "^1.3.0",
+    "postcss": "^8.4.14",
+    "resolve-url-loader": "^5.0.0",
+    "sass": "^1.52.1",
+    "sass-loader": "^12.6.0",
+    "tailwindcss": "^3.0.24"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "config": {
+    "forge": "./forge.config.js"
+  }
+}
