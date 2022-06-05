@@ -1,8 +1,10 @@
 window.quoTunnel.on((e, message) => {
-    let variableName = message.detail.variableName;
-    let id = message.detail.id;
+    console.log(message);
+    let id = message.meta.id;
+    let variableName = message.meta.calledVariable;
     let noOfNodes = 0;
     let totalVariables = 1;
+    let variableStyleAble = "";
 
     if (id > 0) {
         noOfNodes = document.querySelectorAll(`div[id=quo-${id}]`).length;
@@ -12,23 +14,24 @@ window.quoTunnel.on((e, message) => {
         totalVariables = ["entry"];
     }
 
-    let variableStyleAble = variableName.includes("$")
-        ? "var-style"
-        : variableName.includes("()") && !variableName.includes("::")
-            ? "func-style"
-            : variableName.includes("::") || variableName.includes("new ")
-                ? "class-style"
-                : variableName.includes("[") || variableName.includes("new ")
-                    ? "array-style"
-                    : "";
 
-    let displayVarName = variableName.length !== 0 ? "" : "display:none;";
+    //let variableStyleAble = variableName.includes("$")
+    //    ? "var-style"
+    //    : variableName.includes("()") && !variableName.includes("::")
+    //        ? "func-style"
+    //        : variableName.includes("::") || variableName.includes("new ")
+    //            ? "class-style"
+    //            : variableName.includes("[") || variableName.includes("new ")
+    //                ? "array-style"
+    //                : "";
+
+    let displayVarName = variableName !== "" ? "" : "display:none;";
 
     document.getElementById("quo").insertAdjacentHTML("afterbegin", `
-        <div class="quo-dump-container" id="quo-${message.detail.id}">
+        <div class="quo-dump-container" id="quo-${message.meta.id}">
             <div class="time">
-                <span>${message.detail.backtrace}</span>
-                <span>${message.detail.time}</span>
+                <span>${message.meta.origin}</span>
+                <span>${message.meta.time}</span>
             </div>
             <div class="quo-actual-dump">
                 <h3 class="quo-title">
@@ -47,7 +50,7 @@ window.quoTunnel.on((e, message) => {
                            <div class="passed" style="${displayVarName}">
                                <div>
                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="none" d="M0 0h24v24H0z"/><path d="M7.784 14l.42-4H4V8h4.415l.525-5h2.011l-.525 5h3.989l.525-5h2.011l-.525 5H20v2h-3.784l-.42 4H20v2h-4.415l-.525 5h-2.011l.525-5H9.585l-.525 5H7.049l.525-5H4v-2h3.784zm2.011 0h3.99l.42-4h-3.99l-.42 4z"/></svg>
-                                   <span>${message.detail.callTag}</span>
+                                   <span>${message.meta.uid}</span>
                                </div>
                            </div>
                        </div>

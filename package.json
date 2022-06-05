@@ -9,11 +9,10 @@
     "package": "set env ELECTRON_ENV=production&& electron-forge package",
     "make": "set env ELECTRON_ENV=production&&npx mix build && electron-forge make"
   },
-  "repository": "https://github.com/protoqol/quo-client",
+  "repository": "https://github.com/Protoqol/Quo",
   "keywords": [
     "protoqol",
     "quo",
-    "php",
     "debugging"
   ],
   "author": "Protoqol",

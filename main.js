@@ -1,3 +1,4 @@
+/* eng-disable LIMIT_NAVIGATION_GLOBAL_CHECK */
 const {app, BrowserWindow, globalShortcut, Menu} = require("electron");
 const {Buffer} = require("node:buffer");
 const path = require("path");
@@ -11,11 +12,17 @@ function createWindow() {
         height        : 900,
         minWidth      : 935,
         minHeight     : 555,
-        icon          : path.join(__dirname, "meta/quo.png"),
+        icon          : path.join(__dirname, "meta/ico/quo.png"),
         webPreferences: {
-            preload: path.join(__dirname, "initialise.js"),
+            sandbox         : true,
+            preload         : path.join(__dirname, "initialise.js"), /* eng-disable PRELOAD_JS_CHECK */
+            contextIsolation: true,
         },
     });
+
+    mainWindow.webContents.setWindowOpenHandler(() => ({action: "deny"}));
+    mainWindow.webContents.on("new-window", e => e.preventDefault()); /* eng-disable LIMIT_NAVIGATION_JS_CHECK */
+    mainWindow.webContents.on("will-navigate", e => e.preventDefault()); /* eng-disable LIMIT_NAVIGATION_JS_CHECK */
 
     mainWindow.loadFile("main.html");
 
@@ -36,8 +43,7 @@ app.whenReady().then(() => {
         }
     });
 
-    app.on("new-window-for-tab", () => false);
-    app.on("will-navigate", () => false);
+    mainWindow.openDevTools();
 });
 
 app.on("window-all-closed", function () {
@@ -46,32 +52,33 @@ app.on("window-all-closed", function () {
     }
 });
 
-if (process.env.ELECTRON_ENV === "development") {
-    try {
-        require("electron-reloader")(module);
-    } catch (_) {
-        //
-    }
-}
-
 // Server
 http.createServer((request, response) => {
     let requestData = "";
+
     request.on("readable", () => {
         requestData += request.read();
     });
 
     request.on("end", () => {
-        let message = JSON.parse(requestData.replace("null", ""));
-        let buff = Buffer.from(message.dump, "base64");
+        if (request.url !== '/quo-tunnel') {
+            response.setHeader("Content-Type", "application/json");
+            response.writeHead(200);
+            response.end("{\"quo-server\": \"Hi!\"}");
+
+            return true;
+        }
+
+        let data = JSON.parse(requestData.replace("null", ""));
+        let buff = Buffer.from(data.payload, "base64");
 
         mainWindow.webContents.send("quo-tunnel", {
-            data  : buff.toString(),
-            detail: message,
+            data: buff.toString(),
+            meta: data.meta,
         });
 
         response.setHeader("Content-Type", "application/json");
         response.writeHead(200);
         response.end("{\"message\": \"ok\"}");
     });
-}).listen(8118, "127.0.0.1");
+}).listen(7312, "127.0.0.1");
