@@ -1,8 +1,9 @@
 let mix = require("laravel-mix");
 require("mix-tailwindcss");
 
-mix.copy("src/app.js", "dist/app.js")
-    .copy("src/dumper/dump.js", "dist/dumper/dump.js")
-    .sass("src/dumper/dump.scss", "dist/dumper/dump.css")
+mix.combine(["src/app.js", "src/dumper/dump.js"], "dist/quo-runtime.js")
     .sass("src/quo.scss", "dist/quo.css")
-    .tailwind("tailwind.config.js");
+    .tailwind("config/tailwind.config.js")
+    .copyDirectory("src/fonts/", "dist/fonts/")
+    .minify("dist/quo-runtime.js")
+    .minify("dist/quo.css");

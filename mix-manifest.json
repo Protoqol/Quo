@@ -1,6 +1,8 @@
 {
     "/dist/quo.css": "/dist/quo.css",
-    "/dist/dumper/dump.css": "/dist/dumper/dump.css",
-    "/dist/app.js": "/dist/app.js",
-    "/dist/dumper/dump.js": "/dist/dumper/dump.js"
+    "/dist/quo-runtime.js": "/dist/quo-runtime.js",
+    "/dist/fonts/roboto-mono.ttf": "/dist/fonts/roboto-mono.ttf",
+    "/dist/fonts/sora.ttf": "/dist/fonts/sora.ttf",
+    "/dist/quo-runtime.min.js": "/dist/quo-runtime.min.js",
+    "/dist/quo.min.css": "/dist/quo.min.css"
 }

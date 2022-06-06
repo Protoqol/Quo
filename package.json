@@ -1,4 +1,5 @@
 {
+  "author": "Protoqol",
   "name": "quo-client",
   "version": "1.0.0",
   "description": "PHP debugger",
@@ -7,7 +8,8 @@
   "scripts": {
     "start": "set env ELECTRON_ENV=development&& electron-forge start",
     "package": "set env ELECTRON_ENV=production&& electron-forge package",
-    "make": "set env ELECTRON_ENV=production&&npx mix build && electron-forge make"
+    "make": "set env ELECTRON_ENV=production&&npx mix build && electron-forge make",
+    "mix": "set env NODE_ENV=production&&npx mix build"
   },
   "repository": "https://github.com/Protoqol/Quo",
   "keywords": [
@@ -15,7 +17,6 @@
     "quo",
     "debugging"
   ],
-  "author": "Protoqol",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.63",
     "@electron-forge/maker-deb": "^6.0.0-beta.63",
@@ -37,6 +38,6 @@
     "electron-squirrel-startup": "^1.0.0"
   },
   "config": {
-    "forge": "./forge.config.js"
+    "forge": "./config/forge.config.js"
   }
 }
