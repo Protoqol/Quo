@@ -21,6 +21,8 @@
 [Quo is a free, open-source, zero-dependecy, client-side debugger and can be
 found here](https://github.com/Protoqol/Quo).
 
+Quo is a debugging utility to easily dump variables, the dumped variables will appear in this Quo client instead of the traditional way which is often tedious.
+
 ## Issues
 
 #### Issues, bugs and feature requests can be reported [here!](https://github.com/Protoqol/quo-php/issues/new/choose)
