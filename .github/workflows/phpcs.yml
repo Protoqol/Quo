@@ -1,0 +1,65 @@
+name: "Quo testkit"
+on:
+  pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
+jobs:
+  testkit71:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: [ '7.1' ]
+    name: PHP ${{ matrix.php-versions }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP version
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.1'
+          tools: phpcs, composer
+
+      - name: Get php version
+        run: 'php -v'
+
+      - name: Setup Composer dependencies
+        run: 'composer update'
+
+      - name: Run PHPUnit Tests
+        run: 'php ./vendor/bin/phpunit ./tests/'
+
+      - name: Run PHPCS
+        run: 'phpcs'
+
+  testkit81:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: [ '8.1' ]
+    name: PHP ${{ matrix.php-versions }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP version
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: phpcs, composer
+
+      - name: Get php version
+        run: 'php -v'
+
+      - name: Setup Composer dependencies
+        run: 'composer update'
+
+      - name: Run PHPUnit Tests
+        run: 'php ./vendor/bin/phpunit ./tests/'
+
+      - name: Run PHPCS
+        run: 'phpcs'
