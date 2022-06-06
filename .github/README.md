@@ -1,6 +1,12 @@
 ![Quo](assets/quo-client-trans.png)
 
 <p align="center">
+    <a href="https://github.com/protoqol/quo-php/actions/workflows/testkit.yml">	
+       <img alt="Github action status" src="https://github.com/protoqol/quo-php/actions/workflows/testkit.yml/badge.svg">
+    </a>        
+    <a href="https://github.com/protoqol/quo-php/actions/workflows/release.yml">	
+       <img alt="Release" src="https://github.com/protoqol/quo-php/actions/workflows/release.yml/badge.svg">
+    </a>    
     <a href="https://packagist.org/packages/protoqol/quo">	
        <img alt="Packagist Version" src="https://img.shields.io/packagist/v/protoqol/quo-php.svg">
     </a>

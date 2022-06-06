@@ -1,25 +1,45 @@
-name: "Quo PHP testkit"
-on:
-  pull_request:
-    paths:
-      - "src/**/*.js"
-      - "initialise.js"
-      - "main.html"
-      - ".github/workflows/testkit.yml"
+name: Buildkit
+on: [ push, pull_request ]
+
 jobs:
-  testkit81:
+  build_on_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@master
         with:
-          node-version: '12'
+          node-version: 16
+      - name: install dependencies
+        run: npm install
+      - name: build-assets
+        run: npm run build-assets
+      - name: build
+        run: npm run make
 
-      - uses: doyensec/electronegativity-action@v1.1
-
-      - name: Upload sarif
-        uses: github/codeql-action/upload-sarif@v1
+  build_on_mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@master
         with:
-          sarif_file: ../results
+          node-version: 16
+      - name: install dependencies
+        run: npm install
+      - name: build-assets
+        run: npm run build-assets
+      - name: build
+        run: npm run make
 
+  build_on_win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@master
+        with:
+          node-version: 16
+      - name: install dependencies
+        run: npm install
+      - name: build-assets
+        run: npm run build-assets
+      - name: build
+        run: npm run make

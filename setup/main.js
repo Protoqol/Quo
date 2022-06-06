@@ -1,4 +1,3 @@
-/* eng-disable LIMIT_NAVIGATION_GLOBAL_CHECK */
 const {app, BrowserWindow, globalShortcut, Menu} = require("electron");
 const {Buffer} = require("node:buffer");
 const path = require("path");
@@ -12,23 +11,18 @@ function createWindow() {
         height        : 900,
         minWidth      : 935,
         minHeight     : 555,
-        icon          : path.join(__dirname, "meta/ico/quo.png"),
+        icon          : path.join(__dirname, "../config/build/ico/ico-quo.ico"),
         webPreferences: {
             sandbox         : true,
-            preload         : path.join(__dirname, "initialise.js"), /* eng-disable PRELOAD_JS_CHECK */
+            preload         : path.join(__dirname, "initialise.js"),
             contextIsolation: true,
         },
     });
 
     mainWindow.webContents.setWindowOpenHandler(() => ({action: "deny"}));
-    mainWindow.webContents.on("new-window", e => e.preventDefault()); /* eng-disable LIMIT_NAVIGATION_JS_CHECK */
-    mainWindow.webContents.on("will-navigate", e => e.preventDefault()); /* eng-disable LIMIT_NAVIGATION_JS_CHECK */
-
-    mainWindow.loadFile("main.html");
-
-    if (process.env.ELECTRON_ENV === "development") {
-        mainWindow.webContents.openDevTools();
-    }
+    mainWindow.webContents.on("new-window", e => e.preventDefault());
+    mainWindow.webContents.on("will-navigate", e => e.preventDefault());
+    mainWindow.loadFile(path.join(__dirname, "main.html"));
 }
 
 app.whenReady().then(() => {
@@ -42,8 +36,6 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
-
-    mainWindow.openDevTools();
 });
 
 app.on("window-all-closed", function () {
@@ -52,7 +44,6 @@ app.on("window-all-closed", function () {
     }
 });
 
-// Server
 http.createServer((request, response) => {
     let requestData = "";
 
@@ -61,7 +52,7 @@ http.createServer((request, response) => {
     });
 
     request.on("end", () => {
-        if (request.url !== '/quo-tunnel') {
+        if (request.url !== "/quo-tunnel") {
             response.setHeader("Content-Type", "application/json");
             response.writeHead(200);
             response.end("{\"quo-server\": \"Hi!\"}");

@@ -165,15 +165,16 @@ pre.quo-dump {
   }
 
   .quo-dump-num {
-    color: #1299DA;
-  }
-
-  .quo-dump-const {
     @apply text-red-600;
   }
 
+  .quo-dump-const {
+    @apply text-blue-600;
+    @apply font-semibold;
+  }
+
   .quo-dump-str {
-    color: #285d88;
+    @apply text-lime-600;
   }
 
   .quo-dump-note {

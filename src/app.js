@@ -1,10 +1,10 @@
 window.quoTunnel.on((e, message) => {
-    console.log(message);
+    document.getElementById("quoNoRequestsMessage").classList.add("hidden");
+
     let id = message.meta.id;
     let variableName = message.meta.calledVariable;
     let noOfNodes = 0;
     let totalVariables = 1;
-    let variableStyleAble = "";
 
     if (id > 0) {
         noOfNodes = document.querySelectorAll(`div[id=quo-${id}]`).length;
@@ -15,15 +15,15 @@ window.quoTunnel.on((e, message) => {
     }
 
 
-    //let variableStyleAble = variableName.includes("$")
-    //    ? "var-style"
-    //    : variableName.includes("()") && !variableName.includes("::")
-    //        ? "func-style"
-    //        : variableName.includes("::") || variableName.includes("new ")
-    //            ? "class-style"
-    //            : variableName.includes("[") || variableName.includes("new ")
-    //                ? "array-style"
-    //                : "";
+    let variableStyleAble = variableName.includes("$")
+        ? "var-style"
+        : variableName.includes("()") && !variableName.includes("::")
+            ? "func-style"
+            : variableName.includes("::") || variableName.includes("new ")
+                ? "class-style"
+                : variableName.includes("[") || variableName.includes("new ")
+                    ? "array-style"
+                    : "";
 
     let displayVarName = variableName !== "" ? "" : "display:none;";
 
@@ -31,7 +31,7 @@ window.quoTunnel.on((e, message) => {
         <div class="quo-dump-container" id="quo-${message.meta.id}">
             <div class="time">
                 <span>${message.meta.origin}</span>
-                <span>${message.meta.time}</span>
+                <span>${message.meta.senderOrigin} - ${message.meta.time}</span>
             </div>
             <div class="quo-actual-dump">
                 <h3 class="quo-title">
@@ -41,16 +41,16 @@ window.quoTunnel.on((e, message) => {
                             <div class="passed" style="${displayVarName}">
                                 <div>
                                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="none" d="M0 0h24v24H0z"/><path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z"/></svg>
-                                     <span class="${variableStyleAble}">${variableName}</span>
+                                     <span class="${variableStyleAble}">${variableName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")}</span>
                                 </div> 
                             </div>
                        </div>  
                        <div style="margin-top:.75rem;">
-                           <span class="received">Calltag</span>
-                           <div class="passed" style="${displayVarName}">
+                           <span class="received">Origin</span>
+                           <div class="passed">
                                <div>
                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="none" d="M0 0h24v24H0z"/><path d="M7.784 14l.42-4H4V8h4.415l.525-5h2.011l-.525 5h3.989l.525-5h2.011l-.525 5H20v2h-3.784l-.42 4H20v2h-4.415l-.525 5h-2.011l.525-5H9.585l-.525 5H7.049l.525-5H4v-2h3.784zm2.011 0h3.99l.42-4h-3.99l-.42 4z"/></svg>
-                                   <span>${message.meta.uid}</span>
+                                   <span>${message.meta.senderOrigin}</span>
                                </div>
                            </div>
                        </div>
@@ -70,6 +70,10 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("clearLog").addEventListener("click", function () {
         for (let container of document.querySelectorAll("[class=quo-dump-container]")) {
             container.remove();
+        }
+
+        if (document.getElementById("quoNoRequestsMessage").classList.contains("hidden")) {
+            document.getElementById("quoNoRequestsMessage").classList.remove("hidden");
         }
     });
 

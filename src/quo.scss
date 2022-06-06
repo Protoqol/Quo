@@ -3,20 +3,9 @@
 @tailwind utilities;
 @import "./dumper/dump.scss";
 
-@font-face {
-  font-family: Sora;
-  src: url('./fonts/sora.ttf') format("truetype-variations");
-  font-weight: 1 999;
-}
-
-@font-face {
-  font-family: Roboto;
-  src: url('./fonts/roboto-mono.ttf') format("truetype-variations");
-  font-weight: 1 999;
-}
-
 * {
   --bg-dump: #e7e7e7;
+  font-family: sans-serif;
 }
 
 html {
@@ -29,9 +18,10 @@ body {
   @apply flex-col;
   @apply subpixel-antialiased;
   @apply overflow-hidden;
-  font-family: Sora, sans-serif;
 
   .quo-sidebar {
+    height: 9vh;
+    min-height: 80px;
     @apply select-none;
     @apply w-full;
     @apply bg-gray-100;
@@ -81,7 +71,7 @@ body {
 
           svg {
             @apply h-16;
-            @apply stroke-purple-400;
+            stroke: rgba(241, 84, 23, 0.5);
           }
         }
       }
@@ -97,7 +87,7 @@ body {
           @apply px-2;
           @apply py-1;
           @apply bg-white;
-          @apply text-gray-500;
+          @apply text-gray-400;
           @apply rounded;
           @apply font-light;
           font-family: sans-serif !important;
@@ -112,8 +102,9 @@ body {
           svg {
             @apply h-max;
             @apply mr-1;
-            @apply fill-gray-500;
+            @apply fill-gray-400;
             @apply align-baseline;
+            margin-bottom: 2px;
           }
 
           &:hover {
@@ -145,7 +136,7 @@ body {
           input {
             @apply w-full;
             @apply px-3;
-            @apply py-2;
+            @apply py-1;
             @apply rounded;
             @apply outline-0;
             @apply transition duration-300 ease-in-out;
@@ -181,8 +172,16 @@ body {
 
       #quo {
         min-height: 100%;
-        height: 87.2vh;
+        height: 91vh;
         @apply select-text;
+
+        #quoNoRequestsMessage {
+          @apply w-full;
+          @apply h-full;
+          @apply text-center;
+          @apply text-gray-400;
+          @apply mt-5;
+        }
 
         .quo-dump-container {
           @apply flex;
@@ -306,7 +305,7 @@ body {
             .dumps {
               font-family: Roboto, monospace !important;
               @apply h-max;
-              @apply w-4/6;
+              @apply w-7/12;
               @apply flex;
               @apply flex-row;
               @apply pl-1;
@@ -319,6 +318,8 @@ body {
                 @apply h-full;
                 @apply grow;
                 @apply pl-2;
+                @apply pr-24;
+                @apply text-ellipsis;
                 font-size: .825rem;
 
                 &:not(:first-child) {
