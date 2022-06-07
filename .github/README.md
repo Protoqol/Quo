@@ -23,6 +23,10 @@ Quo is a debugging companion to help you debug dumped variables, the dumped vari
 instead of the
 traditional way which is often tedious.
 
+### Companion packages
+
+- [Quo-PHP](https://github.com/Protoqol/Quo-php)
+
 ## Features
 
 - See which variable was dumped (name or value)
@@ -43,10 +47,6 @@ traditional way which is often tedious.
 
 - You need a companion package like [Quo-php](https://github.com/Protoqol/Quo-php) to send variables to Quo.
 - Default (unchangeable for now) hostname and port for Quo are 127.0.0.1:7312.
-
-## Companion packages
-
-- [Quo-PHP](https://github.com/Protoqol/Quo-php)
 
 ## Issues
 
