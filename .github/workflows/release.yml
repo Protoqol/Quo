@@ -1,4 +1,4 @@
-name: Release
+name: Releasekit
 on:
   release:
     types:

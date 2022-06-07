@@ -8,7 +8,8 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npx mix build --mix-config=config/webpack.mix.js && electron-forge make",
+    "make": "electron-forge make",
+    "make-with-build": "npx mix build --mix-config=config/webpack.mix.js && electron-forge make",
     "publish": "electron-forge publish",
     "build-assets": "npx mix build --mix-config=config/webpack.mix.js",
     "watch-assets": "npx mix watch --mix-config=config/webpack.mix.js"
