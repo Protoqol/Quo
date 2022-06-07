@@ -1,6 +1,6 @@
 {
   "author": "Protoqol",
-  "name": "quo-client",
+  "name": "quo",
   "version": "0.1.0",
   "description": "Debugger client application.",
   "main": "setup/main.js",
