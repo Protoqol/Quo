@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = {
     "packagerConfig": {
-        "name"                : "Quo client",
+        "name"                : "Quo-client",
         "out"                 : "./build",
         "Win32MetadataOptions": {
             "CompanyName": "Protoqol",
@@ -18,10 +18,10 @@ module.exports = {
                     "maintainer"        : "Protoqol",
                     "name"              : "quo",
                     "genericName"       : "Debugger",
-                    "productName"       : "Quo client",
+                    "productName"       : "Quo-client",
                     "categories"        : "Development",
                     "productDescription": "Quo is a debugging utility to easily dump variables, the dumped variables will appear in this Quo client instead of the traditional way which is often tedious.",
-                    "description"       : "Quo client, debugging software with ease.",
+                    "description"       : "Quo-client, debugging software with ease.",
                     "icon"              : path.resolve(__dirname + "/build/ico/ico-quo.png"),
                     "section"           : "devel",
 
@@ -31,7 +31,7 @@ module.exports = {
         {
             name  : "@electron-forge/maker-dmg",
             config: {
-                "name"                : "Quo Client",
+                "name"                : "Quo-Client",
                 "overwrite"           : true,
                 "additionalDMGOptions": {
                     "title"   : "Quo installation",
@@ -47,12 +47,12 @@ module.exports = {
             name  : "@electron-forge/maker-squirrel",
             config: {
                 "name"       : "quo",
-                "description": "Quo client, debugging software with ease.",
-                "exe"        : "Quo client.exe",
+                "description": "Quo-client, debugging software with ease.",
+                "exe"        : "Quo-client.exe",
                 "iconUrl"    : path.resolve(__dirname + "/build/ico/ico-quo.ico"),
                 "setupExe"   : "quo-client-installer.exe",
-                "title"      : "Quo client",
-                "productName": "Quo client",
+                "title"      : "Quo-client",
+                "productName": "Quo-client",
 
             },
         },
