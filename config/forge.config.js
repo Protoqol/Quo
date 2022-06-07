@@ -1,14 +1,7 @@
 const path = require("path");
 
 module.exports = {
-    "packagerConfig": {
-        "name"                : "Quo",
-        "out"                 : "./build",
-        "Win32MetadataOptions": {
-            "CompanyName": "Protoqol",
-
-        },
-    },
+    "packagerConfig": {},
     "makers"        : [
         {
             name  : "@electron-forge/maker-deb",
@@ -16,7 +9,7 @@ module.exports = {
                 options: {
                     "owner"             : "Protoqol",
                     "maintainer"        : "Protoqol",
-                    "name"              : "quo",
+                    "name"              : "Quo",
                     "genericName"       : "Debugger",
                     "productName"       : "Quo",
                     "categories"        : "Development",

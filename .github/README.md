@@ -7,9 +7,6 @@
     <a href="https://github.com/protoqol/quo/actions/workflows/release.yml">	
        <img alt="Release" src="https://github.com/protoqol/quo/actions/workflows/release.yml/badge.svg">
     </a>    
-    <a href="https://packagist.org/packages/protoqol/quo">	
-       <img alt="Packagist Version" src="https://img.shields.io/packagist/v/protoqol/quo-php.svg">
-    </a>
     <a href="https://twitter.com/intent/follow?screen_name=Protoqol_XYZ">
         <img src="https://img.shields.io/twitter/follow/Protoqol_XYZ.svg?label=%40Protoqol_XYZ&style=social"
             alt="Follow Protoqol on Twitter">
