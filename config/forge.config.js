@@ -4,6 +4,7 @@ module.exports = {
     "packagerConfig": {
         "name"                : "Quo-client",
         "out"                 : "./build",
+        "executableName"      : "Quo-client",
         "Win32MetadataOptions": {
             "CompanyName": "Protoqol",
 
