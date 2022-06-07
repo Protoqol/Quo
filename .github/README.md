@@ -16,6 +16,8 @@
 # Quo
 
 > Quo is currently in beta, releases are only available as zip unless you built Quo yourself.
+> Quo should __not__ be used in production environments.
+
 
 [Quo is a free, open-source, client-side debugger and can be found here](https://github.com/Protoqol/Quo).
 
