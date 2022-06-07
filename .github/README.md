@@ -16,6 +16,7 @@
 # Quo
 
 > Quo is currently in beta, releases are only available as zip unless you built Quo yourself.
+> 
 > Quo should __not__ be used in production environments.
 
 
