@@ -12,7 +12,7 @@ module.exports = {
                     "name"              : "Quo",
                     "genericName"       : "Debugger",
                     "productName"       : "Quo",
-                    "categories"        : "Development",
+                    "categories"        : ["Development"],
                     "productDescription": "Quo is a debugging utility to easily dump variables, the dumped variables will appear in this Quo client instead of the traditional way which is often tedious.",
                     "description"       : "Quo, debugging software with ease.",
                     "icon"              : path.resolve(__dirname + "/build/ico/ico-quo.png"),
