@@ -1,17 +1,17 @@
 {
   "author": "Protoqol",
   "name": "quo",
-  "version": "0.1.0",
-  "description": "Debugger client application.",
-  "main": "setup/main.js",
+  "version": "0.1.1",
+  "description": "Quo client app.",
+  "main": "./setup/main.html",
   "license": "MIT",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "make-with-build": "npx mix build --mix-config=config/webpack.mix.js && electron-forge make",
-    "publish": "electron-forge publish",
-    "build-assets": "npx mix build --mix-config=config/webpack.mix.js",
+    "start": "cross-env NODE_ENV=development electron-forge start",
+    "package": "cross-env NODE_ENV=production electron-forge package",
+    "make": "cross-env NODE_ENV=production electron-forge make",
+    "publish": "cross-env NODE_ENV=production electron-forge publish",
+    "make-with-build": "cross-env NODE_ENV=production npx mix build --production --mix-config=config/webpack.mix.js && electron-forge make",
+    "build-assets": "cross-env NODE_ENV=production npx mix build --production --mix-config=config/webpack.mix.js",
     "watch-assets": "npx mix watch --mix-config=config/webpack.mix.js"
   },
   "repository": "https://github.com/Protoqol/Quo",
@@ -27,7 +27,10 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "@electron-forge/publisher-github": "^6.0.0-beta.63",
+    "@types/electron": "^1.6.10",
+    "@types/node": "^17.0.41",
     "autoprefixer": "^10.4.7",
+    "cross-env": "^7.0.3",
     "electron": "^19.0.1",
     "electron-reloader": "^1.2.3",
     "laravel-mix": "^6.0.44",
@@ -35,7 +38,9 @@
     "resolve-url-loader": "^5.0.0",
     "sass": "^1.52.1",
     "sass-loader": "^12.6.0",
-    "tailwindcss": "^3.0.24"
+    "tailwindcss": "^3.0.24",
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.7.3"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0"

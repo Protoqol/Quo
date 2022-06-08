@@ -1,7 +1,7 @@
 const {contextBridge, ipcRenderer} = require("electron");
 
 contextBridge.exposeInMainWorld("quoTunnel", {
-    on: (callback) => {
+    incomingPayload: (callback) => {
         ipcRenderer.on("quo-tunnel", callback);
     },
 });

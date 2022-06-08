@@ -2,7 +2,7 @@ const colors = require('tailwindcss/colors')
 
 module.exports = {
     content: [
-        'setup/main.html'
+        'src/Resources/main.html'
     ],
     theme  : {
         extend: {

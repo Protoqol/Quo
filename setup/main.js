@@ -20,16 +20,33 @@ function createWindow() {
     });
 
     mainWindow.webContents.setWindowOpenHandler(() => ({action: "deny"}));
-    mainWindow.webContents.on("new-window", e => e.preventDefault());
     mainWindow.webContents.on("will-navigate", e => e.preventDefault());
-    mainWindow.loadFile(path.join(__dirname, "main.html"));
+    mainWindow.webContents.on("new-window", e => e.preventDefault());
+
+    mainWindow.loadFile(path.join(__dirname, "main.html"))
+        .then(() => {
+            if (process.env.NODE_ENV === "development") {
+                try {
+                    require("electron-reloader")(module);
+                } catch {
+                    //
+                }
+                mainWindow.openDevTools();
+            } else {
+                globalShortcut.unregisterAll();
+                Menu.setApplicationMenu(null);
+                mainWindow.closeDevTools();
+            }
+        })
+        .catch(err => {
+            if (process.env.NODE_ENV === "development") {
+                console.error(err);
+            }
+        });
 }
 
 app.whenReady().then(() => {
     createWindow();
-
-    globalShortcut.unregisterAll();
-    Menu.setApplicationMenu(null);
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -46,6 +63,10 @@ app.on("window-all-closed", function () {
 
 http.createServer((request, response) => {
     let requestData = "";
+
+    if (process.env.NODE_ENV === "development") {
+        console.log(request);
+    }
 
     request.on("readable", () => {
         requestData += request.read();
