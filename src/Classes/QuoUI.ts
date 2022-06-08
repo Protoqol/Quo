@@ -9,7 +9,7 @@ export default class QuoUI {
 
     public constructor() {
         this.payloads = [];
-        this.tabs = [];
+        this.tabs = ["All"];
     }
 
     public savePayloadToState(payload: QuoPayload): void {
@@ -34,18 +34,67 @@ export default class QuoUI {
             // }
         } else {
             this.tabs.forEach((origin: string) => {
-                console.log(origin);
+                if (!QuoUI.tabExists(origin)) {
+                    let tab = document.createElement("div");
+                    tab.id = `quo-origin-${origin}`;
+                    tab.classList.add("quo-origin-tab", "inactive-tab");
+                    tab.innerText = origin;
+                    tab.addEventListener("click", this.selectTabEventHandler);
+                    tabsContainer.append(tab);
+                }
             });
-            let tab = document.createElement("div");
-            tab.id = `quo-origin-${this.tabs[0]}`;
-            tab.classList.add("quo-origin-tab", "inactive-tab");
-            tab.innerText = this.tabs[0];
-            tabsContainer.append(tab);
         }
     }
 
-    public filterByTab(selectedTab: string) {
-        this.activeTab = selectedTab;
+    public filterByActiveTab() {
+        QuoUI.setTabActive(this.activeTab);
 
+        this.payloads.forEach((payload: QuoPayload) => {
+            if (this.activeTab === "all") {
+                payload.uncloakPayload();
+                return true;
+            }
+
+            if (payload.getSenderOrigin() !== this.activeTab) {
+                payload.cloakPayload();
+            } else {
+                payload.uncloakPayload();
+            }
+        });
     }
+
+    public selectTabEventHandler(e: any) {
+        window.UI.activeTab = e.target.innerText.toLowerCase();
+        window.UI.filterByActiveTab();
+    }
+
+    private static setTabActive(originTab: string) {
+        let tabs = document.querySelectorAll(".quo-origin-tab");
+        tabs.forEach((tab) => {
+            if (tab.classList.contains("active-tab")) {
+                tab.classList.remove("active-tab");
+            }
+
+            if (tab.classList.contains("inactive-tab")) {
+                tab.classList.remove("inactive-tab");
+            }
+
+            if (tab.innerHTML.trim() === originTab) {
+                tab.classList.add("active-tab");
+            } else {
+                tab.classList.add("inactive-tab");
+            }
+        });
+    }
+
+    /**
+     * @param {string} originTab
+     * @returns {HTMLElement}
+     * @private
+     */
+    private static tabExists(originTab: string) {
+        return document.getElementById(`quo-origin-${originTab}`);
+    }
+
+
 }

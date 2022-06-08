@@ -47,13 +47,17 @@ export class QuoPayload {
         if (this.elementInViewport()) {
             if (this.element.classList.contains("hidden")) {
                 this.element.classList.remove("hidden");
+                this.element.classList.add("flex");
             }
         }
     }
 
     public cloakPayload() {
         if (this.elementInViewport()) {
-            this.element.classList.add("hidden");
+            if (!this.element.classList.contains("flex")) {
+                this.element.classList.add("hidden");
+                this.element.classList.remove("flex");
+            }
         }
     }
 
