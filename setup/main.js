@@ -1,4 +1,4 @@
-const {app, BrowserWindow, globalShortcut, Menu} = require("electron");
+const {app, BrowserWindow, globalShortcut, Menu, shell, ipcMain} = require("electron");
 const {Buffer} = require("node:buffer");
 const path = require("path");
 const http = require("http");
@@ -21,9 +21,8 @@ function createWindow() {
 
     mainWindow.webContents.setWindowOpenHandler(() => ({action: "deny"}));
     mainWindow.webContents.on("will-navigate", e => e.preventDefault());
-    mainWindow.webContents.on("new-window", e => e.preventDefault());
 
-    mainWindow.loadFile(path.join(__dirname, "main.html"))
+    mainWindow.loadFile(path.join(__dirname, "../src/Resources/main.html"))
         .then(() => {
             if (process.env.NODE_ENV === "development") {
                 try {
@@ -61,11 +60,17 @@ app.on("window-all-closed", function () {
     }
 });
 
+ipcMain.on("quo-open-link", (e, args) => {
+    if (args.includes("phpstorm:")) {
+        shell.openExternal(args);
+    }
+});
+
 http.createServer((request, response) => {
     let requestData = "";
 
     if (process.env.NODE_ENV === "development") {
-        console.log(request);
+        // console.log(request);
     }
 
     request.on("readable", () => {

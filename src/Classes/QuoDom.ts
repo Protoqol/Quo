@@ -17,13 +17,15 @@ export class QuoDom {
     }
 
     /**
-     * Make new quo entry
+     * Make new quo payload
      *
      * @param e
      * @param receivedPayload
      */
     public static make(e: Event, receivedPayload: QuoPayloadInterface) {
+        let payload = QuoPayload.make(receivedPayload);
         let self = new QuoDom(QuoPayload.make(receivedPayload));
+        window.UI.savePayloadToState(payload);
         self.hideEmptyListMessage();
         self.addHtmlToList();
         self.afterAdditionHandler();
@@ -46,11 +48,19 @@ export class QuoDom {
         });
     }
 
+    public registerCategories() {
+
+    }
+
     /**
      * Add received payload to Quo FE
      */
     public addHtmlToList(): void {
         document.getElementById("quo").prepend(this.getVarInjectedHTML());
+        document.getElementById(`quo-link-${this.payload.getUid()}`)
+                .addEventListener("click", (e: any) => {
+                    window.quoTunnel.openUrl(e.target.href);
+                });
     }
 
     /**
@@ -70,7 +80,7 @@ export class QuoDom {
 
         dumpContainer.innerHTML = `
             <div class="time">
-                <span>${this.payload.getOrigin()}</span>
+                <a id="quo-link-${this.payload.getUid()}" target="_top" href="phpstorm://open?file=${this.payload.getOriginWithoutLineNr()}&line=${this.payload.getLineNr()}">${this.payload.getOrigin()}</a>
                 <span>${this.payload.getSenderOrigin()} - ${this.payload.getTime()}</span>
             </div>
             <div class="quo-actual-dump">

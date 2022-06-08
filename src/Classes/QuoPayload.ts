@@ -9,6 +9,12 @@ export class QuoPayload {
     private payload: QuoPayloadInterface;
 
     /**
+     * @type {Element}
+     * @private
+     */
+    private element: Element;
+
+    /**
      * @param {QuoPayloadInterface} payload
      */
     constructor(payload: QuoPayloadInterface) {
@@ -21,6 +27,34 @@ export class QuoPayload {
      */
     public static make(payload: QuoPayloadInterface) {
         return new QuoPayload(payload);
+    }
+
+    /**
+     * @returns {boolean | Element}
+     */
+    public elementInViewport() {
+        let element = document.getElementById(`quo-${this.getUid()}`);
+
+        if (element) {
+            this.element = element;
+            return this.element;
+        }
+
+        return false;
+    }
+
+    public uncloakPayload() {
+        if (this.elementInViewport()) {
+            if (this.element.classList.contains("hidden")) {
+                this.element.classList.remove("hidden");
+            }
+        }
+    }
+
+    public cloakPayload() {
+        if (this.elementInViewport()) {
+            this.element.classList.add("hidden");
+        }
     }
 
     /**
@@ -42,6 +76,25 @@ export class QuoPayload {
      */
     public getOrigin(): string {
         return this.payload.meta.origin;
+    }
+
+    /**
+     * @returns {string}
+     */
+    public getOriginWithoutLineNr(): string {
+        let lastIndex = this.payload.meta.origin.lastIndexOf(":");
+
+        return this.payload.meta.origin.substring(0, lastIndex);
+    }
+
+    /**
+     * Get line number.
+     *
+     * @returns {string}
+     */
+    public getLineNr(): string {
+        let lastIndex = this.payload.meta.origin.lastIndexOf(":");
+        return this.payload.meta.origin.substring(lastIndex + 1);
     }
 
     /**
@@ -99,7 +152,7 @@ export class QuoPayload {
             case this.getCurrentVariableName().includes("[") || this.getCurrentVariableName().includes("]"):
                 return "array-style";
             default:
-                return "";
+                return "def-style";
         }
     }
 

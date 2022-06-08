@@ -3,7 +3,10 @@ const path = require("path");
 const tailwindCss = require("tailwindcss");
 
 mix.options({manifest: false})
-    .ts(["src/app.ts", "src/dump.ts"], "dist/quo-runtime.js", {
+    .ts([
+        "src/App.ts",
+        "src/Dump.ts",
+    ], "dist/quo-runtime.js", {
         configFile: path.resolve(__dirname, "tsconfig.json"),
     })
     .sass("src/Resources/style/quo.scss", "dist/quo.css")

@@ -1,10 +1,11 @@
+import {QuoTunnelInterface} from "./QuoTunnelInterface";
+import QuoUI from "../Classes/QuoUI";
+
 declare global {
     interface Window {
-        quoTunnel: {
-            incomingPayload: {
-                (callback: Function): void
-            }
-        };
+        quoTunnel: QuoTunnelInterface;
+
+        UI: QuoUI;
 
         Sfdump: any;
     }

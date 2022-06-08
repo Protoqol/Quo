@@ -20,8 +20,9 @@ body {
   @apply overflow-hidden;
 
   .quo-sidebar {
+    min-height: 6rem;
+    max-height: 6rem;
     height: 9vh;
-    min-height: 80px;
     @apply select-none;
     @apply w-full;
     @apply bg-gray-100;
@@ -151,6 +152,42 @@ body {
         }
       }
     }
+
+    .quo-origin-tabs {
+      @apply relative;
+      @apply bottom-2;
+      @apply left-4;
+      @apply flex;
+      @apply flex-row;
+      @apply justify-start;
+      @apply items-center;
+      @apply gap-x-px;
+
+      .active-tab {
+        font-family: Roboto, monospace !important;
+        @apply bg-gray-400;
+        @apply border-x;
+        @apply border-gray-400;
+      }
+
+      .inactive-tab {
+        font-family: Roboto, monospace !important;
+        @apply bg-gray-300;
+
+        &:hover {
+          @apply bg-gray-200;
+        }
+      }
+
+      .quo-origin-tab {
+        @apply cursor-pointer;
+        @apply text-xs;
+        @apply text-white;
+        @apply py-1;
+        @apply px-2;
+        @apply rounded-t;
+      }
+    }
   }
 
   .quo-body {
@@ -174,12 +211,13 @@ body {
         min-height: 100%;
         height: 91vh;
         @apply select-text;
+        @apply overflow-y-scroll;
 
         #quoNoRequestsMessage {
           @apply w-full;
-          @apply h-full;
+          @apply h-1/2;
           @apply text-center;
-          @apply text-gray-400;
+          @apply text-gray-300;
           @apply mt-5;
         }
 
@@ -200,7 +238,7 @@ body {
             @apply whitespace-nowrap;
             @apply text-xs;
             @apply font-normal;
-            @apply text-gray-300;
+            @apply text-gray-200;
             @apply pl-3;
             @apply pb-4;
           }
@@ -232,7 +270,7 @@ body {
                   @apply w-max;
                   @apply flex;
                   @apply justify-start;
-                  @apply text-gray-700;
+                  @apply text-gray-300;
                   @apply px-2 py-1;
                   @apply rounded-l;
                   @apply shrink-0;
@@ -254,13 +292,14 @@ body {
 
                 .received {
                   @apply mb-1;
+                  @apply text-gray-400;
                 }
 
                 .passed {
                   @apply w-full;
                   @apply flex;
                   @apply justify-start;
-                  @apply text-gray-700;
+                  @apply text-gray-500;
                   @apply px-2 py-2;
                   @apply shrink-0;
                   @apply grow;
@@ -277,20 +316,29 @@ body {
                       font-family: Roboto, monospace !important;
                     }
 
+                    .def-style {
+                      @apply text-gray-600;
+                      font-weight: 500;
+                    }
+
                     .var-style {
-                      @apply text-orange-600;
+                      @apply text-gray-600;
+                      font-weight: 500;
                     }
 
                     .func-style {
-                      @apply text-fuchsia-600;
+                      @apply text-gray-600;
+                      font-weight: 500;
                     }
 
                     .class-style {
-                      @apply text-blue-600;
+                      @apply text-gray-600;
+                      font-weight: 500;
                     }
 
                     .array-style {
-                      @apply text-pink-600;
+                      @apply text-gray-600;
+                      font-weight: 500;
                     }
 
                     svg {

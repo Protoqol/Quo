@@ -166,15 +166,30 @@ pre.quo-dump {
 
   .quo-dump-num {
     @apply text-red-600;
+
+    //&::after {
+    //  @apply text-red-300;
+    //  content: ': int';
+    //}
   }
 
   .quo-dump-const {
     @apply text-blue-600;
     @apply font-semibold;
+
+    //&::after {
+    //  @apply text-blue-300;
+    //  content: ': bool';
+    //}
   }
 
   .quo-dump-str {
     @apply text-lime-600;
+
+    //&::after {
+    //  @apply text-lime-400;
+    //  content: ': string';
+    //}
   }
 
   .quo-dump-note {

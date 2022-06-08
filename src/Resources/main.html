@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'">
+    <!--    <meta http-equiv="Content-Security-Policy"-->
+    <!--          content="default-src 'none'; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'">-->
     <style>
         @font-face {
             font-family: Roboto;
-            src: url('../dist/fonts/roboto-mono.ttf') format("truetype-variations");
+            src: url('../../dist/fonts/roboto-mono.ttf') format("truetype-variations");
             font-weight: 1 999;
         }
     </style>
-    <link href="../dist/quo.min.css" rel="stylesheet">
+    <link href="../../dist/quo.min.css" rel="stylesheet">
     <title>Quo debugger</title>
 </head>
 <body>
@@ -95,17 +95,23 @@
             </button>
         </div>
     </div>
+
+    <div class="quo-origin-tabs">
+        <div id="all" class="quo-origin-tab active-tab">
+            All
+        </div>
+    </div>
 </div>
 <div class="quo-body">
     <div class="content">
         <div id="quo">
             <div id="quoNoRequestsMessage">
-                Listening for quo() calls on 127.0.0.1:7312
+                Quo is listening
             </div>
         </div>
     </div>
 </div>
 <span class="hidden"></span>
-<script src="../dist/quo-runtime.min.js"></script>
+<script src="../../dist/quo-runtime.min.js"></script>
 </body>
 </html>
