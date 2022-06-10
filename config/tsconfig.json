@@ -7,7 +7,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "stripInternal": true,
-    "declaration": true,
     "outDir": "../dist",
     "lib": [
       "es2015",

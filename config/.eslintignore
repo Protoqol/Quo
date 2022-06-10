@@ -1,0 +1,7 @@
+dist/
+setup/
+src/Abstract/Window.ts
+src/Dump.ts
+config/
+.github/
+node-modules/

@@ -3,7 +3,7 @@
 /* @ts-ignore */
 Sfdump = window.Sfdump || (function
 (doc) {
-    var refStyle = doc.createElement("style"), rxEsc = /([.*+?^${}()|\[\]\/\\])/g,
+    let refStyle = doc.createElement("style"), rxEsc = /([.*+?^${}()|\[\]\/\\])/g,
         idRx                                         = /\bquo-dump-\d+-ref[012]\w+\b/,
         keyHint                                      = 0 <= navigator.platform.toUpperCase().indexOf("MAC") ? "Cmd" : "Ctrl",
         addEventListener                             = function (e, n, cb) {
@@ -31,7 +31,7 @@ Sfdump = window.Sfdump || (function
     }
 
     function toggle(a, recursive) {
-        var s = a.nextSibling || {}, oldClass = s.className, arrow, newClass;
+        let s = a.nextSibling || {}, oldClass = s.className, arrow, newClass;
         if (/\bquo-dump-compact\b/.test(oldClass)) {
             arrow = "&#9660;";
             newClass = "quo-dump-expanded";
@@ -42,7 +42,7 @@ Sfdump = window.Sfdump || (function
             return false;
         }
         if (doc.createEvent && s.dispatchEvent) {
-            var event = doc.createEvent("Event");
+            const event = doc.createEvent("Event");
             event.initEvent("quo-dump-expanded" === newClass ? "sfbeforedumpexpand" : "sfbeforedumpcollapse", true, false);
             s.dispatchEvent(event);
         }
@@ -61,28 +61,28 @@ Sfdump = window.Sfdump || (function
             }
         }
         return true;
-    };
+    }
 
     function collapse(a, recursive) {
-        var s = a.nextSibling || {}, oldClass = s.className;
+        const s = a.nextSibling || {}, oldClass = s.className;
         if (/\bquo-dump-expanded\b/.test(oldClass)) {
             toggle(a, recursive);
             return true;
         }
         return false;
-    };
+    }
 
     function expand(a, recursive) {
-        var s = a.nextSibling || {}, oldClass = s.className;
+        const s = a.nextSibling || {}, oldClass = s.className;
         if (/\bquo-dump-compact\b/.test(oldClass)) {
             toggle(a, recursive);
             return true;
         }
         return false;
-    };
+    }
 
     function collapseAll(root) {
-        var a = root.querySelector("a.quo-dump-toggle");
+        const a = root.querySelector("a.quo-dump-toggle");
         if (a) {
             collapse(a, true);
             expand(a, true);
@@ -92,7 +92,7 @@ Sfdump = window.Sfdump || (function
     }
 
     function reveal(node) {
-        var previous, parents = [];
+        let previous, parents = [];
         while ((node = node.parentNode || {}) && (previous = node.previousSibling) && "A" === previous.tagName) {
             parents.push(previous);
         }
@@ -126,9 +126,9 @@ Sfdump = window.Sfdump || (function
 
     return function (root, x) {
         root = doc.getElementById(root);
-        var indentRx = new RegExp("^(" + (root.getAttribute("data-indent-pad") || " ").replace(rxEsc, "\\$1") + ")+", "m");
-        var options = {"maxDepth": 1, "maxStringLength": 160, "fileLinkFormat": false};
-        var elt = root.getElementsByTagName("A"), len = elt.length, i = 0, s, h, t = [];
+        const indentRx = new RegExp("^(" + (root.getAttribute("data-indent-pad") || " ").replace(rxEsc, "\\$1") + ")+", "m");
+        const options = {"maxDepth": 1, "maxStringLength": 160, "fileLinkFormat": false};
+        let elt = root.getElementsByTagName("A"), len = elt.length, i = 0, s, h, t = [];
 
         while (i < len) {
             t.push(elt[i++]);
@@ -155,14 +155,14 @@ Sfdump = window.Sfdump || (function
                     }
                 }
             });
-        };
+        }
 
         function isCtrlKey(e) {
             return e.ctrlKey || e.metaKey;
         }
 
         function xpathString(str) {
-            var parts = str.match(/[^'"]+|['"]/g).map(function (part) {
+            const parts = str.match(/[^'"]+|['"]/g).map(function (part) {
                 if ("'" == part) {
                     return "\"'\"";
                 }
@@ -197,7 +197,7 @@ Sfdump = window.Sfdump || (function
             if (/\bquo-dump-toggle\b/.test(a.className)) {
                 e.preventDefault();
                 if (!toggle(a, isCtrlKey(e))) {
-                    var r = doc.getElementById(a.getAttribute("href").slice(1)), s = r.previousSibling,
+                    let r = doc.getElementById(a.getAttribute("href").slice(1)), s = r.previousSibling,
                         f                                                          = r.parentNode, t = a.parentNode;
                     t.replaceChild(r, a);
                     f.replaceChild(a, s);
@@ -326,7 +326,7 @@ Sfdump = window.Sfdump || (function
 
             /* @ts-ignore */
             function showCurrent(state) {
-                var currentNode = state.current(), currentRect, searchRect;
+                let currentNode = state.current(), currentRect, searchRect;
                 if (currentNode) {
                     reveal(currentNode);
                     highlight(root, currentNode, state.nodes);
@@ -334,18 +334,18 @@ Sfdump = window.Sfdump || (function
                 counter.textContent = (state.isEmpty() ? 0 : state.idx + 1) + " of " + state.count();
             }
 
-            var search = doc.createElement("div");
+            const search = doc.createElement("div");
             search.className = "quo-dump-search-wrapper quo-dump-search-hidden";
             search.innerHTML = " <input type=\"text\" class=\"quo-dump-search-input\"> <span class=\"quo-dump-search-count\">0 of 0<\/span> <button type=\"button\" class=\"quo-dump-search-input-previous\" tabindex=\"-1\"> <svg viewBox=\"0 0 1792 1792\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M1683 1331l-166 165q-19 19-45 19t-45-19L896 965l-531 531q-19 19-45 19t-45-19l-166-165q-19-19-19-45.5t19-45.5l742-741q19-19 45-19t45 19l742 741q19 19 19 45.5t-19 45.5z\"\/><\/svg> <\/button> <button type=\"button\" class=\"quo-dump-search-input-next\" tabindex=\"-1\"> <svg viewBox=\"0 0 1792 1792\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M1683 808l-742 741q-19 19-45 19t-45-19L109 808q-19-19-19-45.5t19-45.5l166-165q19-19 45-19t45 19l531 531 531-531q19-19 45-19t45 19l166 165q19 19 19 45.5t-19 45.5z\"\/><\/svg> <\/button> ";
             root.insertBefore(search, root.firstChild);
             /* @ts-ignore */
-            var state = new SearchState();
-            var searchInput = search.querySelector(".quo-dump-search-input");
+            const state = new SearchState();
+            const searchInput = search.querySelector(".quo-dump-search-input");
             var counter = search.querySelector(".quo-dump-search-count");
-            var searchInputTimer = 0;
-            var previousSearchQuery = "";
+            let searchInputTimer = 0;
+            let previousSearchQuery = "";
             addEventListener(searchInput, "keyup", function (e) {
-                var searchQuery = e.target.value; /* Don't perform anything if the pressed key didn't change the query */
+                const searchQuery = e.target.value; /* Don't perform anything if the pressed key didn't change the query */
                 if (searchQuery === previousSearchQuery) {
                     return;
                 }
@@ -360,8 +360,8 @@ Sfdump = window.Sfdump || (function
                         counter.textContent = "0 of 0";
                         return;
                     }
-                    var classMatches = ["quo-dump-str", "quo-dump-key", "quo-dump-public", "quo-dump-protected", "quo-dump-private"].map(xpathHasClass).join(" or ");
-                    var xpathResult = doc.evaluate(".//span[" + classMatches + "][contains(translate(child::text(), " + xpathString(searchQuery.toUpperCase()) + ", " + xpathString(searchQuery.toLowerCase()) + "), " + xpathString(searchQuery.toLowerCase()) + ")]", root, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+                    const classMatches = ["quo-dump-str", "quo-dump-key", "quo-dump-public", "quo-dump-protected", "quo-dump-private"].map(xpathHasClass).join(" or ");
+                    const xpathResult = doc.evaluate(".//span[" + classMatches + "][contains(translate(child::text(), " + xpathString(searchQuery.toUpperCase()) + ", " + xpathString(searchQuery.toLowerCase()) + "), " + xpathString(searchQuery.toLowerCase()) + ")]", root, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
                     /* @ts-ignore */
                     while (node = xpathResult.iterateNext()) {
                         /* @ts-ignore */
@@ -381,7 +381,7 @@ Sfdump = window.Sfdump || (function
                 });
             });
             addEventListener(root, "keydown", function (e) {
-                var isSearchActive = !/\bquo-dump-search-hidden\b/.test(search.className);
+                const isSearchActive = !/\bquo-dump-search-hidden\b/.test(search.className);
                 if ((114 === e.keyCode && !isSearchActive) || (isCtrlKey(e) && 70 === e.keyCode)) { /* F3 or CMD/CTRL + F */
                     if (70 === e.keyCode && document.activeElement === searchInput) { /* * If CMD/CTRL + F is hit while having focus on search input, * the user probably meant to trigger browser search instead. * Let the browser execute its behavior: */
                         return;
