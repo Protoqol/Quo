@@ -1,4 +1,4 @@
-![Quo](assets/quo-client-trans.png)
+![Quo](assets/quo-companion.jpg)
 
 <p align="center">
     <a href="https://github.com/protoqol/quo/actions/workflows/main.yml">	
