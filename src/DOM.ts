@@ -1,26 +1,25 @@
 import Payload from "./Entities/Payload";
-import {IncomingPayloadInterface} from "./Abstract/IncomingPayloadInterface";
 import "./Abstract/Window";
 
 export default class DOM {
 
     /**
-     * @type Payload
+     * @type {HTMLElement}
      */
-    public payload: Payload;
+    public static payloadsContainer: HTMLElement = document.getElementById("quo");
 
     /**
-     * @param payload
+     * Add received payload to front-end.
      */
-    constructor(payload: Payload) {
-        this.payload = payload;
-    }
+    public static addHtmlToList(payload: Payload): void {
+        let dump = payload.prepend(DOM.payloadsContainer);
 
-    /**
-     * Any logic that has to be run after adding a new payload.
-     */
-    public static afterAdditionHandler(payload: Payload): void {
-        const dump = document.querySelector(`div[id*=quo-${payload.data.getUid()}] pre[id*=quo-dump-]`);
+        if (window.QuoState.activeTab.toLowerCase() !== "all" && window.QuoState.activeTab !== payload.data.getSenderOrigin()) {
+            payload.cloak();
+        } else {
+            payload.uncloak();
+        }
+
         window.Sfdump(dump.id);
         let prev: string = null;
         Array.from(document.getElementsByTagName("article")).reverse().forEach(function (article: HTMLElement) {
@@ -30,17 +29,6 @@ export default class DOM {
             }
             prev = dedupId;
         });
-    }
-
-    /**
-     * Add received payload to Quo FE
-     */
-    public static addHtmlToList(payload: Payload): void {
-        document.getElementById("quo").prepend(payload.data.getVarInjectedHTML());
-        document.getElementById(`quo-link-${payload.data.getUid()}`)
-                .addEventListener("click", (e: MouseEvent) => {
-                    window.MainProcess.openUrl((e.target as HTMLAnchorElement).href);
-                });
     }
 
     /**
@@ -54,7 +42,7 @@ export default class DOM {
      * Clear page of payloads.
      */
     public static clearPage(): void {
-        const nodes: NodeList = document.querySelectorAll("[class=quo-dump-container]");
+        const nodes: NodeList = document.querySelectorAll(".quo-dump-container, .quo-origin-tab[data-filter]");
 
         nodes.forEach((payload: HTMLElement) => {
             payload.remove();
@@ -117,5 +105,14 @@ export default class DOM {
     public static registerHandlers() {
         document.getElementById("clearLog").addEventListener("click", DOM.clearPage);
         document.getElementById("search").addEventListener("keyup", DOM.search);
+        document.addEventListener("keydown", (e: KeyboardEvent) => {
+            switch (e.key) {
+                case "/":
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    document.getElementById("search").focus();
+            }
+        });
     }
 }

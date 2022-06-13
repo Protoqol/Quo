@@ -61,17 +61,15 @@ app.on("window-all-closed", function () {
 });
 
 ipcMain.on("quo-open-link", (e, args) => {
-    if (args.includes("phpstorm:")) {
-        shell.openExternal(args);
+    if (args) {
+        if (args.includes("phpstorm:")) {
+            shell.openExternal(args);
+        }
     }
 });
 
 http.createServer((request, response) => {
     let requestData = "";
-
-    if (process.env.NODE_ENV === "development") {
-        // console.log(request);
-    }
 
     request.on("readable", () => {
         requestData += request.read();
@@ -81,7 +79,7 @@ http.createServer((request, response) => {
         if (request.url !== "/quo-tunnel") {
             response.setHeader("Content-Type", "application/json");
             response.writeHead(200);
-            response.end("{\"quo-server\": \"Hi!\"}");
+            response.end("{\"quo-server-says\": \"Hi!\"}");
 
             return true;
         }

@@ -1,6 +1,19 @@
 export abstract class HTMLDecorator {
 
+    /**
+     * @type {HTMLElement}
+     */
     public element: HTMLElement;
+
+    /**
+     * @type {boolean}
+     */
+    public isCloaked: boolean;
+
+    /**
+     * @type {boolean}
+     */
+    public isUncloaked: boolean;
 
     /**
      * Check if Element in viewport.
@@ -8,8 +21,7 @@ export abstract class HTMLDecorator {
      * @returns {boolean}
      */
     public elementInViewport(): boolean {
-        return document.contains(this.element)
-            && this.element.classList.contains("hidden")
+        return this.element.classList.contains("hidden")
             && this.element.style.display !== "none"
             && this.element.style.visibility !== "hidden";
     }
@@ -19,8 +31,9 @@ export abstract class HTMLDecorator {
      *
      * @param {HTMLElement} target
      */
-    public append(target: HTMLElement): void {
-        return target.append(this.element);
+    public append(target: HTMLElement): HTMLElement {
+        target.append(this.element);
+        return this.element;
     }
 
     /**
@@ -28,8 +41,9 @@ export abstract class HTMLDecorator {
      *
      * * @param {HTMLElement} target
      */
-    public prepend(target: HTMLElement): void {
-        return target.prepend(this.element);
+    public prepend(target: HTMLElement): HTMLElement {
+        target.prepend(this.element);
+        return this.element;
     }
 
     /**
@@ -39,11 +53,12 @@ export abstract class HTMLDecorator {
      * @param standsInForClass
      */
     public cloak(cloakClass: string = "hidden", standsInForClass: string = "flex") {
-        if (this.elementInViewport()) {
-            if (this.element.classList.contains(standsInForClass)) {
-                this.element.classList.remove(cloakClass);
-                this.element.classList.add(cloakClass);
-            }
+        if (this.element.classList.contains(standsInForClass)) {
+            this.element.classList.remove(standsInForClass);
+            this.element.classList.add(cloakClass);
+
+            this.isCloaked = true;
+            this.isUncloaked = false;
         }
     }
 
@@ -54,11 +69,33 @@ export abstract class HTMLDecorator {
      * @param standsInForClass
      */
     public uncloak(uncloakClass: string = "flex", standsInForClass: string = "hidden") {
-        if (this.elementInViewport()) {
-            if (!this.element.classList.contains(standsInForClass)) {
-                this.element.classList.remove(standsInForClass);
-                this.element.classList.add(uncloakClass);
-            }
+        if (this.element.classList.contains(standsInForClass)) {
+            this.element.classList.remove(standsInForClass);
+            this.element.classList.add(uncloakClass);
+            this.isCloaked = false;
+            this.isUncloaked = true;
         }
     }
+
+    /**
+     * Generate a hash that produces a consistent hash with the same value.
+     *
+     * @param {string} str
+     * @param {number} seed
+     * @returns {number}
+     */
+    public generateRepeatableHash(str: string, seed: number = 0) {
+        str = str.toLowerCase();
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for (let i = 0, ch; i < str.length; i++) {
+            ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+        return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    }
+
 }

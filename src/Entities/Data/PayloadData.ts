@@ -15,7 +15,7 @@ export default class PayloadData {
      * @type {string}
      * @private
      */
-    private uuid: string;
+    private readonly uuid: string;
 
     /**
      * @param {IncomingPayloadInterface} payload
@@ -26,49 +26,10 @@ export default class PayloadData {
     }
 
     /**
-     * Create Quo HTML container containing all the variables from the payload.
+     * @returns {string}
      */
-    public getVarInjectedHTML(): HTMLElement {
-        const dumpContainer = document.createElement("div");
-        dumpContainer.id = `quo-${this.getUid()}`;
-        dumpContainer.classList.add("quo-dump-container");
-        dumpContainer.innerHTML = `
-            <div class="time">
-                <a id="quo-link-${this.getUid()}" target="_top" href="phpstorm://open?file=${this.getOriginWithoutLineNr()}&line=${this.getLineNr()}">${this.getOrigin()}</a>
-                <span>${this.getSenderOrigin()} - ${this.getTime()}</span>
-            </div>
-            <div class="quo-actual-dump">
-                <h3 class="quo-title">
-                    <div class="file">
-                        <div>
-                            <span class="received">Received (arg #${this.getNoOfNodes() + 1} of ${this.getAllPassedVariables().length})</span>
-                            <div class="passed" style="${this.getVarname ? "" : "display:none;"}">
-                                <div>
-                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="none" d="M0 0h24v24H0z"/><path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z"/></svg>
-                                     <span class="${this.getVariableStyling()}">
-                                        ${this.getVarname()}
-                                     </span>
-                                </div> 
-                            </div>
-                       </div>  
-                       <div style="margin-top:.75rem;">
-                           <span class="received">Origin</span>
-                           <div class="passed">
-                               <div>
-                                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path fill="none" d="M0 0h24v24H0z"/><path d="M7.784 14l.42-4H4V8h4.415l.525-5h2.011l-.525 5h3.989l.525-5h2.011l-.525 5H20v2h-3.784l-.42 4H20v2h-4.415l-.525 5h-2.011l.525-5H9.585l-.525 5H7.049l.525-5H4v-2h3.784zm2.011 0h3.99l.42-4h-3.99l-.42 4z"/></svg>
-                                   <span>${this.getSenderOrigin()}</span>
-                               </div>
-                           </div>
-                       </div>
-                    </div>
-                </h3>
-                <div class="dumps">
-                    ${this.getDumpHTML()}
-                </div>
-            </div>
-        `;
-
-        return dumpContainer;
+    public getUuid() {
+        return this.uuid;
     }
 
     /**
@@ -187,7 +148,7 @@ export default class PayloadData {
      */
     public getNoOfNodes(): number {
         if (this.getId() > 0) {
-            return document.querySelectorAll(`div[id=quo-${this.getUid()}]`).length;
+            return document.querySelectorAll(`div[data-request='${this.getUid()}']`).length;
         }
 
         return 0;

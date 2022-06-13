@@ -6,6 +6,7 @@
 * {
   --bg-dump: #e7e7e7;
   font-family: sans-serif;
+  transition: all ease-in-out 400ms;
 }
 
 html {
@@ -20,9 +21,7 @@ body {
   @apply overflow-hidden;
 
   .quo-sidebar {
-    min-height: 6rem;
-    max-height: 6rem;
-    height: 9vh;
+    height: 6rem;
     @apply select-none;
     @apply w-full;
     @apply bg-gray-100;
@@ -35,7 +34,8 @@ body {
       @apply flex-row;
       @apply justify-between;
       @apply items-center;
-      @apply py-2;
+      @apply pt-2;
+      @apply pb-3;
       @apply px-5;
 
       .quo-header {
@@ -155,37 +155,72 @@ body {
 
     .quo-origin-tabs {
       @apply relative;
-      @apply bottom-2;
+      @apply bottom-3;
       @apply left-4;
       @apply flex;
       @apply flex-row;
       @apply justify-start;
       @apply items-center;
-      @apply gap-x-px;
+      @apply gap-x-1.5;
+
+      .quo-origin-tab {
+        @apply h-6;
+        @apply cursor-pointer;
+        @apply text-xs;
+        @apply pl-2;
+        @apply rounded-t;
+        @apply flex;
+        @apply flex-row;
+        @apply justify-center;
+        @apply items-center;
+      }
 
       .active-tab {
         font-family: Roboto, monospace !important;
         @apply bg-gray-400;
-        @apply border-x;
-        @apply border-gray-400;
+        @apply text-white;
+
+        div {
+          @apply bg-gray-400;
+          @apply fill-gray-200;
+          @apply ml-1;
+          @apply h-full;
+          @apply rounded-tr;
+          @apply flex;
+          @apply flex-col;
+          @apply items-center;
+          @apply justify-center;
+          @apply px-1;
+
+          &:hover {
+            @apply bg-gray-300;
+          }
+        }
       }
 
       .inactive-tab {
         font-family: Roboto, monospace !important;
-        @apply bg-gray-300;
+        @apply text-gray-400;
+
+        div {
+          @apply fill-gray-500;
+          @apply ml-1;
+          @apply h-full;
+          @apply rounded-tr;
+          @apply flex;
+          @apply flex-col;
+          @apply items-center;
+          @apply justify-center;
+          @apply px-1;
+
+          &:hover {
+            @apply bg-gray-100;
+          }
+        }
 
         &:hover {
           @apply bg-gray-200;
         }
-      }
-
-      .quo-origin-tab {
-        @apply cursor-pointer;
-        @apply text-xs;
-        @apply text-white;
-        @apply py-1;
-        @apply px-2;
-        @apply rounded-t;
       }
     }
   }
@@ -209,7 +244,7 @@ body {
 
       #quo {
         min-height: 100%;
-        height: 91vh;
+        height: calc(100vh - 6rem);
         @apply select-text;
         @apply overflow-y-scroll;
 
@@ -227,7 +262,15 @@ body {
           @apply border-y;
           @apply border-gray-200;
           @apply px-2;
-          @apply py-6;
+          @apply pt-5;
+          @apply pb-1;
+
+          .collapse {
+            @apply cursor-pointer;
+            @apply relative;
+            @apply bottom-0;
+            left: 95vw;
+          }
 
           .time {
             @apply flex;
@@ -367,6 +410,7 @@ body {
                 @apply pl-2;
                 @apply pr-24;
                 @apply text-ellipsis;
+                min-height: 6rem;
                 font-size: .825rem;
 
                 &:not(:first-child) {
@@ -383,6 +427,8 @@ body {
                   @apply rounded;
                   @apply absolute right-0 top-0;
                   @apply text-xs;
+                  @apply font-light;
+                  @apply select-none;
                 }
 
                 .type-string {
