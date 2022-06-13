@@ -16,9 +16,6 @@
 # Quo
 
 > Quo is currently in beta, releases are only available as zip unless you built Quo yourself.
-> 
-> Quo should __not__ be used in production environments.
-
 
 [Quo is a free, open-source, client-side debugger and can be found here](https://github.com/Protoqol/Quo).
 
@@ -30,26 +27,26 @@ traditional way which is often tedious.
 
 - [Quo-PHP](https://github.com/Protoqol/Quo-php)
 
-## Features
+## Install (only zip available for now)
 
-- See which variable was dumped (name or value)
-- Nested variables unfolding (thanks to symfony/var-dumper)
-
-![Quo](assets/preview.png)
-
-- Search dumped variables
-
-![Quo](assets/preview_search.png)
-
-## Install - only zip available for now.
-
-1. Head over to [the releases](https://github.com/Protoqol/Quo/releases)
+1. Head over to the [releases](https://github.com/Protoqol/Quo/releases)
 2. Look for the latest version
 3. Download the zip for your OS (quo-darwin-\*.zip for macOS, quo-linux-\*.zip for Linux, quo-win32-\*.zip for windows)
 4. Extract wherever, and run the Quo executable.
 
 - You need a companion package like [Quo-php](https://github.com/Protoqol/Quo-php) to send variables to Quo.
-- Default (unchangeable for now) hostname and port for Quo are 127.0.0.1:7312.
+- Default hostname and port for Quo are 127.0.0.1:7312.
+
+
+## Features
+
+- See dump output
+- See which variable was dumped (name or value)
+- Organisation with tabs to filter by domain
+- Search for output
+- Nested variables unfolding
+
+![Quo](assets/preview.png)
 
 ## Issues
 
