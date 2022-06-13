@@ -53,7 +53,9 @@ body {
         }
 
         svg {
-          @apply fill-yellow-300;
+          g {
+            @apply fill-gray-700;
+          }
         }
       }
 
@@ -71,7 +73,7 @@ body {
 
           svg {
             @apply h-16;
-            stroke: rgba(241, 84, 23, 0.5);
+            stroke: #ed145b;
           }
         }
       }
