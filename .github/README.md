@@ -13,15 +13,12 @@
     </a>
 </p>
 
-# Quo
+> Quo is currently in beta, releases are only available as zip unless you build yourself.
 
-> Quo is currently in beta, releases are only available as zip unless you built Quo yourself.
-
-[Quo is a free, open-source, client-side debugger and can be found here](https://github.com/Protoqol/Quo).
+### What is Quo?
 
 Quo is a debugging companion to help you debug dumped variables, the dumped variables will appear in this Quo client
-instead of the
-traditional way which is often tedious.
+instead of via the traditional way which is often tedious.
 
 ### Want to help keep open-source sustainable?
 
@@ -29,6 +26,15 @@ You can help by contributing to the code or donating using the button below!
 Both are highly appreciated and contribute directly to keeping open-source free and sustainable!
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TJS5BKNE3JGW8)
+
+## Table of content
+
+1. [Companion packages](#companion-packages)
+2. [Installation](#install-only-zip-available-for-now)
+3. [Features and images](#features)
+4. [Issues](#issues)
+5. [Contributing](#contributing)
+6. [License](#license)
 
 ### Companion packages
 
@@ -52,7 +58,11 @@ Both are highly appreciated and contribute directly to keeping open-source free 
 - Search for output
 - Nested variables unfolding
 
-![Quo](assets/preview.png)
+![Quo](assets/full.png)
+
+![Quo](assets/search.png)
+
+![Quo](assets/tab.png)
 
 ## Issues
 

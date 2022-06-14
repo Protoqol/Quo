@@ -15,7 +15,10 @@
     "moduleResolution": "node"
   },
   "exclude": [
-    "../node_modules"
+    "../node_modules",
+    "forge.config.js",
+    "webpack.mix.js",
+    "tailwind.config.js"
   ],
   "files": [
     "../src/App.ts",
