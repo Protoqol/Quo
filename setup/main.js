@@ -2,6 +2,7 @@ const {app, BrowserWindow, globalShortcut, Menu, shell, ipcMain} = require("elec
 const {Buffer} = require("node:buffer");
 const path = require("path");
 const http = require("http");
+const {IncomingMessage} = require("http");
 
 let mainWindow = null;
 
