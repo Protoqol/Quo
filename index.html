@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Quo debugging</title>
+    <link data-trunk rel="tailwind-css" href="styles.scss" />
+    <link data-trunk rel="copy-dir" href="public" />
+    <link data-trunk rel="rust" data-wasm-opt="z" />
+  </head>
+  <body>
+  <div class="titlebar">
+    <div data-tauri-drag-region></div>
+    <div class="controls">
+      <button id="titlebar-minimize" title="Minimize">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 11H5V13H19V11Z"></path></svg>
+      </button>
+      <button id="titlebar-maximize" title="Maximize">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"></path></svg>
+      </button>
+      <button id="titlebar-close" title="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  </body>
+  <script>
+    const { getCurrentWindow } = window.__TAURI__.window;
+    const appWindow = getCurrentWindow();
+    document.getElementById('titlebar-minimize')?.addEventListener('click', () => appWindow.minimize());
+    document.getElementById('titlebar-maximize')?.addEventListener('click', () => appWindow.toggleMaximize());
+    document.getElementById('titlebar-close')?.addEventListener('click', () => appWindow.close());
+
+    // Get width of .quo-sidebar and set the left amount of pixel width to the same colour as quo-sidebar
+    const updateSidebarWidth = () => {
+      const sidebar = document.querySelector('.quo-sidebar');
+      const titlebar = document.querySelector('.titlebar');
+
+      if (sidebar && titlebar) {
+        const width = sidebar.getBoundingClientRect().width;
+        const bgColor = window.getComputedStyle(sidebar).backgroundColor;
+
+        titlebar.style.gridTemplateColumns = `${width}px 1fr max-content`;
+
+        // Create or update the sidebar-matching element in titlebar
+        let sidebarMatch = document.getElementById('titlebar-sidebar-match');
+        if (!sidebarMatch) {
+          sidebarMatch = document.createElement('div');
+          sidebarMatch.id = 'titlebar-sidebar-match';
+          sidebarMatch.setAttribute('data-tauri-drag-region', '');
+          titlebar.prepend(sidebarMatch);
+        }
+
+        sidebarMatch.style.width = `${width}px`;
+        sidebarMatch.style.backgroundColor = bgColor;
+
+        // Ensure the original drag region also has the attribute if it was missing or if we want to be sure
+        const originalDragRegion = titlebar.querySelector('div:not(#titlebar-sidebar-match):not(.controls)');
+        if (originalDragRegion && !originalDragRegion.hasAttribute('data-tauri-drag-region')) {
+            originalDragRegion.setAttribute('data-tauri-drag-region', '');
+        }
+      }
+    };
+
+    // Use ResizeObserver to handle dynamic width changes
+    const observer = new ResizeObserver(() => {
+      updateSidebarWidth();
+    });
+
+    // Start observing when the sidebar is available
+    const checkSidebar = setInterval(() => {
+      const sidebar = document.querySelector('.quo-sidebar');
+      if (sidebar) {
+        observer.observe(sidebar);
+        updateSidebarWidth();
+        clearInterval(checkSidebar);
+      }
+    }, 100);
+  </script>
+</html>
