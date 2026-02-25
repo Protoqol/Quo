@@ -7,5 +7,6 @@ dist/
 
 yarn.lock
 yarn-error.log
+.yarn
 
 todo.md
