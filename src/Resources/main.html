@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none'; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'">
+          content="default-src 'none'; font-src 'self' https://fonts.gstatic.com; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; object-src 'none'">
     <style>
         @font-face {
             font-family: Roboto;
@@ -11,95 +11,93 @@
             font-weight: 1 999;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="../../dist/quo.min.css" rel="stylesheet">
     <title>Quo debugging companion</title>
 </head>
 <body>
-<div class="quo-sidebar">
-    <div class="quo-actions">
-        <div class="quo-header">
-            <svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="75" viewBox="0 0 1492.000000 843.000000"
+<div class="quo-layout">
+    <aside class="quo-sidebar">
+        <div class="quo-sidebar-header">
+            <svg class="quo-logo" xmlns="http://www.w3.org/2000/svg" version="1.0" width="32" viewBox="0 0 1492.000000 843.000000"
                  preserveAspectRatio="xMidYMid meet">
-                <g transform="translate(0.000000,843.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none">
+                <g transform="translate(0.000000,843.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
                     <path d="M1930 8409 c-501 -56 -929 -271 -1296 -650 -306 -317 -504 -706 -585 -1149 -20 -110 -21 -161 -30 -1275 -5 -638 -8 -1527 -6 -1975 4 -787 4 -819 25 -930 60 -316 168 -584 337 -840 94 -141 178 -241 316 -375 352 -342 770 -541 1248 -596 133 -15 445 -6 566 16 122 22 260 60 374 102 l95 36 376 -382 c352 -358 377 -381 410 -381 32 0 65 31 482 447 247 247 451 455 453 464 3 9 2 25 -2 37 -5 11 -160 176 -346 366 l-338 345 54 108 c73 146 141 328 182 489 68 265 66 189 65 2034 -1 1734 -7 2158 -35 2320 -115 685 -557 1278 -1180 1585 -301 148 -599 216 -940 213 -82 0 -184 -4 -225 -9z m415 -1365 c255 -53 488 -291 566 -579 22 -80 22 -82 31 -1620 5 -847 7 -1682 5 -1855 -4 -358 -10 -397 -88 -554 -116 -234 -292 -388 -504 -441 -94 -24 -267 -25 -355 -2 -242 64 -464 258 -555 484 -57 143 -55 50 -55 2045 0 1996 -3 1887 56 2042 59 153 213 336 346 409 154 86 359 112 553 71z"/>
                     <path d="M12565 8413 c-103 -9 -300 -48 -401 -79 -582 -176 -1073 -599 -1341 -1154 -62 -128 -132 -332 -158 -460 -49 -237 -46 -155 -55 -2105 -4 -1058 -4 -1895 2 -1970 35 -522 247 -987 628 -1379 360 -370 788 -586 1280 -646 108 -13 369 -13 485 0 463 53 895 265 1245 610 374 369 600 844 650 1365 15 152 5 3677 -11 3855 -23 260 -93 513 -207 745 -220 447 -566 796 -1004 1014 -217 108 -439 173 -693 201 -85 9 -331 11 -420 3z m306 -1358 c255 -21 504 -224 605 -491 58 -155 55 -51 61 -2035 l5 -1825 -21 -85 c-77 -305 -325 -562 -609 -631 -69 -16 -246 -14 -323 5 -275 67 -506 305 -585 602 -18 67 -19 146 -19 1930 l0 1860 22 84 c86 322 360 562 673 591 41 3 86 5 100 4 14 -2 55 -6 91 -9z"/>
                     <path d="M5381 8281 c-18 -18 -19 -66 -25 -1342 -4 -728 -8 -2006 -9 -2839 -2 -1425 -1 -1522 16 -1625 79 -476 278 -872 606 -1209 427 -437 935 -656 1519 -656 258 0 448 30 679 105 456 150 878 486 1140 908 170 275 276 572 318 893 18 137 19 932 6 3991 -7 1676 -8 1754 -26 1773 -18 20 -29 20 -655 20 -534 0 -639 -2 -656 -14 -19 -14 -19 -57 -24 -2818 l-5 -2803 -22 -80 c-82 -293 -291 -511 -560 -587 -99 -27 -275 -30 -373 -5 -259 67 -474 284 -562 568 l-23 74 -5 2811 c-5 2747 -5 2812 -24 2833 -19 21 -21 21 -658 21 -611 0 -639 -1 -657 -19z"/>
                 </g>
             </svg>
+            <span class="quo-logo-text">Quo</span>
         </div>
-        <div class="input-container">
-            <label for="search">
-                <input type="text" id="search" placeholder="Search entries..."/>
-                <span id="searchResult"></span>
-            </label>
-        </div>
-        <div class="loader-container">
-            <div class="loader">
-                <svg width="60" height="60" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="none" fill-rule="evenodd" transform="translate(1 1)" stroke-width="2">
-                        <circle cx="22" cy="22" r="6" stroke-opacity="0">
-                            <animate attributeName="r"
-                                     begin="1.5s" dur="3s"
-                                     values="6;22"
-                                     calcMode="linear"
-                                     repeatCount="indefinite"/>
-                            <animate attributeName="stroke-opacity"
-                                     begin="1.5s" dur="3s"
-                                     values="1;0" calcMode="linear"
-                                     repeatCount="indefinite"/>
-                            <animate attributeName="stroke-width"
-                                     begin="1.5s" dur="3s"
-                                     values="2;0" calcMode="linear"
-                                     repeatCount="indefinite"/>
-                        </circle>
-                        <circle cx="22" cy="22" r="6" stroke-opacity="0">
-                            <animate attributeName="r"
-                                     begin="3s" dur="3s"
-                                     values="6;22"
-                                     calcMode="linear"
-                                     repeatCount="indefinite"/>
-                            <animate attributeName="stroke-opacity"
-                                     begin="3s" dur="3s"
-                                     values="1;0" calcMode="linear"
-                                     repeatCount="indefinite"/>
-                            <animate attributeName="stroke-width"
-                                     begin="3s" dur="3s"
-                                     values="2;0" calcMode="linear"
-                                     repeatCount="indefinite"/>
-                        </circle>
-                        <circle cx="22" cy="22" r="8">
-                            <animate attributeName="r"
-                                     begin="0s" dur="1.5s"
-                                     values="6;1;2;3;4;5;6"
-                                     calcMode="linear"
-                                     repeatCount="indefinite"/>
-                        </circle>
-                    </g>
-                </svg>
+        <nav class="quo-nav">
+            <div id="quo-tabs-container" class="quo-origin-tabs"></div>
+        </nav>
+        <div class="quo-sidebar-footer">
+            <div class="settings-container mb-6 px-2">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Settings</span>
+                </div>
+                <label class="flex items-center justify-between cursor-pointer group">
+                    <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">Auto group dumps</span>
+                    <div class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoGroupToggle" class="sr-only peer" checked>
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+                    </div>
+                </label>
             </div>
-        </div>
-        <div class="button-container">
-            <button type="button" id="clearLog" title="Clear all entries">
+            <div class="loader-container">
+                <div class="loader">
+                    <svg width="24" height="24" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="none" fill-rule="evenodd" transform="translate(1 1)" stroke-width="2">
+                            <circle cx="22" cy="22" r="6" stroke-opacity="0">
+                                <animate attributeName="r" begin="1.5s" dur="3s" values="6;22" calcMode="linear" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-opacity" begin="1.5s" dur="3s" values="1;0" calcMode="linear" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-width" begin="1.5s" dur="3s" values="2;0" calcMode="linear" repeatCount="indefinite"/>
+                            </circle>
+                            <circle cx="22" cy="22" r="6" stroke-opacity="0">
+                                <animate attributeName="r" begin="3s" dur="3s" values="6;22" calcMode="linear" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-opacity" begin="3s" dur="3s" values="1;0" calcMode="linear" repeatCount="indefinite"/>
+                                <animate attributeName="stroke-width" begin="3s" dur="3s" values="2;0" calcMode="linear" repeatCount="indefinite"/>
+                            </circle>
+                            <circle cx="22" cy="22" r="8">
+                                <animate attributeName="r" begin="0s" dur="1.5s" values="6;1;2;3;4;5;6" calcMode="linear" repeatCount="indefinite"/>
+                            </circle>
+                        </g>
+                    </svg>
+                </div>
+                <span class="loader-text">Listening...</span>
+            </div>
+            <button type="button" id="clearLog" title="Clear all entries" class="quo-btn-clear">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
                     <path fill="none" d="M0 0h24v24H0z"/>
                     <path d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3zm1 2H6v12h12V8zm-4.586 6l1.768 1.768-1.414 1.414L12 15.414l-1.768 1.768-1.414-1.414L10.586 14l-1.768-1.768 1.414-1.414L12 12.586l1.768-1.768 1.414 1.414L13.414 14zM9 4v2h6V4H9z"/>
                 </svg>
-                <span>
-                    Clear
-                </span>
+                <span>Clear</span>
             </button>
         </div>
-    </div>
-    <div id="quo-tabs-container" class="quo-origin-tabs"></div>
-</div>
-<div class="quo-body">
-    <div class="content">
-        <div id="quo">
-            <div id="quoNoRequestsMessage">
-                Quo is listening
+    </aside>
+    <main class="quo-main">
+        <header class="quo-main-header">
+            <div class="input-container">
+                <label for="search">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="search" placeholder="Search payloads... (Press '/' to focus)"/>
+                </label>
+                <span id="searchResult"></span>
+            </div>
+        </header>
+        <div class="quo-body">
+            <div id="quo">
+                <div id="quoNoRequestsMessage">
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-slate-300"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <p>Waiting for incoming payloads...</p>
+                        <span class="text-xs text-slate-400 mt-2">Dumps from your application will appear here automatically.</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 <span class="hidden"></span>
 <script src="../../dist/quo-runtime.min.js"></script>

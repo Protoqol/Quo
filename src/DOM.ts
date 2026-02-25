@@ -12,23 +12,38 @@ export default class DOM {
      * Add received payload to front-end.
      */
     public static addHtmlToList(payload: Payload): void {
-        let dump = payload.prepend(DOM.payloadsContainer);
+        let dumpElement: HTMLElement;
 
-        if (window.QuoState.activeTab.toLowerCase() !== "all" && window.QuoState.activeTab !== payload.data.getSenderOrigin()) {
-            payload.cloak();
+        if (window.QuoState.autoGroup) {
+            const existingContainer = document.querySelector(`.quo-dump-container[data-request="${payload.data.getUid()}"]`);
+            if (existingContainer) {
+                const dumpsList = existingContainer.querySelector(".dumps");
+                const newGroupedWrapper = payload.element.querySelector(".grouped-dump-wrapper");
+
+                if (newGroupedWrapper) {
+                    newGroupedWrapper.classList.add("animate-slide-in-top");
+                    dumpsList.appendChild(newGroupedWrapper);
+                }
+
+                dumpElement = existingContainer as HTMLElement;
+            } else {
+                dumpElement = payload.prepend(DOM.payloadsContainer);
+                dumpElement.classList.add("animate-slide-in-top");
+            }
         } else {
-            payload.uncloak();
+            dumpElement = payload.prepend(DOM.payloadsContainer);
+            dumpElement.classList.add("animate-slide-in-top");
         }
 
-        window.Sfdump(dump.id);
-        let prev: string = null;
-        Array.from(document.getElementsByTagName("article")).reverse().forEach(function (article: HTMLElement) {
-            const dedupId = article.dataset.dedupId;
-            if (dedupId === prev) {
-                article.getElementsByTagName("header")[0].classList.add("hidden");
-            }
-            prev = dedupId;
-        });
+        if (window.QuoState.activeTab.toLowerCase() !== "all" && window.QuoState.activeTab !== payload.data.getSenderOrigin()) {
+            dumpElement.classList.add("hidden");
+            dumpElement.classList.remove("flex");
+        } else {
+            dumpElement.classList.add("flex");
+            dumpElement.classList.remove("hidden");
+        }
+
+        window.Sfdump(payload.data.getUuid());
     }
 
     /**
@@ -62,39 +77,55 @@ export default class DOM {
         let searchValue: string = (e.target as HTMLInputElement).value;
 
         const canSearch = Boolean(searchValue);
-        let resultNodes: NodeList = null;
-
-        const allNodes: NodeList = document.querySelectorAll(`i[data-searchable]`);
 
         if (searchValue) {
-            searchValue = searchValue.replace("$", "");
-            resultNodes = document.querySelectorAll(`i[data-searchable*='${searchValue}']`);
-            document.getElementById("searchResult").innerText = `Found ${resultNodes.length} result${resultNodes.length > 1 || resultNodes.length === 0 ? "s" : ""}`;
+            searchValue = searchValue.replace("$", "").toLowerCase();
+
+            let count = 0;
+            const allSearchable = document.querySelectorAll(`i[data-searchable]`);
+            allSearchable.forEach((node: HTMLElement) => {
+                if (node.dataset.searchable.toLowerCase().includes(searchValue)) {
+                    count++;
+                }
+            });
+
+            document.getElementById("searchResult").innerText = `Found ${count} result${count !== 1 ? "s" : ""}`;
         } else {
             document.getElementById("searchResult").innerText = ``;
         }
 
-        allNodes.forEach((node: HTMLElement) => {
-            let canStay = true;
-            const searchable = node.dataset.searchable;
-            const dumpContainer = node.parentElement.parentElement.parentElement.parentElement;
+        const allContainers = document.querySelectorAll(`.quo-dump-container`);
+        allContainers.forEach((dumpContainer: HTMLElement) => {
+            const allSearchableInContainer = dumpContainer.querySelectorAll(`i[data-searchable]`);
+
+            // Check if matches the active tab filter
+            const activeTab = window.QuoState.activeTab.toLowerCase();
+            const payloadOrigin = dumpContainer.dataset.domain.toLowerCase();
+            const tabMatches = (activeTab === "all" || activeTab === payloadOrigin);
 
             if (canSearch) {
-                resultNodes.forEach((node: HTMLElement) => {
-                    if (searchable === node.dataset.searchable) {
-                        canStay = false;
+                let anyMatch = false;
+                allSearchableInContainer.forEach((node: HTMLElement) => {
+                    if (node.dataset.searchable.toLowerCase().includes(searchValue)) {
+                        anyMatch = true;
                     }
                 });
-            } else {
-                dumpContainer.style.display = "";
-                return true;
-            }
 
-
-            if (canStay) {
-                dumpContainer.style.display = "none";
+                if (anyMatch && tabMatches) {
+                    dumpContainer.classList.remove("hidden");
+                    dumpContainer.classList.add("flex");
+                } else {
+                    dumpContainer.classList.remove("flex");
+                    dumpContainer.classList.add("hidden");
+                }
             } else {
-                dumpContainer.style.display = "";
+                if (tabMatches) {
+                    dumpContainer.classList.remove("hidden");
+                    dumpContainer.classList.add("flex");
+                } else {
+                    dumpContainer.classList.remove("flex");
+                    dumpContainer.classList.add("hidden");
+                }
             }
         });
     }
@@ -105,6 +136,9 @@ export default class DOM {
     public static registerHandlers() {
         document.getElementById("clearLog").addEventListener("click", DOM.clearPage);
         document.getElementById("search").addEventListener("keyup", DOM.search);
+        document.getElementById("autoGroupToggle").addEventListener("change", (e: Event) => {
+            window.QuoState.autoGroup = (e.target as HTMLInputElement).checked;
+        });
         document.addEventListener("keydown", (e: KeyboardEvent) => {
             switch (e.key) {
                 case "/":

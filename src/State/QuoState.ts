@@ -23,6 +23,11 @@ export default class QuoState {
     public tabs: Array<Tab>;
 
     /**
+     * @type {boolean}
+     */
+    public autoGroup: boolean = true;
+
+    /**
      * @type {string[]}
      * @private
      */

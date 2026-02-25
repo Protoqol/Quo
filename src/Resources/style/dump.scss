@@ -74,7 +74,6 @@ pre.quo-dump {
     white-space: nowrap;
     margin-bottom: 5px;
     display: flex;
-    position: -webkit-sticky;
     position: sticky;
     top: 5px;
 
@@ -153,32 +152,32 @@ pre.quo-dump {
   }
 
   .property-public {
-    @apply text-lime-600;
+    @apply text-emerald-400;
   }
 
   .property-protected {
-    @apply text-amber-600;
+    @apply text-amber-400;
   }
 
   .property-private {
-    @apply text-red-600;
+    @apply text-rose-400;
   }
 
   .quo-dump-num {
-    @apply text-red-600;
+    @apply text-rose-400;
   }
 
   .quo-dump-const {
-    @apply text-blue-600;
+    @apply text-sky-400;
     @apply font-semibold;
   }
 
   .quo-dump-str {
-    @apply text-lime-600;
+    @apply text-emerald-400;
   }
 
   .quo-dump-note {
-    color: #1299DA;
+    @apply text-indigo-400;
 
     &::after {
       content: " ▼"
@@ -187,31 +186,31 @@ pre.quo-dump {
 
   .quo-dump-ref {
     display: none;
-    color: #4c1d95;
+    @apply text-violet-400;
   }
 
   .quo-dump-public {
-    color: #686868;
+    @apply text-slate-300;
   }
 
   .quo-dump-protected {
-    color: #686868;
+    @apply text-slate-300;
   }
 
   .quo-dump-private {
-    color: #686868;
+    @apply text-slate-300;
   }
 
   .quo-dump-meta {
-    color: #B729D9;
+    @apply text-violet-400;
   }
 
   .quo-dump-key {
-    color: #686868;
+    @apply text-slate-400;
   }
 
   .quo-dump-index {
-    color: #1299DA;
+    @apply text-sky-400;
   }
 
   .quo-dump-ns {
@@ -219,7 +218,7 @@ pre.quo-dump {
   }
 
   .quo-dump-ellipsis-note {
-    color: #1299DA;
+    @apply text-sky-400;
   }
 }
 

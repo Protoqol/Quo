@@ -4,452 +4,261 @@
 @import "./dump.scss";
 
 * {
-  --bg-dump: #e7e7e7;
-  font-family: sans-serif;
+  --bg-dump: #f7f5dd;
+  --header-bg: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --accent-color: #ed145b;
+  --text-main: #2f4858;
+  --text-muted: #64748b;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
 html {
-  @apply bg-gray-100;
+  @apply bg-slate-50;
 }
 
 body {
-  @apply w-full;
+  @apply w-full h-screen;
   @apply flex;
   @apply flex-col;
-  @apply subpixel-antialiased;
+  @apply antialiased;
   @apply overflow-hidden;
+  @apply text-slate-800;
 
-  .quo-sidebar {
-    height: 6rem;
-    @apply select-none;
-    @apply w-full;
-    @apply bg-gray-100;
-    @apply border-b;
-    @apply border-gray-200;
+  .quo-layout {
+    @apply flex flex-row w-full h-full;
 
-    .quo-actions {
-      @apply bg-gray-100;
-      @apply flex;
-      @apply flex-row;
-      @apply justify-between;
-      @apply items-center;
-      @apply pt-2;
-      @apply pb-3;
-      @apply px-5;
+    .quo-sidebar {
+      @apply w-64 h-full bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
 
-      .quo-header {
-        @apply w-max;
-        @apply flex;
-        @apply flex-row;
-        @apply justify-center;
-        @apply items-center;
-        @apply mr-5;
+      .quo-sidebar-header {
+        @apply p-6 flex items-center gap-3 border-b border-slate-800;
 
-        h1 {
-          @apply text-2xl;
-          @apply font-bold;
-          @apply text-gray-800;
-          @apply whitespace-nowrap;
-        }
-
-        svg {
-          g {
-            @apply fill-gray-700;
-          }
-        }
-      }
-
-      div {
-        @apply w-1/3;
-      }
-
-      .loader-container {
-        @apply flex;
-        @apply justify-center;
-        @apply items-center;
-
-        .loader {
-          @apply w-1/3;
-
-          svg {
-            @apply h-16;
-            stroke: #ed145b;
-          }
-        }
-      }
-
-      .button-container {
-        @apply flex;
-        @apply justify-end;
-        @apply items-center;
-
-        button {
-          @apply flex flex-row justify-center items-center;
-          @apply w-max;
-          @apply px-2;
-          @apply py-1;
-          @apply bg-white;
-          @apply text-gray-400;
-          @apply rounded;
-          @apply font-light;
-          font-family: sans-serif !important;
-          box-shadow: 0 1px 3px #d1d1d1;
-          @apply transition duration-150 ease-in-out;
-
-          span {
-            @apply h-max;
-            @apply align-baseline;
-          }
-
-          svg {
-            @apply h-max;
-            @apply mr-1;
-            @apply fill-gray-400;
-            @apply align-baseline;
-            margin-bottom: 2px;
-          }
-
+        .quo-logo {
+          @apply text-indigo-400 transition-transform duration-300 shrink-0;
           &:hover {
-            @apply transition duration-150 ease-in-out;
-            @apply bg-gray-200;
-            box-shadow: none;
+            transform: rotate(5deg) scale(1.1);
           }
+        }
+
+        .quo-logo-text {
+          @apply text-xl font-bold text-white;
+          letter-spacing: -0.025em;
         }
       }
 
-      .input-container {
-        @apply flex;
-        @apply justify-start;
-        @apply items-center;
+      .quo-nav {
+        @apply flex-1 overflow-y-auto py-4;
 
-        label {
-          @apply flex;
-          @apply flex-row;
-          @apply justify-center;
-          @apply items-center;
-          @apply w-max;
+        .quo-origin-tabs {
+          @apply flex flex-col gap-1 px-3;
 
-          span {
-            @apply whitespace-nowrap;
-            @apply ml-4;
-            @apply text-gray-400;
-          }
+          .quo-origin-tab {
+            @apply flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-sm font-medium;
+            @apply text-slate-400 hover:bg-slate-800 hover:text-slate-200;
 
-          input {
-            @apply w-full;
-            @apply px-3;
-            @apply py-1;
-            @apply rounded;
-            @apply outline-0;
-            @apply transition duration-300 ease-in-out;
-            @apply border;
-            @apply border-gray-200;
+            span {
+              @apply truncate mr-2 flex-1;
+              pointer-events: none;
+            }
 
-            &:focus {
-              @apply transition duration-300 ease-in-out;
-              @apply pr-14;
+            &.active-tab {
+              @apply bg-indigo-600/10 text-indigo-400 border border-indigo-500/20;
+            }
+
+            #closeTab {
+               @apply opacity-0 transition-opacity duration-200 w-4 h-4 p-0.5 rounded hover:bg-slate-700 hover:text-red-400 shrink-0;
+            }
+
+            &:hover #closeTab {
+              @apply opacity-100;
             }
           }
         }
       }
+
+      .quo-sidebar-footer {
+        @apply p-4 border-t border-slate-800 bg-slate-950/50;
+
+        .loader-container {
+          @apply flex items-center gap-3 mb-4 px-2;
+
+          .loader svg {
+            @apply text-indigo-500;
+          }
+
+          .loader-text {
+            @apply text-xs font-medium text-slate-500 italic;
+          }
+        }
+
+        .quo-btn-clear {
+          @apply flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg;
+          @apply bg-slate-800 text-slate-300 text-sm font-medium border border-slate-700;
+          @apply transition-all duration-200 hover:bg-slate-700 hover:text-white hover:border-slate-600;
+
+          svg {
+            @apply fill-current;
+          }
+        }
+      }
     }
 
-    .quo-origin-tabs {
-      @apply relative;
-      @apply bottom-3;
-      @apply left-4;
-      @apply flex;
-      @apply flex-row;
-      @apply justify-start;
-      @apply items-center;
-      @apply gap-x-1.5;
+    .quo-main {
+      @apply flex-1 flex flex-col h-full bg-slate-50;
 
-      .quo-origin-tab {
-        @apply h-6;
-        @apply cursor-pointer;
-        @apply text-xs;
-        @apply pl-2;
-        @apply rounded-t;
-        @apply flex;
-        @apply flex-row;
-        @apply justify-center;
-        @apply items-center;
-      }
+      .quo-main-header {
+        @apply h-16 border-b border-slate-200 bg-white flex items-center px-8 z-10;
 
-      .active-tab {
-        font-family: Roboto, monospace !important;
-        @apply bg-gray-400;
-        @apply text-white;
+        .input-container {
+          @apply flex-1 max-w-2xl;
 
-        div {
-          @apply bg-gray-400;
-          @apply fill-gray-200;
-          @apply ml-1;
-          @apply h-full;
-          @apply rounded-tr;
-          @apply flex;
-          @apply flex-col;
-          @apply items-center;
-          @apply justify-center;
-          @apply px-1;
+          label {
+            @apply relative flex items-center;
 
-          &:hover {
-            @apply bg-gray-300;
+            .search-icon {
+              @apply absolute left-3 text-slate-400;
+              pointer-events: none;
+            }
+
+            input {
+              @apply w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl text-sm transition-all duration-200;
+              @apply focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none;
+
+              &::placeholder {
+                @apply text-slate-500;
+              }
+            }
+          }
+
+          #searchResult {
+            @apply ml-4 text-xs font-medium text-slate-400 whitespace-nowrap;
           }
         }
       }
 
-      .inactive-tab {
-        font-family: Roboto, monospace !important;
-        @apply text-gray-400;
+      .quo-body {
+        @apply flex-1 overflow-y-auto p-8;
 
-        div {
-          @apply fill-gray-500;
-          @apply ml-1;
-          @apply h-full;
-          @apply rounded-tr;
-          @apply flex;
-          @apply flex-col;
-          @apply items-center;
-          @apply justify-center;
-          @apply px-1;
+        #quo {
+          @apply max-w-5xl mx-auto;
 
-          &:hover {
-            @apply bg-gray-100;
+          .empty-state {
+            @apply flex flex-col items-center justify-center h-64 text-center;
+
+            svg {
+              @apply mb-4 text-slate-300;
+            }
+
+            p {
+              @apply text-slate-600 font-medium;
+            }
           }
-        }
-
-        &:hover {
-          @apply bg-gray-200;
-        }
-      }
-    }
-  }
-
-  .quo-body {
-    @apply w-full;
-    @apply bg-gray-100;
-    @apply overflow-y-auto;
-
-    .header {
-      @apply flex;
-      @apply flex-col;
-      @apply justify-center;
-      @apply items-center;
-      @apply border-b-2;
-    }
-
-    .content {
-      @apply max-h-full;
-      @apply h-full;
-
-      #quo {
-        min-height: 100%;
-        height: calc(100vh - 6rem);
-        @apply select-text;
-        @apply overflow-y-scroll;
-
-        #quoNoRequestsMessage {
-          @apply w-full;
-          @apply h-1/2;
-          @apply text-center;
-          @apply text-gray-300;
-          @apply mt-5;
         }
 
         .quo-dump-container {
-          @apply flex-col;
-          @apply bg-white;
-          @apply border-y;
-          @apply border-gray-200;
-          @apply px-2;
-          @apply pt-5;
-          @apply pb-1;
+          @apply flex flex-col bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm overflow-hidden transition-all duration-300;
 
-          .collapse {
-            @apply cursor-pointer;
-            @apply relative;
-            @apply bottom-0;
-            left: 95vw;
+          &:hover {
+            @apply shadow-md border-slate-300;
+            transform: translateY(-2px);
+          }
+
+          &.animate-slide-in-top {
+            animation: slideInTop 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
           }
 
           .time {
-            @apply flex;
-            @apply justify-between;
-            @apply items-center;
-            @apply w-full;
-            @apply whitespace-nowrap;
-            @apply text-xs;
-            @apply font-normal;
-            @apply text-gray-200;
-            @apply pl-3;
-            @apply pb-4;
+            @apply flex justify-between items-center px-6 py-3 bg-slate-50/50 border-b border-slate-100;
+            @apply text-[10px] font-bold text-slate-400 uppercase tracking-wider;
+
+            a {
+              @apply text-indigo-500 hover:text-indigo-600 transition-colors lowercase font-mono text-xs;
+            }
           }
 
           .quo-actual-dump {
-            @apply flex;
-            @apply flex-row;
-            @apply justify-between;
+            @apply p-6;
 
             .quo-title {
-              @apply w-1/3;
-              @apply flex flex-col justify-start;
-              @apply whitespace-nowrap;
-              @apply px-2;
-              @apply pb-2;
+              @apply mb-4;
 
               .file {
-                @apply w-full;
-                @apply text-gray-500;
-                @apply text-xs;
-                @apply flex;
-                @apply flex-col;
-                @apply justify-center;
-                @apply items-start;
-                @apply pr-10;
-                @apply font-light;
+                @apply flex flex-col gap-3;
 
                 .backtrace {
-                  @apply w-max;
-                  @apply flex;
-                  @apply justify-start;
-                  @apply text-gray-300;
-                  @apply px-2 py-1;
-                  @apply rounded-l;
-                  @apply shrink-0;
-                  @apply grow;
-                  @apply border-r;
-                  @apply border-gray-200;
+                  @apply flex items-center w-max px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-mono text-slate-500;
 
-                  div {
-                    @apply flex;
-                    @apply flex-row;
-                    @apply justify-center;
-                    @apply items-center;
-
-                    svg {
-                      @apply mr-2;
-                    }
-                  }
-                }
-
-                .received {
-                  @apply mb-1;
-                  @apply text-gray-400;
+                  svg { @apply mr-2 text-slate-400; }
                 }
 
                 .passed {
-                  @apply w-full;
-                  @apply flex;
-                  @apply justify-start;
-                  @apply text-gray-500;
-                  @apply px-2 py-2;
-                  @apply shrink-0;
-                  @apply grow;
+                  @apply flex items-center text-sm;
 
-                  div {
-                    @apply flex;
-                    @apply flex-row;
-                    @apply justify-center;
-                    @apply items-center;
-                    @apply text-sm;
-
-                    span {
-                      @apply font-normal;
-                      font-family: Roboto, monospace !important;
-                    }
-
-                    .def-style {
-                      @apply text-gray-600;
-                      font-weight: 500;
-                    }
-
-                    .var-style {
-                      @apply text-gray-600;
-                      font-weight: 500;
-                    }
-
-                    .func-style {
-                      @apply text-gray-600;
-                      font-weight: 500;
-                    }
-
-                    .class-style {
-                      @apply text-gray-600;
-                      font-weight: 500;
-                    }
-
-                    .array-style {
-                      @apply text-gray-600;
-                      font-weight: 500;
-                    }
-
-                    svg {
-                      @apply fill-gray-400;
-                      @apply mr-1;
-                    }
+                  span {
+                    @apply font-bold text-slate-700;
+                    font-family: 'JetBrains Mono', 'Roboto Mono', monospace !important;
                   }
+
+                  svg { @apply mr-2 text-indigo-400; }
                 }
               }
             }
 
             .dumps {
-              font-family: Roboto, monospace !important;
-              @apply h-max;
-              @apply w-7/12;
-              @apply flex;
-              @apply flex-row;
-              @apply pl-1;
-              @apply rounded;
-              @apply bg-gray-200;
+              @apply rounded-xl bg-slate-900 border border-slate-800 overflow-hidden;
 
-              .quo-dump {
-                @apply bg-gray-100;
-                @apply w-1;
-                @apply h-full;
-                @apply grow;
-                @apply pl-2;
-                @apply pr-24;
-                @apply text-ellipsis;
-                min-height: 6rem;
-                font-size: .825rem;
+              .grouped-dump-wrapper {
+                @apply border-b border-slate-800/50 last:border-0;
 
-                &:not(:first-child) {
-                  @apply border-l;
-                  @apply border-gray-200;
+                &.animate-slide-in-top {
+                  animation: slideInTop 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
                 }
 
-                [class*='type-'] {
-                  font-family: Sora, sans-serif !important;
-                  @apply bg-gray-700;
-                  @apply text-white;
-                  @apply not-italic;
-                  @apply px-2 py-1;
-                  @apply rounded;
-                  @apply absolute right-0 top-0;
-                  @apply text-xs;
-                  @apply font-light;
-                  @apply select-none;
+                .quo-title {
+                  @apply flex px-4 pt-4 mb-0;
+
+                  .file {
+                    @apply flex-row items-center gap-3;
+
+                    .backtrace {
+                      @apply bg-slate-800/50 border-slate-700/50 text-slate-500 py-1 px-2;
+                      font-size: 9px;
+                      @apply uppercase tracking-tighter font-bold;
+
+                      svg { @apply w-3 h-3 text-slate-600; }
+                    }
+
+                    .passed {
+                      @apply text-xs opacity-90;
+
+                      span {
+                        @apply text-indigo-300;
+                        font-family: 'JetBrains Mono', 'Roboto Mono', monospace !important;
+                      }
+
+                      svg { @apply w-4 h-4 text-indigo-500/50; }
+                    }
+                  }
                 }
 
-                .type-string {
-                  @apply bg-lime-600;
-                }
+                .quo-dump {
+                  @apply p-4 pt-2 text-[13px] leading-relaxed text-slate-300 relative;
+                  font-family: 'JetBrains Mono', 'Roboto Mono', monospace !important;
 
-                .type-boolean {
-                  @apply bg-blue-600;
-                }
+                  .quo-title {
+                    @apply hidden;
+                  }
 
-                .type-integer {
-                  @apply bg-red-600;
-                }
+                  [class*='type-'] {
+                    @apply absolute right-4 top-2 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded opacity-40 select-none tracking-widest;
+                  }
 
-                .type-stdClass {
-                  @apply bg-violet-600;
-                }
-
-                .type-array {
-                  @apply bg-amber-600;
+                  .type-string { @apply bg-emerald-500/20 text-emerald-400; }
+                  .type-boolean { @apply bg-sky-500/20 text-sky-400; }
+                  .type-integer { @apply bg-rose-500/20 text-rose-400; }
+                  .type-stdClass { @apply bg-violet-500/20 text-violet-400; }
+                  .type-array { @apply bg-amber-500/20 text-amber-400; }
                 }
               }
             }
@@ -457,5 +266,27 @@ body {
         }
       }
     }
+  }
+
+  // Animations
+  @keyframes slideInTop {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-in-top {
+    // This is now redundant since it's nested, but keeping for general use if needed
+    animation: slideInTop 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
+  }
+
+  // Legacy/Compatibility styles if needed
+  .quo-sidebar-legacy {
+    display: none;
   }
 }
