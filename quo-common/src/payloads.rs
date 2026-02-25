@@ -3,12 +3,17 @@ use base64::engine::general_purpose::STANDARD;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct QuoPayloadVariable {
     pub var_type: String,
     
     pub name: String,
 
     pub value: String,
+
+    pub mutable: bool,
+
+    pub is_constant: bool
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]

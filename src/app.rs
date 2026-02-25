@@ -31,6 +31,7 @@ pub fn App() -> impl IntoView {
 
             match serde_wasm_bindgen::from_value::<TauriEvent<IncomingQuoPayload>>(event_obj) {
                 Ok(event) => {
+                    println!("{}", event.payload.meta.sender_origin);
                     let mut current = GetUntracked::get_untracked(&payloads);
                     current.insert(0, event.payload);
                     Set::set(&set_payloads, current);
