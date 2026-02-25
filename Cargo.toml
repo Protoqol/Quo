@@ -14,6 +14,7 @@ console_error_panic_hook = "0.1.7"
 quo-common = { path = "./quo-common" }
 leptos-use = { version = "0.18.0", features = ["storage"] }
 codee = { version = "0.3.5", features = ["json_serde"] }
+chrono = { version = "0.4.44", features = ["alloc", "unstable-locales"] }
 
 [workspace]
-members = ["quo","quo-common", "src-tauri"]
+members = ["quo", "quo-common", "src-tauri"]

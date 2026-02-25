@@ -1,3 +1,4 @@
+use chrono::{DateTime, Locale};
 use leptos::prelude::*;
 use leptos::{component, html, view, IntoView};
 use quo_common::payloads::IncomingQuoPayload;
@@ -21,10 +22,23 @@ pub fn DumpItem(dump: IncomingQuoPayload) -> impl IntoView {
     });
 
     view! {
-        <div class="bg-slate-900 text-white my-4 rounded p-4">
+        <div class="bg-slate-900 text-white my-4 rounded px-4 py-2">
             <div class="flex flex-row justify-between">
-                <h2 class="text-slate-600 font-normal">{format!("{}", dump.meta.origin)}</h2>
-                <h2 class="text-white">
+                <h2 class="text-slate-500 font-normal w-full flex flex-row justify-between items-center">
+                    <span class="bg-pink-800 rounded text-white px-2 ">
+                        {format!(" {}", dump.meta.origin)}
+                    </span>
+                    <span>
+                        {format!(
+                            " {}",
+                            DateTime::from_timestamp_millis(
+                                    dump.meta.time.trim().parse::<i64>().unwrap(),
+                                )
+                                .unwrap()
+                                .format_localized("%_d %b %H:%M:%S", Locale::nl_NL)
+                                .to_string(),
+                        )}
+                    </span>
                     {format!("{}", dump.meta.sender_origin.replace("\\", "/"))}
                 </h2>
             </div>
