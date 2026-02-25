@@ -5,6 +5,14 @@ use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
 use quo_common::payloads::IncomingQuoPayload;
 
+#[derive(Clone, PartialEq)]
+struct ToggleSetting {
+    id: String,
+    title: String,
+    description: String,
+    position: bool, // Toggle position, true = on, false = off.
+}
+
 #[component]
 pub fn SideBar() -> impl IntoView {
     let (clear_button_txt, set_clear_button_txt) = signal("Clear entries".to_string());
@@ -12,7 +20,8 @@ pub fn SideBar() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
-    let on_button_click = move |_ev: MouseEvent| {
+    // Delete all dumps from local storage.
+    let clear_dump_entries = move |_ev: MouseEvent| {
         if !payloads.get().is_empty() {
             set_clear_button_disabled.set(true);
             set_clear_button_txt.set("Clearing...".to_string());
@@ -35,6 +44,15 @@ pub fn SideBar() -> impl IntoView {
         }
     };
 
+    let toggle_settings: Vec<ToggleSetting> = vec![ToggleSetting {
+        id: "auto-group-dumps".to_string(),
+        title: "Auto group dumps".to_string(),
+        description:
+            "When dumping multiple variables at once Quo will automatically group those together."
+                .to_string(),
+        position: false,
+    }];
+
     view! {
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
@@ -51,23 +69,35 @@ pub fn SideBar() -> impl IntoView {
                             Settings
                         </span>
                     </div>
-                    <label class="flex items-center justify-between cursor-pointer group">
-                        <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
-                            Auto group dumps
-                        </span>
-                        <div class="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                id="autoGroupToggle"
-                                class="sr-only peer"
-                                checked
-                            />
-                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
-                        </div>
-                    </label>
+                    <For
+                        each=move || toggle_settings.clone()
+                        key=|setting| setting.title.clone()
+                        children=|setting: ToggleSetting| {
+                            view! {
+                                <label
+                                    class="flex items-center justify-between cursor-pointer group"
+                                    title=setting.description
+                                >
+                                    <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                                        {setting.title}
+                                    </span>
+                                    <div class="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            id="autoGroupToggle"
+                                            class="sr-only peer"
+                                            checked
+                                        />
+                                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+                                    </div>
+                                </label>
+                            }
+                        }
+                    />
+
                 </div>
                 <button
-                    on:click=on_button_click
+                    on:click=clear_dump_entries
                     type="button"
                     title="Clear all entries"
                     class="quo-btn-clear cursor-hover"
