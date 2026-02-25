@@ -124,7 +124,7 @@ body {
         @apply h-16 border-b border-slate-200 bg-white flex items-center px-8 z-10;
 
         .input-container {
-          @apply flex-1 max-w-2xl;
+          @apply flex-1 max-w-2xl mt-1;
 
           label {
             @apply relative flex items-center;
@@ -136,7 +136,7 @@ body {
 
             input {
               @apply w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl text-sm transition-all duration-200;
-              @apply focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none;
+              @apply focus:bg-white focus:border-pink-500 focus:ring-4 focus:ring-indigo-500/10 outline-none;
 
               &::placeholder {
                 @apply text-slate-500;
