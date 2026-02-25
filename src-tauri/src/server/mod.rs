@@ -38,7 +38,6 @@ async fn handle_request(
                 .unwrap());
         }
     };
-    // println!("Received payload (decoded): {}", body_str.get_raw_payload());
 
     send_to_frontend(app, body_str);
 

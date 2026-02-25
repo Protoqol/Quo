@@ -1,7 +1,18 @@
+/* Use Tailwind v3 for SCSS support. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @import 'dump';
+
+@font-face {
+  font-family: "Inter";
+  src: url("/public/fonts/Inter-Variable.ttf");
+}
+
+@font-face {
+  font-family: "Google-Sans";
+  src: url("/public/fonts/Google-Sans-Variable.ttf");
+}
 
 :root {
   font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -12,39 +23,40 @@
   -webkit-text-size-adjust: 100%;
 }
 
-
 html {
   @apply bg-slate-50;
   @apply select-none;
+  @apply h-screen;
 }
 
 body {
-  @apply w-full h-screen;
   @apply flex;
   @apply flex-col;
   @apply antialiased;
   @apply overflow-hidden;
   @apply text-slate-800;
+  @apply h-screen;
+
+  & > div {
+    @apply flex flex-col h-full;
+  }
 
   .quo-layout {
-    @apply flex flex-row w-full h-full;
+    @apply flex flex-row w-full flex-1 overflow-hidden;
 
     .quo-sidebar {
-      @apply w-64 h-full bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
+      @apply relative w-64 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
 
       .quo-sidebar-header {
-        @apply p-6 flex items-center gap-3 border-b border-slate-800;
+        @apply h-24 p-6 flex items-center gap-1 border-b bg-slate-950 border-slate-800;
 
         .quo-logo {
-          @apply text-indigo-400 transition-transform duration-300 shrink-0;
-          &:hover {
-            transform: rotate(5deg) scale(1.1);
-          }
+          @apply transition-transform duration-300 shrink-0;
         }
 
         .quo-logo-text {
-          @apply text-xl font-bold text-white;
-          letter-spacing: -0.025em;
+          @apply text-3xl font-mono font-semibold;
+          color: #ec135b;
         }
       }
 
@@ -312,7 +324,7 @@ body {
 }
 
 .titlebar {
-  @apply bg-white;
+  @apply bg-transparent;
   @apply h-[30px];
   @apply select-none;
   @apply grid;

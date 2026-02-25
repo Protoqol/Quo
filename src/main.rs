@@ -1,14 +1,19 @@
 mod app;
 mod components;
 
+use crate::components::Taskbar;
 use app::*;
 use leptos::prelude::*;
 
 fn main() {
     console_error_panic_hook::set_once();
-    mount_to_body(|| {
+
+    mount_to_body(move || {
         view! {
-            <App/>
+            <div>
+                <Taskbar />
+                <App />
+            </div>
         }
     })
 }

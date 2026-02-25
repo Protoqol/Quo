@@ -1,8 +1,9 @@
 use crate::components::DumpItem;
 use crate::components::SideBar;
 use codee::string::JsonSerdeCodec;
+use leptos::ev;
+use leptos::html;
 use leptos::prelude::*;
-use leptos::reactive::traits::{Get, GetUntracked, Set};
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use quo_common::payloads::IncomingQuoPayload;
@@ -22,6 +23,17 @@ pub fn App() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
+    let search_input_ref = NodeRef::<html::Input>::new();
+
+    window_event_listener(ev::keydown, move |ev| {
+        if ev.key() == "/" {
+            if let Some(search_input) = search_input_ref.get() {
+                ev.prevent_default();
+                let _ = search_input.focus();
+            }
+        }
+    });
+
     Effect::new(move |_| {
         let handle_event = Closure::wrap(Box::new(move |event_obj: JsValue| {
             #[derive(serde::Deserialize)]
@@ -32,9 +44,9 @@ pub fn App() -> impl IntoView {
             match serde_wasm_bindgen::from_value::<TauriEvent<IncomingQuoPayload>>(event_obj) {
                 Ok(event) => {
                     println!("{}", event.payload.meta.sender_origin);
-                    let mut current = GetUntracked::get_untracked(&payloads);
+                    let mut current = payloads.get_untracked();
                     current.insert(0, event.payload);
-                    Set::set(&set_payloads, current);
+                    set_payloads.set(current);
                 }
                 Err(_e) => {
                     // @TODO error handle
@@ -62,18 +74,14 @@ pub fn App() -> impl IntoView {
                                 viewBox="0 0 24 24"
                                 width="16"
                                 height="16"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                                fill="currentColor"
                             >
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"></path>
                             </svg>
                             <input
                                 type="text"
                                 id="search"
+                                node_ref=search_input_ref
                                 placeholder="Search payloads... (Press '/' to focus)"
                             />
                         </label>
@@ -83,25 +91,12 @@ pub fn App() -> impl IntoView {
                 <div class="quo-body">
                     <div id="quo">
                         <Show
-                            when=move || !Get::get(&payloads).is_empty()
+                            when=move || !payloads.get().is_empty()
                             fallback=|| {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="48"
-                                                height="48"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                class="mb-4 text-slate-300"
-                                            >
-                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                            </svg>
+                                            <img src="/public/boat-animation.apng" class="w-32" />
                                             <p>Waiting for incoming payloads...</p>
                                             <span class="text-xs text-slate-400 mt-2">
                                                 Dumps from your application will appear here automatically.
@@ -112,7 +107,7 @@ pub fn App() -> impl IntoView {
                             }
                         >
                             <For
-                                each=move || Get::get(&payloads)
+                                each=move || payloads.get()
                                 key=|payload| payload.meta.uid.clone()
                                 children=|payload: IncomingQuoPayload| {
                                     view! { <DumpItem dump=payload /> }

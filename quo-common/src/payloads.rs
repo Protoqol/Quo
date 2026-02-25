@@ -1,48 +1,25 @@
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
-#[serde(rename_all = "camelCase")]
 pub struct QuoPayloadVariable {
-    pub var_type: String,
-    
-    pub name: String,
-
-    pub value: String,
-
-    pub mutable: bool,
-
-    pub is_constant: bool
+    pub var_type: String,  // Type of variable
+    pub name: String,      // Name of variable
+    pub value: String,     // Value of variable
+    pub mutable: bool,     // Is variable mutable?
+    pub is_constant: bool, // Is variable a constant?
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
-#[serde(rename_all = "camelCase")]
 pub struct IncomingQuoPayloadMeta {
-    pub id: u32,
-
-    pub uid: String,
-
-    pub origin: String,
-
-    pub sender_origin: String,
-
-    pub time: String,
-
-    pub called_variable: String,
-
+    pub id: u32,               // ID
+    pub uid: String,           // Reproducible UID
+    pub origin: String,        // Project name
+    pub sender_origin: String, // Filename:line
+    pub time_epoch_ms: i64,    // Milliseconds since epoch
     pub variable: QuoPayloadVariable,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct IncomingQuoPayload {
     pub meta: IncomingQuoPayloadMeta,
-
-    pub payload: String,
-}
-
-impl IncomingQuoPayload {
-    pub fn get_raw_payload(&self) -> String {
-        String::from_utf8_lossy(&STANDARD.decode(&self.payload).unwrap()).to_string()
-    }
 }

@@ -15,6 +15,7 @@ quo-common = { path = "./quo-common" }
 leptos-use = { version = "0.18.0", features = ["storage"] }
 codee = { version = "0.3.5", features = ["json_serde"] }
 chrono = { version = "0.4.44", features = ["alloc", "unstable-locales"] }
+gloo-timers = "0.3.0"
 
 [workspace]
 members = ["quo", "quo-common", "src-tauri"]

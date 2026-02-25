@@ -1,6 +1,6 @@
 use chrono::{DateTime, Locale};
 use leptos::prelude::*;
-use leptos::{component, html, view, IntoView};
+use leptos::html;
 use quo_common::payloads::IncomingQuoPayload;
 use wasm_bindgen::prelude::*;
 
@@ -11,15 +11,17 @@ extern "C" {
 }
 
 #[component]
-#[allow(dead_code)]
 pub fn DumpItem(dump: IncomingQuoPayload) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
 
     Effect::new(move |_| {
-        if let Some(el) = code_ref.get() {
-            highlightElement(&el);
+        match code_ref.get() {
+            Some(el) => highlightElement(&el),
+            None => {}
         }
     });
+
+    // @TODO configurable locale
 
     view! {
         <div class="bg-slate-900 text-white my-4 rounded px-4 py-2">
@@ -31,18 +33,19 @@ pub fn DumpItem(dump: IncomingQuoPayload) -> impl IntoView {
                     <span>
                         {format!(
                             " {}",
-                            DateTime::from_timestamp_millis(
-                                    dump.meta.time.trim().parse::<i64>().unwrap(),
-                                )
-                                .unwrap()
-                                .format_localized("%_d %b %H:%M:%S", Locale::nl_NL)
-                                .to_string(),
+                            match DateTime::from_timestamp_millis(dump.meta.time_epoch_ms) {
+                                Some(time) => {
+                                    time.format_localized("%_d %b %H:%M:%S", Locale::nl_NL)
+                                        .to_string()
+                                }
+                                None => "-".to_string(),
+                            },
                         )}
                     </span>
                     {format!("{}", dump.meta.sender_origin.replace("\\", "/"))}
                 </h2>
             </div>
-            <pre class="monospace text-wrap">
+            <pre class="font-mono text-wrap">
                 <code
                     node_ref=code_ref
                     class="language-rust rounded select-text"
