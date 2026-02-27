@@ -55,10 +55,11 @@ pub fn SideBar() -> impl IntoView {
         position: false,
     }];
 
+    // @TODO optimise lists
     view! {
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
-                <img src="/public/animated_icon.apng" class="quo-logo w-8" />
+                <img src="/public/assets/icons/animated_icon.apng" class="quo-logo w-8" />
                 <span class="quo-logo-text">QUO</span>
             </div>
             <nav class="quo-nav">
@@ -69,7 +70,7 @@ pub fn SideBar() -> impl IntoView {
                             Click to filter
                         </small>
                     </h2>
-                    <hr class="mt-2 mb-4" />
+                    <hr class="mt-2 mb-4 border-slate-700" />
                     <For
                         each=move || {
                             let mut sorted_payloads = payloads.get().clone();

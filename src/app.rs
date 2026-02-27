@@ -96,7 +96,7 @@ pub fn App() -> impl IntoView {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <img src="/public/boat-animation.apng" class="w-32" />
+                                            <img src="/public/assets/icons/boat-animation.apng" class="w-32" />
                                             <p>Waiting for incoming payloads...</p>
                                             <span class="text-xs text-slate-400 mt-2">
                                                 Dumps from your application will appear here automatically.

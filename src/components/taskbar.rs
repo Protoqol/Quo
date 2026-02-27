@@ -26,7 +26,17 @@ pub fn Taskbar() -> impl IntoView {
     view! {
         <div class="titlebar">
             <div data-tauri-drag-region class="bg-white">
-                <div data-tauri-drag-region class="w-64 h-[30px] bg-slate-950"></div>
+                <div data-tauri-drag-region class="w-64 h-[30px] bg-slate-950 flex items-center">
+                    <svg
+                        title="Open Quo settings"
+                        class="w-5 h-5 ml-2 fill-slate-700 hover:fill-slate-600 cursor-pointer"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                    >
+                        <path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z"></path>
+                    </svg>
+                </div>
             </div>
             <div class="controls bg-white">
                 <button title="Minimize" on:click=move |_| app_window.minimize()>

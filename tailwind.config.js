@@ -5,7 +5,11 @@ module.exports = {
         fontFamily: {
             mono: ['Google-Sans', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
         },
-        extend: {},
+        extend: {
+            colors: {
+                accent: "#ec135b"
+            }
+        },
     },
     plugins: [],
 }
