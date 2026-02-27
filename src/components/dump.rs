@@ -2,8 +2,8 @@ use crate::components::LanguageIcon;
 use chrono::prelude::*;
 use chrono::Locale;
 use leptos::prelude::*;
-use leptos::{html, serde_json};
-use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use leptos::{html};
+use quo_common::payloads::{IncomingQuoPayload};
 use std::string::ToString;
 use wasm_bindgen::prelude::*;
 

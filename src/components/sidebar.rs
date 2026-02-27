@@ -1,9 +1,11 @@
 use codee::string::JsonSerdeCodec;
 use gloo_timers::callback::Timeout;
+use itertools::Itertools;
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
-use quo_common::payloads::IncomingQuoPayload;
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use crate::components::LanguageIcon;
 
 #[derive(Clone, PartialEq)]
 struct ToggleSetting {
@@ -60,7 +62,33 @@ pub fn SideBar() -> impl IntoView {
                 <span class="quo-logo-text">QUO</span>
             </div>
             <nav class="quo-nav">
-                <div id="quo-tabs-container" class="quo-origin-tabs"></div>
+                <div id="quo-tabs-container" class="quo-origin-tabs">
+                    <For
+                        each=move || {
+                            let mut sorted_payloads = payloads.get().clone();
+                            sorted_payloads.sort_by(|a, b| a.meta.origin.cmp(&b.meta.origin));
+                            sorted_payloads
+                                .into_iter()
+                                .chunk_by(|a| a.meta.origin.clone())
+                                .into_iter()
+                                .map(|(key, group)| (key, group.collect::<Vec<_>>()))
+                                .collect::<Vec<_>>()
+                        }
+                        key=|(group, _items)| group.clone()
+                        children=|(group, items): (String, Vec<IncomingQuoPayload>)| {
+                            let language: QuoPayloadLanguage = match items.first() {
+                                Some(payload) => payload.language.clone(),
+                                None => QuoPayloadLanguage::Unknown,
+                            };
+                            view! {
+                                <div class="flex flex-row gap-x-2 bg-slate-800 rounded px-2 py-2">
+                                    <LanguageIcon lang=language class="mt-[4px]".to_string() />
+                                    <p>{group}</p>
+                                </div>
+                            }
+                        }
+                    />
+                </div>
             </nav>
             <div class="quo-sidebar-footer">
                 <div class="settings-container mb-6 px-2">
