@@ -20,6 +20,21 @@ pub struct IncomingQuoPayloadMeta {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum QuoPayloadLanguage {
+    Rust,
+    Php,
+    Python,
+    Javascript,
+    Typescript,
+    Ruby,
+    Go,
+    #[default]
+    Unknown
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct IncomingQuoPayload {
     pub meta: IncomingQuoPayloadMeta,
+    pub language: QuoPayloadLanguage,
 }

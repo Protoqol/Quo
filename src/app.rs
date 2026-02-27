@@ -107,7 +107,14 @@ pub fn App() -> impl IntoView {
                             }
                         >
                             <For
-                                each=move || payloads.get()
+                                each=move || {
+                                    let mut sorted_payloads = payloads.get().clone();
+                                    sorted_payloads
+                                        .sort_by(|a, b| {
+                                            b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms)
+                                        });
+                                    sorted_payloads.into_iter()
+                                }
                                 key=|payload| payload.meta.uid.clone()
                                 children=|payload: IncomingQuoPayload| {
                                     view! { <DumpItem dump=payload /> }

@@ -1,7 +1,9 @@
+use crate::components::LanguageIcon;
 use chrono::prelude::*;
-use leptos::html;
+use chrono::Locale;
 use leptos::prelude::*;
-use quo_common::payloads::IncomingQuoPayload;
+use leptos::{html, serde_json};
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use std::string::ToString;
 use wasm_bindgen::prelude::*;
 
@@ -47,11 +49,15 @@ pub fn DumpItem(dump: IncomingQuoPayload) -> impl IntoView {
     });
 
     view! {
-        <div class="bg-slate-900 text-white my-4 rounded px-4 py-2">
-            <div class="flex flex-row justify-between">
+        <div class="bg-slate-900 text-white my-4 rounded pb-2">
+            <div class="bg-slate-950 w-full flex flex-row justify-between py-2 px-4 rounded-t">
                 <h2 class="text-slate-500 font-normal w-full flex flex-row justify-between items-center">
-                    <span class="bg-pink-800 rounded text-white px-2 ">
-                        {format!(" {}", dump.meta.origin)}
+                    <span
+                        title="Filter dumps on this origin"
+                        class="bg-slate-900 hover:bg-slate-950 rounded px-2 flex flex-row items-center justify-center gap-x-2 cursor-pointer"
+                    >
+                        <LanguageIcon lang=dump.language.clone() class="mt-[2px]".to_string() />
+                        <p>{format!(" {}", dump.meta.origin)}</p>
                     </span>
                     <span>{format!(" {}", datetime_format(dump.meta.time_epoch_ms))}</span>
                     {format!("{}", dump.meta.sender_origin.replace("\\", "/"))}
