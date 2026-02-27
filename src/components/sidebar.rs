@@ -1,3 +1,4 @@
+use crate::components::LanguageIcon;
 use codee::string::JsonSerdeCodec;
 use gloo_timers::callback::Timeout;
 use itertools::Itertools;
@@ -5,7 +6,6 @@ use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
-use crate::components::LanguageIcon;
 
 #[derive(Clone, PartialEq)]
 struct ToggleSetting {
@@ -63,6 +63,13 @@ pub fn SideBar() -> impl IntoView {
             </div>
             <nav class="quo-nav">
                 <div id="quo-tabs-container" class="quo-origin-tabs">
+                    <h2 class="text-md font-bold uppercase tracking-wider text-slate-500">
+                        Groups
+                        <small class="text-xs font-normal tracking-normal normal-case ml-2 text-slate-600">
+                            Click to filter
+                        </small>
+                    </h2>
+                    <hr class="mt-2 mb-4" />
                     <For
                         each=move || {
                             let mut sorted_payloads = payloads.get().clone();
@@ -80,10 +87,13 @@ pub fn SideBar() -> impl IntoView {
                                 Some(payload) => payload.language.clone(),
                                 None => QuoPayloadLanguage::Unknown,
                             };
+
                             view! {
-                                <div class="flex flex-row gap-x-2 bg-slate-800 rounded px-2 py-2">
+                                <div class="flex flex-row gap-x-2 border-[1px] border-transparent bg-slate-950 hover:border-slate-600 rounded px-2 py-2 cursor-pointer transition-all text-slate-500">
                                     <LanguageIcon lang=language class="mt-[4px]".to_string() />
-                                    <p>{group}</p>
+                                    <p class="font-semibold">
+                                        {format!("{} - {}", group, items.len())}
+                                    </p>
                                 </div>
                             }
                         }
