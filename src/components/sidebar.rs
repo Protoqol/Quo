@@ -59,8 +59,18 @@ pub fn SideBar() -> impl IntoView {
     view! {
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
-                <img src="/public/assets/icons/animated_icon.apng" class="quo-logo w-8" />
-                <span class="quo-logo-text">QUO</span>
+                <div class="flex flex-row">
+                    <img src="/public/assets/icons/animated_icon.apng" class="quo-logo w-10" />
+                    <span class="quo-logo-text text-white">QUO</span>
+                </div>
+                <a
+                    title="Visit protoqol.nl"
+                    href="https://protoqol.nl?referer=quo-app"
+                    target="_blank"
+                    class="text-accent font-semibold cursor-hover text-xs tracking-wider ml-6 -mt-2"
+                >
+                    Protoqol
+                </a>
             </div>
             <nav class="quo-nav">
                 <div id="quo-tabs-container" class="quo-origin-tabs">

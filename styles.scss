@@ -50,15 +50,14 @@ body {
       @apply relative w-64 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
 
       .quo-sidebar-header {
-        @apply h-24 p-6 flex items-center gap-1 border-b bg-slate-950 border-slate-800;
+        @apply h-24 pt-[35px] flex flex-col items-center justify-center border-b bg-slate-950 border-slate-800;
 
         .quo-logo {
           @apply transition-transform duration-300 shrink-0;
         }
 
         .quo-logo-text {
-          @apply text-3xl font-mono font-semibold;
-          color: #ec135b;
+          @apply text-3xl font-mono font-semibold uppercase mr-4 text-white;
         }
       }
 
