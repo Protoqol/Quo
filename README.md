@@ -2,3 +2,11 @@
 
 > Quo is undergoing a rebuild from Electron to Tauri.
 
+Components
+
+## Tauri entrypoint, server `src-tauri/`
+
+## Frontend `src/`
+
+## Quo commmon code `quo-common/`
+

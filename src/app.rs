@@ -3,9 +3,11 @@ use crate::components::SideBar;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
+use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
+use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
 use wasm_bindgen::prelude::*;
 
@@ -23,6 +25,10 @@ pub fn App() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
+    let (_server_host, set_server_host, _) =
+        use_local_storage::<String, JsonSerdeCodec>("server_host");
+    let (_server_port, set_server_port, _) = use_local_storage::<String, JsonSerdeCodec>("server_port");
+
     let search_input_ref = NodeRef::<html::Input>::new();
 
     window_event_listener(ev::keydown, move |ev| {
@@ -35,7 +41,7 @@ pub fn App() -> impl IntoView {
     });
 
     Effect::new(move |_| {
-        let handle_event = Closure::wrap(Box::new(move |event_obj: JsValue| {
+        let handle_payload_received_event = Closure::wrap(Box::new(move |event_obj: JsValue| {
             #[derive(serde::Deserialize)]
             struct TauriEvent<T> {
                 payload: T,
@@ -55,9 +61,42 @@ pub fn App() -> impl IntoView {
             };
         }) as Box<dyn FnMut(JsValue)>);
 
+        let handle_connection_established = Closure::wrap(Box::new(move |event_obj: JsValue| {
+            #[derive(serde::Deserialize)]
+            struct TauriEvent<T> {
+                payload: T,
+            }
+
+            match serde_wasm_bindgen::from_value::<TauriEvent<ConnectionEstablishedEvent>>(
+                event_obj,
+            ) {
+                Ok(event) => {
+                    let ConnectionEstablishedEvent {
+                        host,
+                        port,
+                        success,
+                    } = event.payload;
+
+                    set_server_host.set(host);
+                    set_server_port.set(port.to_string());
+
+                    if success {
+                        console_log("Connection established")
+                    } else {
+                        console_log("Connection NOT established")
+                    }
+                }
+                Err(_e) => {
+                    // @TODO error handle
+                    println!("Could not handle event `connection-established`");
+                }
+            };
+        }) as Box<dyn FnMut(JsValue)>);
+
         spawn_local(async move {
-            listen("payload-received", &handle_event).await;
-            handle_event.forget();
+            listen("payload-received", &handle_payload_received_event).await;
+            listen("connection-established", &handle_connection_established).await;
+            handle_payload_received_event.forget();
         });
     });
 
@@ -96,7 +135,10 @@ pub fn App() -> impl IntoView {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <img src="/public/assets/icons/boat-animation.apng" class="w-32" />
+                                            <img
+                                                src="/public/assets/icons/boat-animation.apng"
+                                                class="w-32"
+                                            />
                                             <p>Waiting for incoming payloads...</p>
                                             <span class="text-xs text-slate-400 mt-2">
                                                 Dumps from your application will appear here automatically.

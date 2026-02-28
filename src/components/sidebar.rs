@@ -22,6 +22,9 @@ pub fn SideBar() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
+    let (server_host, _, _) = use_local_storage::<String, JsonSerdeCodec>("server_host");
+    let (server_port, _, _) = use_local_storage::<String, JsonSerdeCodec>("server_port");
+
     // Delete all dumps from local storage.
     let clear_dump_entries = move |_ev: MouseEvent| {
         if !payloads.get().is_empty() {
@@ -110,6 +113,9 @@ pub fn SideBar() -> impl IntoView {
                         }
                     />
                 </div>
+                <span class="relative bottom-0">
+                    Listening on {format!("{}:{}", server_host.get(), server_port.get())}
+                </span>
             </nav>
             <div class="quo-sidebar-footer">
                 <div class="settings-container mb-6 px-2">

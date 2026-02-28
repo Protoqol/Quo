@@ -1,0 +1,10 @@
+use tauri::{AppHandle, Emitter};
+use quo_common::events::ConnectionEstablishedEvent;
+/*
+ * Server connection established, `connection-established` event.
+ */
+#[tauri::command]
+pub fn send_connection_info_to_frontend(app: AppHandle, data: ConnectionEstablishedEvent) {
+    println!("Sending connection-established event");
+    app.emit("connection-established", &data).unwrap();
+}

@@ -1,6 +1,7 @@
 mod events;
 mod server;
 
+use tauri::Manager;
 use crate::server::setup_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -12,5 +13,5 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running quo");
+        .expect("Tauri to start up Quo");
 }
