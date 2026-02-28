@@ -1,5 +1,6 @@
 mod app;
 mod components;
+pub mod atoms;
 
 use crate::components::Taskbar;
 use app::*;

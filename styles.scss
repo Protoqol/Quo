@@ -14,6 +14,35 @@
   src: url("/public/fonts/Google-Sans-Variable.ttf");
 }
 
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-toast-in {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+.animate-toast-out {
+  animation: fade-out 0.3s ease-in forwards;
+  overflow: hidden;
+}
+
 :root {
   font-family: 'Inter', 'Segoe UI', sans-serif;
   font-synthesis: none;
@@ -58,7 +87,7 @@ body {
 
         .quo-logo-text {
           @apply text-3xl font-mono font-semibold uppercase mr-4 text-white;
-        }
+        } 
       }
 
       .quo-nav {

@@ -1,10 +1,13 @@
+use crate::atoms::ToastType;
 use crate::components::LanguageIcon;
+use crate::toast;
 use codee::string::JsonSerdeCodec;
 use gloo_timers::callback::Timeout;
 use itertools::Itertools;
-use leptos::ev::MouseEvent;
+use leptos::ev::{MouseEvent};
 use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
+use leptos_use::{use_clipboard, UseClipboardReturn};
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 
 #[derive(Clone, PartialEq)]
@@ -17,6 +20,12 @@ struct ToggleSetting {
 
 #[component]
 pub fn SideBar() -> impl IntoView {
+    let UseClipboardReturn {
+        is_supported,
+        copy: copy_fn,
+        ..
+    } = use_clipboard();
+
     let (clear_button_txt, set_clear_button_txt) = signal("Clear entries".to_string());
     let (clear_button_disabled, set_clear_button_disabled) = signal(false);
     let (payloads, set_payloads, _) =
@@ -53,10 +62,20 @@ pub fn SideBar() -> impl IntoView {
         id: "auto-group-dumps".to_string(),
         title: "Auto group dumps".to_string(),
         description:
-            "When dumping multiple variables at once Quo will automatically group those together."
-                .to_string(),
+        "When dumping multiple variables at once Quo will automatically group those together."
+            .to_string(),
         position: false,
     }];
+
+    let copy_address = move |server_host: String, server_port: String, is_supported: bool| {
+        if !is_supported {
+            toast!("Clipboard is not available for writing", ToastType::Error);
+            return;
+        }
+
+        copy_fn(format!("{}:{}", server_host, server_port).as_str());
+        toast!("Server address copied to clipboard", ToastType::Success);
+    };
 
     // @TODO optimise lists
     view! {
@@ -114,16 +133,24 @@ pub fn SideBar() -> impl IntoView {
                     />
                 </div>
             </nav>
-            <div title="Copy Quo address" class="flex flex-row justify-center items-center w-full">
+            <div
+                title="Copy Quo address"
+                class="cursor-pointer flex flex-row justify-center items-center w-full"
+                on:click=move |_| copy_address(
+                    server_host.get(),
+                    server_port.get(),
+                    is_supported.get(),
+                )
+            >
                 <div class="flex px-2 py-1 gap-x-2 flex-row justify-center items-center text-sm text-slate-600 mb-4 bg-slate-950 rounded hover:text-slate-500">
-                    <pre class="select-text">
+                    <pre class="cursor-pointer select-text">
                         {format!("http://{}:{}", server_host.get(), server_port.get())}
                     </pre>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="currentColor"
-                        class="w-4 h-4"
+                        class="w-4 h-4 cursor-pointer"
                     >
                         <path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z"></path>
                     </svg>

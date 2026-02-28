@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+// @TODO support for extra custom fields (eg CLI env/Laravel Jobs etc.)
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct QuoPayloadVariable {
     pub var_type: String,  // Type of variable

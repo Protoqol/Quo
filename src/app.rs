@@ -1,3 +1,4 @@
+use crate::atoms::{provide_toast_context, Toaster};
 use crate::components::DumpItem;
 use crate::components::SideBar;
 use codee::string::JsonSerdeCodec;
@@ -22,6 +23,7 @@ extern "C" {
 
 #[component]
 pub fn App() -> impl IntoView {
+    provide_toast_context();
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
@@ -122,6 +124,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <div class="quo-layout">
+            <Toaster />
             <SideBar />
             <main class="quo-main">
                 <header class="quo-main-header">

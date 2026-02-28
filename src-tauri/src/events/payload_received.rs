@@ -8,4 +8,3 @@ use tauri::{AppHandle, Emitter};
 pub fn send_incoming_payload_to_frontend(app: AppHandle, data: IncomingQuoPayload) {
     app.emit("payload-received", &data).unwrap();
 }
-
