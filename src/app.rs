@@ -96,6 +96,26 @@ pub fn App() -> impl IntoView {
         spawn_local(async move {
             listen("payload-received", &handle_payload_received_event).await;
             listen("connection-established", &handle_connection_established).await;
+
+            // Fetch initial connection info after listeners are set up
+            let connection_info = invoke("get_connection_info", JsValue::NULL).await;
+            if !connection_info.is_null() && !connection_info.is_undefined() {
+                if let Ok(event) = serde_wasm_bindgen::from_value::<ConnectionEstablishedEvent>(connection_info) {
+                    let ConnectionEstablishedEvent {
+                        host,
+                        port,
+                        success,
+                    } = event;
+
+                    set_server_host.set(host);
+                    set_server_port.set(port.to_string());
+
+                    if success {
+                        console_log("Initial connection info loaded")
+                    }
+                }
+            }
+
             handle_payload_received_event.forget();
         });
     });
