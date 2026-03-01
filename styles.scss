@@ -200,14 +200,10 @@ body {
         }
 
         .quo-dump-container {
-          @apply flex flex-col bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm overflow-hidden transition-all duration-300;
+          @apply flex flex-col bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm transition-all duration-300;
 
           &:hover {
             @apply shadow-md border-slate-300;
-          }
-
-          &.animate-slide-in-top {
-            animation: slideInTop 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
           }
 
           .time {
