@@ -1,10 +1,14 @@
 mod events;
+mod invokers;
 mod server;
 
+use crate::invokers::file_action_invokers::{
+    get_available_editors, open_file, open_in_editor, show_in_explorer,
+};
 use crate::server::{get_connection_info, setup_server, ServerState};
 use quo_common::events::ConnectionEstablishedEvent;
 use std::sync::Mutex;
-use tauri::{Emitter};
+use tauri::Emitter;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,7 +17,13 @@ pub fn run() {
         .manage(ServerState(Mutex::new(
             ConnectionEstablishedEvent::default(),
         )))
-        .invoke_handler(tauri::generate_handler![get_connection_info])
+        .invoke_handler(tauri::generate_handler![
+            get_connection_info,
+            open_file,
+            show_in_explorer,
+            get_available_editors,
+            open_in_editor
+        ])
         .setup(|app| {
             setup_server(app.handle().clone());
             Ok(())

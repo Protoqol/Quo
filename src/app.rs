@@ -25,6 +25,9 @@ extern "C" {
 #[component]
 pub fn App() -> impl IntoView {
     provide_toast_context();
+
+    let search_input_ref = NodeRef::<html::Input>::new();
+
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
@@ -32,8 +35,6 @@ pub fn App() -> impl IntoView {
         use_local_storage::<String, JsonSerdeCodec>("server_host");
     let (server_port, set_server_port, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_port");
-
-    let search_input_ref = NodeRef::<html::Input>::new();
 
     let delete_payload = move |uid: String| {
         let backup = payloads.get_untracked();
@@ -112,6 +113,7 @@ pub fn App() -> impl IntoView {
             };
         }) as Box<dyn FnMut(JsValue)>);
 
+        // When app is closed remove server_host & server_port from localstorage to prevent being out-of-date
         let handle_app_exit = Closure::wrap(Box::new(move |_obj: JsValue| {
             let _ = window()
                 .local_storage()

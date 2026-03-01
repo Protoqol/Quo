@@ -76,7 +76,7 @@ body {
     @apply flex flex-row w-full flex-1 overflow-hidden;
 
     .quo-sidebar {
-      @apply relative w-64 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
+      @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
 
       .quo-sidebar-header {
         @apply h-24 pt-[35px] flex flex-col items-center justify-center border-b bg-slate-950 border-slate-800;
@@ -148,7 +148,7 @@ body {
     }
 
     .quo-main {
-      @apply flex-1 flex flex-col h-full bg-slate-50;
+      @apply flex-1 flex flex-col h-full bg-slate-50 min-w-0;
 
       .quo-main-header {
         @apply h-16 border-b border-slate-200 bg-white flex items-center px-8 z-10;
@@ -184,7 +184,7 @@ body {
         @apply flex-1 overflow-y-auto p-8;
 
         #quo {
-          @apply max-w-5xl mx-auto;
+          @apply w-full mx-auto;
 
           .empty-state {
             @apply flex flex-col items-center justify-center h-64 text-center;

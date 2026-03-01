@@ -1,5 +1,6 @@
 use quo_common::events::ConnectionEstablishedEvent;
 use tauri::{AppHandle, Emitter};
+
 /*
  * Server connection established, `connection-established` event.
  */

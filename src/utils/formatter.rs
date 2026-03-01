@@ -54,10 +54,15 @@ fn format_javascript_typescript(dump: &IncomingQuoPayload) -> String {
 fn format_php(dump: &IncomingQuoPayload) -> String {
     // @TODO find better way display type UI wise
     format!(
-        "${} = {} // {}",
+        "// @var {}\n{}{} = {}",
+        dump.meta.variable.var_type,
+        if dump.meta.variable.is_constant {
+            "const "
+        } else {
+            "$"
+        },
         dump.meta.variable.name,
         format_code_snippet(&dump.meta.variable.value, 4),
-        dump.meta.variable.var_type,
     )
 }
 
