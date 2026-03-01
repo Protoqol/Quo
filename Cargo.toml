@@ -19,4 +19,4 @@ gloo-timers = "0.3.0"
 itertools = "0.14.0"
 
 [workspace]
-members = ["quo", "quo-common", "src-tauri"]
+members = ["quo-common", "src-tauri"]
