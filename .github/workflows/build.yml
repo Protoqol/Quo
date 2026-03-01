@@ -34,6 +34,10 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: setup wasm
+        run: |
+          rustup target add wasm32-unknown-unknown
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -45,8 +49,10 @@ jobs:
         with:
           version: 'latest'
 
-      - name: install frontend dependencies
-        run: npm install
+      - name: install frontend dependencies & update caniuse
+        run: |
+          npm install
+          npx update-browserslist-db@latest
 
       - name: build app
         uses: tauri-apps/tauri-action@v0.6.1
