@@ -204,7 +204,6 @@ body {
 
           &:hover {
             @apply shadow-md border-slate-300;
-            transform: translateY(-2px);
           }
 
           &.animate-slide-in-top {
