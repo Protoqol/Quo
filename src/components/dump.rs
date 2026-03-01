@@ -1,4 +1,6 @@
+use crate::atoms::ToastType;
 use crate::components::LanguageIcon;
+use crate::toast;
 use crate::utils::formatter::format_by_language;
 use chrono::prelude::*;
 use chrono::Locale;
@@ -36,9 +38,9 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     let sender_origin = StoredValue::new(dump.meta.sender_origin.clone());
 
     let delete_uid = dump.meta.uid.clone();
-    let delete_self = move || {
+    let delete_self = StoredValue::new(move || {
         on_delete.run(delete_uid.clone());
-    };
+    });
 
     let open_default = StoredValue::new(move || {
         let path = sender_origin.get_value();
@@ -77,6 +79,14 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
         set_show_dropdown.set(false);
     });
 
+    let copy_to_clipboard = StoredValue::new(move |text: String| {
+        let window = window();
+        let navigator = window.navigator();
+        let clipboard = navigator.clipboard();
+        let _ = clipboard.write_text(&text);
+        toast!("Copied to clipboard", ToastType::Success);
+    });
+
     // Close dropdown when clicking outside
     let _ = on_click_outside(dropdown_ref, move |_| set_show_dropdown.set(false));
 
@@ -85,7 +95,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     //
 
     /// POC code formatting for larger objects
-    fn format_code(dump: &IncomingQuoPayload) -> String {
+    fn code_format(dump: &IncomingQuoPayload) -> String {
         format_by_language(&dump)
     }
 
@@ -109,6 +119,19 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
         "".to_string()
     }
 
+    /// Format file path @TODO configurable full or truncated file path
+    fn file_path_format(filepath: &String) -> String {
+        let show_full = false;
+
+        let normalized = filepath.replace("\\", "/");
+
+        if show_full {
+            normalized
+        } else {
+            normalized.split('/').last().unwrap_or("").to_string()
+        }
+    }
+
     //
     // Effects
     //
@@ -130,48 +153,57 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     });
 
     view! {
-        <div class="bg-slate-900 text-white my-4 rounded pb-2">
-            <div class="bg-slate-950 flex flex-row justify-between py-2 pl-4 pr-2 rounded-t">
+        <div class="quo-dump-container animate-slide-in-top group/item">
+            <div class="bg-slate-950 flex flex-row justify-between py-2 pl-4 pr-2 rounded-t border-b border-slate-900">
                 <div
                     data-identifier="dump_header"
                     class="text-slate-500 font-normal w-full flex flex-row justify-between items-center"
                 >
-                    <div data-identifier="dump_project" class="flex-1 shrink-0">
+                    <div data-identifier="dump_project" class="flex-none">
                         <span
                             title="Filter dumps on this origin"
-                            class="bg-slate-900 hover:bg-slate-950 rounded px-2 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-48"
+                            class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
                         >
-                            <LanguageIcon lang=dump.language.clone() class="mt-[2px]".to_string() />
-                            <p>{format!(" {}", &dump.meta.origin)}</p>
+                            {dump.meta.origin.clone()}
                         </span>
-                    </div>
-                    <div data-identifier="dump_time" class="w-48 shrink-0 text-center">
-                        <span>{format!(" {}", datetime_format(dump.meta.time_epoch_ms))}</span>
                     </div>
                     <div
                         data-identifier="dump_location"
-                        class="flex-1 min-w-0 overflow-visible relative"
+                        class="flex-1 min-w-0 overflow-visible relative ml-4"
                     >
-                        <div class="flex flex-row justify-end items-center gap-x-4">
+                        <div class="flex flex-row justify-end items-center gap-x-2">
                             <span
-                                class="text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-slate-300"
+                                class="text-sm text-slate-500 text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-slate-300 transition-colors max-w-[300px]"
                                 title=format!("{}", &dump.meta.sender_origin.replace("\\", "/"))
                                 on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
                             >
-                                {format!("{}", &dump.meta.sender_origin.replace("\\", "/"))}
+                                {file_path_format(&dump.meta.sender_origin)}
                             </span>
+                            <div
+                                class="p-1 rounded hover:bg-slate-800 cursor-pointer transition-colors"
+                                on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="w-4 h-4 text-slate-600 group-hover/item:text-slate-400 transition-colors"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                >
+                                    <path d="M12 3C10.8954 3 10 3.89543 10 5C10 6.10457 10.8954 7 12 7C13.1046 7 14 6.10457 14 5C14 3.89543 13.1046 3 12 3ZM12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10ZM12 17C10.8954 17 10 17.8954 10 19C10 20.1046 10.8954 21 12 21C13.1046 21 14 20.1046 14 19C14 17.8954 13.1046 17 12 17Z"></path>
+                                </svg>
+                            </div>
                             <Show when=move || show_dropdown.get()>
                                 <div
                                     node_ref=dropdown_ref
-                                    class="absolute top-8 right-10 bg-slate-800 border border-slate-700 rounded shadow-lg z-50 py-1 w-64 text-sm"
+                                    class="absolute top-8 right-0 bg-slate-800 border border-slate-700 rounded shadow-lg z-50 py-1 w-64 text-sm"
                                 >
                                     <div
-                                        class="flex flex-row items-center gap-x-1 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
                                         on:click=move |_| show_in_explorer.get_value()()
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4"
+                                            class="w-4 h-4 opacity-70"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
@@ -180,12 +212,12 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                         "Show in explorer"
                                     </div>
                                     <div
-                                        class="flex flex-row items-center gap-x-1 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
                                         on:click=move |_| open_default.get_value()()
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4"
+                                            class="w-4 h-4 opacity-70"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
@@ -221,11 +253,11 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
 
                                             view! {
                                                 <div
-                                                    class="flex flex-row items-center gap-x-1 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                                    class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
                                                     on:click=move |_| open_in_editor.get_value()(cmd.clone())
                                                 >
                                                     <img
-                                                        class="w-4 h-4"
+                                                        class="w-4 h-4 opacity-70"
                                                         src=format!("/public/assets/editor_icons/{}.svg", id)
                                                     />
                                                     {format!("Open in {}", name)}
@@ -233,39 +265,79 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                             }
                                         }
                                     />
+                                    <div class="border-t border-slate-700 my-1"></div>
+                                    <div
+                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-red-900/30 cursor-pointer text-red-400"
+                                        on:click=move |_| {
+                                            delete_self.get_value()();
+                                            set_show_dropdown.set(false);
+                                        }
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            class="w-4 h-4"
+                                        >
+                                            <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM13.4142 13.9997L15.182 12.232L13.7678 10.8178L12 12.5855L10.2322 10.8178L8.81802 12.232L10.5858 13.9997L8.81802 15.7675L10.2322 17.1817L12 15.4139L13.7678 17.1817L15.182 15.7675L13.4142 13.9997ZM9 4V6H15V4H9Z"></path>
+                                        </svg>
+                                        "Delete dump"
+                                    </div>
                                 </div>
                             </Show>
-                            <span
-                                title="Delete this dump"
-                                class="opacity-50 hover:opacity-100 bg-red-800 text-slate-200 hover:bg-red-600 hover:text-white p-1 rounded transition-all cursor-pointer"
-                                on:click=move |_| delete_self()
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    class="w-4 h-4"
-                                >
-                                    <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM13.4142 13.9997L15.182 12.232L13.7678 10.8178L12 12.5855L10.2322 10.8178L8.81802 12.232L10.5858 13.9997L8.81802 15.7675L10.2322 17.1817L12 15.4139L13.7678 17.1817L15.182 15.7675L13.4142 13.9997ZM9 4V6H15V4H9Z"></path>
-                                </svg>
-                            </span>
                         </div>
                     </div>
                 </div>
             </div>
-            <pre class="font-mono text-wrap">
-                <code
-                    node_ref=code_ref
-                    class=format!(
-                        "language-{} language-rust rounded select-text",
-                        serde_json::to_string(&dump.language).unwrap().replace("\"", ""),
-                    )
-                    style="background: transparent !important;"
-                >
-                    {format_code(&dump)}
-                </code>
-            </pre>
+            <div class="relative group">
+                <div class="absolute right-4 top-2 z-10 flex flex-row items-center gap-x-2">
+                    <div class="flex flex-row items-center gap-x-1.5 bg-slate-950/80 backdrop-blur-sm border border-slate-800/50 px-2 py-1 rounded-lg text-[10px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
+                        <img
+                            class="w-3 h-3 opacity-50"
+                            src="/public/assets/icons/animated_clock.apng"
+                        />
+                        {format!("{}", datetime_format(dump.meta.time_epoch_ms))}
+                    </div>
+                </div>
+                <pre class="font-mono text-wrap relative bg-slate-900">
+                    <div class="absolute left-4 top-4 pointer-events-none">
+                        <LanguageIcon
+                            lang=dump.language.clone()
+                            class="w-10 h-10 opacity-[0.03]".to_string()
+                        />
+                    </div>
+                    <span
+                        title="Copy code to clipboard"
+                        class="absolute bottom-4 right-4 z-10 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white p-1.5 rounded-lg shadow-sm border border-slate-700/50 cursor-pointer transition-all opacity-50 group-hover:opacity-100"
+                        on:click={
+                            let content = code_format(&dump);
+                            move |_| copy_to_clipboard.get_value()(content.clone())
+                        }
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            class="w-3.5 h-3.5"
+                        >
+                            <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM9 4V6H15V4H9ZM18 8H10V18H18V8ZM14 11H16V13H14V11ZM14 14H16V16H14V14ZM11 11H13V13H11V11ZM11 14H13V16H11V14Z"></path>
+                        </svg>
+                    </span>
+                    <code
+                        node_ref=code_ref
+                        class=format!(
+                            "language-{} rounded-b select-text block px-4 py-4",
+                            serde_json::to_string(&dump.language)
+                                .unwrap()
+                                .replace("\"", "")
+                                .to_lowercase(),
+                        )
+                        style="background: transparent !important;"
+                    >
+                        {code_format(&dump)}
+                    </code>
+                </pre>
+            </div>
         </div>
     }
 }

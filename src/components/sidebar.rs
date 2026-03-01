@@ -60,21 +60,29 @@ pub fn SideBar(
 
     let toggle_settings: Vec<ToggleSetting> = vec![
         ToggleSetting {
-        id: "auto-group-dumps".to_string(),
-        title: "Auto group dumps".to_string(),
-        description:
-            "When dumping multiple variables at once Quo will automatically group those together."
-                .to_string(),
-        position: false,
-    },
-    ToggleSetting {
-        id: "auto-expand".to_string(),
-        title: "Collapse data".to_string(),
-        description:
-            "Automatically expand larger data structures"
-                .to_string(),
-        position: true,
-    }
+            id: "auto-group-dumps".to_string(),
+            title: "Auto group dumps".to_string(),
+            description:
+                "When dumping multiple variables at once Quo will automatically group those together."
+                    .to_string(),
+            position: false,
+        },
+        ToggleSetting {
+            id: "auto-expand".to_string(),
+            title: "Collapse data".to_string(),
+            description:
+                "Automatically expand larger data structures"
+                    .to_string(),
+            position: true,
+        },
+        ToggleSetting {
+            id: "long-file-path".to_string(),
+            title: "Show full file path".to_string(),
+            description:
+                "Show full file path instead of the truncated version"
+                    .to_string(),
+            position: false,
+        }
     ];
 
     let copy_address = move |server_host: String, server_port: String, is_supported: bool| {
@@ -84,7 +92,7 @@ pub fn SideBar(
         }
 
         copy_fn(format!("{}:{}", server_host, server_port).as_str());
-        toast!("Server address copied to clipboard", ToastType::Success);
+        toast!("Copied to clipboard", ToastType::Success);
     };
 
     // @TODO optimise lists
@@ -187,7 +195,7 @@ pub fn SideBar(
                         children=|setting: ToggleSetting| {
                             view! {
                                 <label
-                                    class="flex items-center justify-between cursor-pointer group mb-2"
+                                    class="flex items-center justify-between cursor-pointer group mb-3"
                                     title=setting.description
                                 >
                                     <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">

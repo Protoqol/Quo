@@ -76,6 +76,8 @@ pub async fn show_in_explorer(path: String) {
 pub async fn get_available_editors() -> Vec<Editor> {
     let mut editors = Vec::new();
 
+    // @TODO Jetbrain toolbox scripts support
+
     #[cfg(target_os = "windows")]
     {
         // VS Code
