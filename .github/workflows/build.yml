@@ -38,6 +38,11 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
 
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -56,6 +61,8 @@ jobs:
 
       - name: build app
         uses: tauri-apps/tauri-action@v0.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: quo-v__VERSION__
           releaseName: 'Quo v__VERSION__'
