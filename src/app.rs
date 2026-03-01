@@ -1,6 +1,7 @@
-use crate::atoms::{provide_toast_context, Toaster};
+use crate::atoms::{provide_toast_context, ToastType, Toaster};
 use crate::components::DumpItem;
 use crate::components::SideBar;
+use crate::toast;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
@@ -27,11 +28,27 @@ pub fn App() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
-    let (_server_host, set_server_host, _) =
+    let (server_host, set_server_host, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_host");
-    let (_server_port, set_server_port, _) = use_local_storage::<String, JsonSerdeCodec>("server_port");
+    let (server_port, set_server_port, _) =
+        use_local_storage::<String, JsonSerdeCodec>("server_port");
 
     let search_input_ref = NodeRef::<html::Input>::new();
+
+    let delete_payload = move |uid: String| {
+        let backup = payloads.get_untracked();
+        let mut current = payloads.get_untracked();
+        current.retain(|p| p.meta.uid != uid);
+        let to_compare = current.clone();
+        set_payloads.set(current);
+
+        if (backup.len() - 1) == to_compare.len() {
+            toast!("Dump was deleted", ToastType::Success)
+        } else {
+            // @TODO check why
+            toast!("Dump not deleted", ToastType::Error)
+        }
+    };
 
     window_event_listener(ev::keydown, move |ev| {
         if ev.key() == "/" {
@@ -95,14 +112,30 @@ pub fn App() -> impl IntoView {
             };
         }) as Box<dyn FnMut(JsValue)>);
 
+        let handle_app_exit = Closure::wrap(Box::new(move |_obj: JsValue| {
+            let _ = window()
+                .local_storage()
+                .unwrap()
+                .unwrap()
+                .remove_item("server_host");
+            let _ = window()
+                .local_storage()
+                .unwrap()
+                .unwrap()
+                .remove_item("server_port");
+        }) as Box<dyn FnMut(JsValue)>);
+
         spawn_local(async move {
             listen("payload-received", &handle_payload_received_event).await;
             listen("connection-established", &handle_connection_established).await;
+            listen("app-exit", &handle_app_exit).await;
 
             // Fetch initial connection info after listeners are set up
             let connection_info = invoke("get_connection_info", JsValue::NULL).await;
             if !connection_info.is_null() && !connection_info.is_undefined() {
-                if let Ok(event) = serde_wasm_bindgen::from_value::<ConnectionEstablishedEvent>(connection_info) {
+                if let Ok(event) =
+                    serde_wasm_bindgen::from_value::<ConnectionEstablishedEvent>(connection_info)
+                {
                     let ConnectionEstablishedEvent {
                         host,
                         port,
@@ -119,13 +152,15 @@ pub fn App() -> impl IntoView {
             }
 
             handle_payload_received_event.forget();
+            handle_connection_established.forget();
+            handle_app_exit.forget();
         });
     });
 
     view! {
         <div class="quo-layout">
             <Toaster />
-            <SideBar />
+            <SideBar server_host server_port />
             <main class="quo-main">
                 <header class="quo-main-header">
                     <div class="input-container">
@@ -181,8 +216,13 @@ pub fn App() -> impl IntoView {
                                     sorted_payloads.into_iter()
                                 }
                                 key=|payload| payload.meta.uid.clone()
-                                children=|payload: IncomingQuoPayload| {
-                                    view! { <DumpItem dump=payload /> }
+                                children=move |payload: IncomingQuoPayload| {
+                                    view! {
+                                        <DumpItem
+                                            dump=payload
+                                            on_delete=Callback::new(delete_payload)
+                                        />
+                                    }
                                 }
                             />
                         </Show>

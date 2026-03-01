@@ -6,5 +6,5 @@ use tauri::{AppHandle, Emitter};
 #[tauri::command]
 pub fn send_connection_info_to_frontend(app: AppHandle, data: ConnectionEstablishedEvent) {
     println!("Sending connection-established event");
-    app.emit("connection-established", &data).unwrap();
+    let _ = app.emit("connection-established", &data);
 }

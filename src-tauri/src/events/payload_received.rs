@@ -6,5 +6,5 @@ use tauri::{AppHandle, Emitter};
  */
 #[tauri::command]
 pub fn send_incoming_payload_to_frontend(app: AppHandle, data: IncomingQuoPayload) {
-    app.emit("payload-received", &data).unwrap();
+    let _ = app.emit("payload-received", &data);
 }

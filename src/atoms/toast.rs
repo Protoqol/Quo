@@ -1,6 +1,6 @@
+use gloo_timers::future::sleep;
 use leptos::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use gloo_timers::future::sleep;
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
 
@@ -34,7 +34,7 @@ pub fn add_toast(text: String, toast_type: ToastType) {
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
     if let Some(set_toasts) = use_context::<WriteSignal<Vec<ToastMessage>>>() {
         let visible = RwSignal::new(true);
-        
+
         set_toasts.update(|toasts| {
             toasts.push(ToastMessage {
                 id,
@@ -44,14 +44,12 @@ pub fn add_toast(text: String, toast_type: ToastType) {
             });
         });
 
-        // Start fade out after 1500ms
         leptos::task::spawn_local(async move {
             sleep(std::time::Duration::from_millis(1500)).await;
             visible.set(false);
-            
-            // Wait for fade out animation (300ms) before removing from DOM
+
             sleep(std::time::Duration::from_millis(300)).await;
-            
+
             set_toasts.update(|toasts| {
                 toasts.retain(|t| t.id != id);
             });
@@ -70,9 +68,8 @@ pub fn remove_toast(id: usize) {
 #[component]
 pub fn Toast(message: ToastMessage) -> impl IntoView {
     let id = message.id;
-    let visible = message.visible;
     let text = message.text.clone();
-    
+
     let icon = match message.toast_type {
         ToastType::Success => view! {
             <svg

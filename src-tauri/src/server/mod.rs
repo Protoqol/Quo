@@ -7,7 +7,7 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
-use port_check::{free_local_port_in_range, is_port_reachable};
+use port_check::{free_local_port_in_range};
 use quo_common::events::ConnectionEstablishedEvent;
 use std::net::SocketAddr;
 use std::sync::Mutex;

@@ -4,7 +4,7 @@ mod server;
 use crate::server::{get_connection_info, setup_server, ServerState};
 use quo_common::events::ConnectionEstablishedEvent;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -17,6 +17,11 @@ pub fn run() {
         .setup(|app| {
             setup_server(app.handle().clone());
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                let _ = window.emit("app-exit", ());
+            }
         })
         .run(tauri::generate_context!())
         .expect("Tauri to start up Quo");
