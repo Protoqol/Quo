@@ -87,7 +87,7 @@ body {
 
         .quo-logo-text {
           @apply text-3xl font-mono font-semibold uppercase mr-4 text-white;
-        } 
+        }
       }
 
       .quo-nav {
@@ -212,6 +212,14 @@ body {
 
             a {
               @apply text-indigo-500 hover:text-indigo-600 transition-colors lowercase font-mono text-xs;
+            }
+          }
+
+          .code_dump {
+            pre {
+              @apply bg-transparent;
+              background: transparent !important;
+              background-color: transparent !important;
             }
           }
 

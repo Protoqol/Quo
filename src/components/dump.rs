@@ -8,15 +8,22 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos::{html, serde_json};
 use leptos_use::on_click_outside;
-use quo_common::payloads::IncomingQuoPayload;
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use std::string::ToString;
+use std::sync::OnceLock;
+use syntect::highlighting::{Theme, ThemeSet};
+use syntect::html::highlighted_html_for_string;
+use syntect::parsing::SyntaxSet;
 use wasm_bindgen::prelude::*;
+
+static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
+static THEME: OnceLock<Theme> = OnceLock::new();
+
+// @TODO configurable
+const CODE_THEME: &[u8] = include_bytes!("../syntec_themes/Vision_(colorblind).tmTheme");
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = hljs)]
-    fn highlightElement(el: &leptos::web_sys::Element);
-
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
@@ -37,8 +44,10 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     let (available_editors, set_available_editors) = signal::<Vec<serde_json::Value>>(vec![]);
 
     let is_fresh = {
-        let dump_time = DateTime::from_timestamp_millis(dump.meta.time_epoch_ms).unwrap_or_else(|| Local::now().with_timezone(&Utc).into());
-        let (fresh, set_fresh) = signal(Utc::now().signed_duration_since(dump_time) < Duration::seconds(15));
+        let dump_time = DateTime::from_timestamp_millis(dump.meta.time_epoch_ms)
+            .unwrap_or_else(|| Local::now().with_timezone(&Utc).into());
+        let (fresh, set_fresh) =
+            signal(Utc::now().signed_duration_since(dump_time) < Duration::seconds(15));
 
         if fresh.get_untracked() {
             Effect::new(move |_| {
@@ -47,13 +56,15 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                         .set_timeout_with_callback_and_timeout_and_arguments_0(
                             &Closure::wrap(Box::new(move || {
                                 let current_age = Utc::now().signed_duration_since(dump_time);
-                                
+
                                 if current_age >= Duration::seconds(15) {
                                     set_fresh.set(false);
                                 } else {
                                     set_fresh.set(true);
                                 }
-                            }) as Box<dyn FnMut()>).into_js_value().unchecked_into(),
+                            }) as Box<dyn FnMut()>)
+                            .into_js_value()
+                            .unchecked_into(),
                             1000,
                         )
                         .unwrap();
@@ -76,7 +87,6 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
 
     let open_default = StoredValue::new(move || {
         // @TODO check if file exists use std::fs; assert!(!fs::exists("does_not_exist.txt").expect("Can't check existence of file does_not_exist.txt"));
-
         let path = sender_origin.get_value();
         spawn_local(async move {
             invoke(
@@ -130,7 +140,31 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
 
     /// POC code formatting for larger objects
     fn code_format(dump: &IncomingQuoPayload) -> String {
-        format_by_language(&dump)
+        let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
+        let theme = THEME.get_or_init(|| {
+            let mut cursor = std::io::Cursor::new(CODE_THEME);
+            ThemeSet::load_from_reader(&mut cursor).expect("Failed to load embedded theme")
+        });
+
+        let syntax = ss.find_syntax_by_extension("php").unwrap();
+        let code = format!("<?php {}", format_by_language(&dump));
+
+        let html = highlighted_html_for_string(&code, &ss, syntax, theme).unwrap();
+
+        if dump.language == QuoPayloadLanguage::Php {
+            if let Some(pos) = html.find("&lt;?php") {
+                if let Some(start_span) = html[..pos].rfind("<span") {
+                    if let Some(end_span) = html[pos..].find("</span>") {
+                        let mut result = html.clone();
+                        result.replace_range(start_span..pos + end_span + 7, "");
+                        return result;
+                    }
+                }
+            }
+            return html.replace("&lt;?php", "");
+        }
+
+        html
     }
 
     /// Pretty datetime formatting
@@ -180,11 +214,6 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                 set_available_editors.set(editors_vec);
             }
         });
-    });
-
-    Effect::new(move |_| match code_ref.get() {
-        Some(el) => highlightElement(&el),
-        None => {}
     });
 
     view! {
@@ -340,7 +369,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                         {format!("{}", datetime_format(dump.meta.time_epoch_ms))}
                     </div>
                 </div>
-                <pre class="font-mono text-wrap relative bg-slate-900 rounded-b">
+                <div class="font-mono text-wrap relative bg-slate-900 rounded-b">
                     <div class="absolute left-4 top-4 pointer-events-none">
                         <LanguageIcon
                             lang=dump.language.clone()
@@ -374,18 +403,11 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                     </span>
                     <code
                         node_ref=code_ref
-                        class=format!(
-                            "language-{} rounded-b-2xl select-text block px-4 py-4",
-                            serde_json::to_string(&dump.language)
-                                .unwrap()
-                                .replace("\"", "")
-                                .to_lowercase(),
-                        )
-                        style="background: transparent !important;"
+                        class="code_dump select-text block px-4 py-4 text-wrap"
+                        inner_html=code_format(&dump)
                     >
-                        {code_format(&dump)}
                     </code>
-                </pre>
+                </div>
             </div>
         </div>
     }
