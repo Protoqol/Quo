@@ -111,5 +111,5 @@ quo([userId, username]);
 
 ## License
 
-Quo is open-source software licensed under the [MIT license](LICENSE).
+Quo is open-source software licensed under the [GPL-3 license](.github/LICENSE).
 
