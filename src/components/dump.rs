@@ -138,7 +138,6 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     // Functions
     //
 
-    /// POC code formatting for larger objects
     fn code_format(dump: &IncomingQuoPayload) -> String {
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
@@ -146,8 +145,18 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
             ThemeSet::load_from_reader(&mut cursor).expect("Failed to load embedded theme")
         });
 
-        let syntax = ss.find_syntax_by_extension("php").unwrap();
-        let code = format!("<?php {}", format_by_language(&dump));
+        let syntax = ss.find_syntax_by_extension("rs").unwrap();
+
+        let code = match dump.language {
+            QuoPayloadLanguage::Php => format!("<?php\n{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Rust => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Python => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Javascript => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Typescript => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Ruby => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Go => format!("{}", format_by_language(&dump)),
+            QuoPayloadLanguage::Unknown => format!("{}", format_by_language(&dump)),
+        };
 
         let html = highlighted_html_for_string(&code, &ss, syntax, theme).unwrap();
 
@@ -161,7 +170,8 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                     }
                 }
             }
-            return html.replace("&lt;?php", "");
+
+            return html.replace("&lt;?php", "").replace("<?php", "");
         }
 
         html

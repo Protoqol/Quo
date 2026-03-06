@@ -1,9 +1,10 @@
 [package]
 name = "quo-client"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Quo debugger"
 edition = "2021"
+authors = ["Protoqol <open-source@protoqol.nl"]
+license = "GPL-3"
 
 [lib]
 name = "quo_debugging_client_lib"
