@@ -8,6 +8,7 @@ use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
 use leptos_use::{use_clipboard, UseClipboardReturn};
+use quo_rust::quo;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 
 #[derive(Clone, PartialEq)]
@@ -90,6 +91,8 @@ pub fn SideBar(
             toast!("Clipboard is not available for writing", ToastType::Error);
             return;
         }
+
+        quo!(server_host);
 
         copy_fn(format!("{}:{}", server_host, server_port).as_str());
         toast!("Copied to clipboard", ToastType::Success);
