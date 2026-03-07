@@ -92,8 +92,6 @@ pub fn SideBar(
             return;
         }
 
-        quo!(server_host);
-
         copy_fn(format!("{}:{}", server_host, server_port).as_str());
         toast!("Copied to clipboard", ToastType::Success);
     };
