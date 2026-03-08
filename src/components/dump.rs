@@ -369,7 +369,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                     </div>
                 </div>
             </div>
-            <div class="relative group">
+            <div class="relative group overflow-x-scroll bg-slate-900">
                 <div class="absolute right-4 top-2 z-10 flex flex-row items-center gap-x-2">
                     <div class="flex flex-row items-center gap-x-1.5 bg-slate-950/80 backdrop-blur-sm border border-slate-800/50 px-2 py-1 rounded-lg text-[10px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
                         <img

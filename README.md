@@ -33,8 +33,8 @@ Use the `quo-rust` crate to send variables with simple macro calls.
 Add `quo-rust` to your `Cargo.toml`:
 
 ```toml
-[dependencies]
-quo-rust = "0.1.0"
+[dev-dependencies]
+quo = { version = "0.1.7", package = "quo-rust" }
 ```
 
 ### Quick Start
@@ -42,14 +42,23 @@ quo-rust = "0.1.0"
 Import the macro and pass variables to inspect:
 
 ```rust
-use quo_rust::quo;
+use quo::quo;
+
+#[derive(Debug)]
+struct User {
+    id: u32,
+    username: String,
+}
 
 fn main() {
     let user_id = 42;
-    let username = "dev_user";
-    
+    let user = User { id: 1, username: "jdoe".to_string() };
+
+    // Dump a single variable
+    quo!(user_id);
+
     // Dump multiple variables at once
-    quo!([user_id, username]);
+    quo!(user_id, user);
 }
 ```
 

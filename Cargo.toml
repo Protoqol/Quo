@@ -21,7 +21,8 @@ gloo-timers = "0.3.0"
 itertools = "0.14.0"
 syntect = { version = "5.3.0", default-features = false, features = ["default-fancy"] }
 rust-format = "0.3"
-quo-rust = "0.1.6"
+quo = { version = "0.1.8", package = "quo-rust" }
+# quo = { path = "../../Quo-rust", package = "quo-rust", features = ["hashing"]}
 
 [workspace]
 members = ["quo-common", "src-tauri"]

@@ -2,7 +2,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'dump';
 
 @font-face {
   font-family: "Inter";
@@ -54,8 +53,41 @@
   @apply transition-all;
 }
 
+* {
+  --sb-track-color: #0f172a;
+  --sb-thumb-color: #ec135b;
+  --sb-size: 8px;
+}
+
+*::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  @apply rounded;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-slate-700;
+  @apply border-none;
+  @apply rounded;
+
+
+  &:hover {
+    @apply bg-slate-600;
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
+
 html {
-  @apply bg-slate-50;
+  @apply bg-slate-950;
   @apply select-none;
   @apply h-screen;
 }
@@ -148,16 +180,16 @@ body {
     }
 
     .quo-main {
-      @apply flex-1 flex flex-col h-full bg-slate-50 min-w-0;
+      @apply flex-1 flex flex-col h-full bg-slate-800 min-w-0;
 
       .quo-main-header {
-        @apply h-16 border-b border-slate-200 bg-white flex items-center px-8 z-10;
+        @apply h-16 border-b border-slate-700 bg-slate-950 flex items-center px-8 z-10;
 
         .input-container {
-          @apply flex-1 max-w-2xl mt-1;
+          @apply flex-1 max-w-2xl mt-1 ;
 
           label {
-            @apply relative flex items-center;
+            @apply relative flex items-center ;
 
             .search-icon {
               @apply absolute left-3 text-slate-400;
@@ -165,7 +197,7 @@ body {
             }
 
             input {
-              @apply w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl text-sm transition-all duration-200;
+              @apply w-full pl-10 pr-4 py-2 bg-slate-800 border border-transparent rounded-xl text-sm transition-all duration-200;
               @apply focus:bg-white focus:border-pink-500 focus:ring-4 focus:ring-indigo-500/10 outline-none;
 
               &::placeholder {
@@ -200,7 +232,7 @@ body {
         }
 
         .quo-dump-container {
-          @apply flex flex-col bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm transition-all duration-300;
+          @apply flex flex-col rounded-2xl mb-6 shadow-sm transition-all duration-300;
 
           &:hover {
             @apply shadow-md border-slate-300;
@@ -367,6 +399,16 @@ body {
     @apply flex;
   }
 
+  #titlebar-close {
+    &:hover {
+      @apply bg-red-500;
+
+      svg {
+        @apply fill-white;
+      }
+    }
+  }
+
   button {
     @apply appearance-none;
     @apply p-0;
@@ -383,21 +425,12 @@ body {
     }
 
     &:hover {
-      @apply bg-slate-200;
+      @apply bg-slate-900;
 
       svg {
-        @apply fill-slate-800;
+        @apply fill-slate-400;
       }
     }
   }
 
-  #titlebar-close {
-    &:hover {
-      @apply bg-red-500;
-
-      svg {
-        @apply fill-white;
-      }
-    }
-  }
 }

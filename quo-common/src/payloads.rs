@@ -4,21 +4,46 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct QuoPayloadVariable {
-    pub var_type: String,  // Type of variable
-    pub name: String,      // Name of variable
-    pub value: String,     // Value of variable
-    pub mutable: bool,     // Is variable mutable?
-    pub is_constant: bool, // Is variable a constant?
+    pub var_type: String,
+    pub name: String,
+    pub value: String,
+    pub is_mutable: bool,
+    pub is_constant: bool,
+    pub is_expression: bool,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_address: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grouping_hash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct IncomingQuoPayloadMeta {
-    pub id: u32,               // ID
-    pub uid: String,           // Reproducible UID
-    pub origin: String,        // Project name
-    pub sender_origin: String, // Filename:line
-    pub time_epoch_ms: i64,    // Milliseconds since epoch
+    pub id: u32,
+    pub uid: String,
+    pub origin: String,
+    pub sender_origin: String,
+    pub time_epoch_ms: i64,
     pub variable: QuoPayloadVariable,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stack_trace: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thread_info: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runtime: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cpu_usage: Option<f32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_usage: Option<u64>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_function: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]

@@ -199,7 +199,7 @@ pub fn App() -> impl IntoView {
                                                 src="/public/assets/icons/boat-animation.apng"
                                                 class="w-32"
                                             />
-                                            <p>Waiting for incoming payloads...</p>
+                                            <p class="text-white">Waiting for incoming payloads...</p>
                                             <span class="text-xs text-slate-400 mt-2">
                                                 Dumps from your application will appear here automatically.
                                             </span>

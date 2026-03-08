@@ -25,3 +25,6 @@ hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 http-body-util = "0.1"
 quo-common = { path = "../quo-common" }
+
+[dev-dependencies]
+quo = { version = "0.1.7", package = "quo-rust" }

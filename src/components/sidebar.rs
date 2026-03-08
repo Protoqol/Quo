@@ -1,4 +1,5 @@
 use crate::atoms::ToastType;
+use crate::atoms::TestDump;
 use crate::components::LanguageIcon;
 use crate::toast;
 use codee::string::JsonSerdeCodec;
@@ -8,7 +9,6 @@ use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_use::storage::use_local_storage;
 use leptos_use::{use_clipboard, UseClipboardReturn};
-use quo_rust::quo;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 
 #[derive(Clone, PartialEq)]
@@ -152,6 +152,7 @@ pub fn SideBar(
                     />
                 </div>
             </nav>
+            <TestDump/>
             <div
                 title="Copy Quo address"
                 class="cursor-pointer flex flex-row justify-center items-center w-full"
