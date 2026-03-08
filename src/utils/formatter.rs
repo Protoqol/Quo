@@ -15,11 +15,15 @@ pub fn format_by_language(dump: &IncomingQuoPayload) -> String {
 
 fn format_rust(dump: &IncomingQuoPayload) -> String {
     let declaration = format!(
-        "{} {}: {} = {}",
-        if dump.meta.variable.is_constant {
-            "const"
+        "{}{}: {} = {}",
+        if dump.meta.variable.is_expression {
+            ""
         } else {
-            "let"
+            if dump.meta.variable.is_constant {
+                "const " // The space is important.
+            } else {
+                "let " // The space is important.
+            }
         },
         dump.meta.variable.name,
         dump.meta.variable.var_type,

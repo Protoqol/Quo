@@ -9,6 +9,7 @@ use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
+use quo::quo;
 use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
 use wasm_bindgen::prelude::*;
@@ -61,6 +62,7 @@ pub fn App() -> impl IntoView {
     });
 
     Effect::new(move |_| {
+
         let handle_payload_received_event = Closure::wrap(Box::new(move |event_obj: JsValue| {
             #[derive(serde::Deserialize)]
             struct TauriEvent<T> {

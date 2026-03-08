@@ -108,10 +108,14 @@ body {
     @apply flex flex-row w-full flex-1 overflow-hidden;
 
     .quo-sidebar {
-      @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 select-none;
+      @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col select-none;
+
+      @media (max-width: 720px) {
+        display: none !important;
+      }
 
       .quo-sidebar-header {
-        @apply h-24 pt-[35px] flex flex-col items-center justify-center border-b bg-slate-950 border-slate-800;
+        @apply h-[94px] pt-[32px] flex flex-col items-center justify-center border-b bg-slate-950 border-slate-800 border-r-0;
 
         .quo-logo {
           @apply transition-transform duration-300 shrink-0;
