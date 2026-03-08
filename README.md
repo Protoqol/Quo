@@ -24,43 +24,9 @@ Integrating Quo into your workflow is a simple two-step process.
 
 ---
 
-## Rust (work in progress)
+## Rust [`quo-rust`](https://github.com/Protoqol/Quo-rust)
 
-Use the `quo-rust` crate to send variables with simple macro calls.
-
-### Installation
-
-Add `quo-rust` to your `Cargo.toml`:
-
-```toml
-[dev-dependencies]
-quo = { version = "0.1.7", package = "quo-rust" }
-```
-
-### Quick Start
-
-Import the macro and pass variables to inspect:
-
-```rust
-use quo::quo;
-
-#[derive(Debug)]
-struct User {
-    id: u32,
-    username: String,
-}
-
-fn main() {
-    let user_id = 42;
-    let user = User { id: 1, username: "jdoe".to_string() };
-
-    // Dump a single variable
-    quo!(user_id);
-
-    // Dump multiple variables at once
-    quo!(user_id, user);
-}
-```
+Use the `quo-rust` crate to send variables with simple macro calls. 
 
 ---
 
