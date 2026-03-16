@@ -25,7 +25,7 @@ pub fn Taskbar() -> impl IntoView {
 
     view! {
         <div class="titlebar">
-            <div data-tauri-drag-region class="bg-white">
+            <div data-tauri-drag-region class="bg-slate-950">
                 <div
                     data-tauri-drag-region
                     class="w-64 h-[30px] bg-slate-950 flex items-center justify-between px-2"
@@ -55,7 +55,7 @@ pub fn Taskbar() -> impl IntoView {
                     </a>
                 </div>
             </div>
-            <div class="controls bg-white">
+            <div class="controls bg-slate-950">
                 <button title="Minimize" on:click=move |_| app_window.minimize()>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@ pub fn Taskbar() -> impl IntoView {
                         <path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"></path>
                     </svg>
                 </button>
-                <button title="Close" on:click=move |_| app_window_close.close()>
+                <button id="titlebar-close" title="Close" on:click=move |_| app_window_close.close()>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"

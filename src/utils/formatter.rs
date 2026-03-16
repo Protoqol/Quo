@@ -1,5 +1,5 @@
-/// NOTE: these code formatters were written with the help of an AI assistant.
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use rust_format::{Formatter, RustFmt};
 
 pub fn format_by_language(dump: &IncomingQuoPayload) -> String {
     match dump.language {
@@ -15,21 +15,38 @@ pub fn format_by_language(dump: &IncomingQuoPayload) -> String {
 
 fn format_rust(dump: &IncomingQuoPayload) -> String {
     let declaration = format!(
-        "{} {}: {}",
-        if dump.meta.variable.is_constant {
-            "const"
+        "{}{}: {} = {}",
+        if dump.meta.variable.is_expression {
+            ""
         } else {
-            "let"
+            if dump.meta.variable.is_constant {
+                "const " // The space is important.
+            } else {
+                "let " // The space is important.
+            }
         },
         dump.meta.variable.name,
         dump.meta.variable.var_type,
+        dump.meta.variable.value,
     );
 
-    format!(
-        "{} = {}",
-        declaration,
-        format_code_snippet(&dump.meta.variable.value, 4)
-    )
+    match RustFmt::default().format_str(&declaration) {
+        Ok(formatted) => formatted.trim().to_string(),
+        Err(_) => {
+            // Fallback to generic formatting if RustFmt fails
+            format!(
+                "{} {}: {} = {}",
+                if dump.meta.variable.is_constant {
+                    "const"
+                } else {
+                    "let"
+                },
+                dump.meta.variable.name,
+                dump.meta.variable.var_type,
+                format_code_snippet(&dump.meta.variable.value, 4)
+            )
+        }
+    }
 }
 
 fn format_javascript_typescript(dump: &IncomingQuoPayload) -> String {

@@ -17,7 +17,7 @@
         "title"      : "Quo",
         "width"      : 1600,
         "height"     : 900,
-        "minWidth"   : 1220,
+        "minWidth"   : 600,
         "minHeight"  : 720,
         "decorations": false
       }
