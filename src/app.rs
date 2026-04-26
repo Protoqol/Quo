@@ -291,6 +291,9 @@ pub fn App() -> impl IntoView {
                                 id="search"
                                 node_ref=search_input_ref
                                 placeholder="Search payloads... (Press '/' to focus)"
+                                autocomplete="off"
+                                autocapitalize="none"
+                                spellcheck="false"
                             />
                         </label>
                         <span id="searchResult"></span>
