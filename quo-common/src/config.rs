@@ -59,6 +59,14 @@ pub const SETTINGS: &[Setting] = &[
         show_in_sidebar: true,
     },
     Setting {
+        id: "truncate-large-var-types",
+        category: Category::Ui,
+        label: "Truncate large types",
+        description: "Show truncated version of large variable types.",
+        default: DefaultValue::Bool(false),
+        show_in_sidebar: true,
+    },
+    Setting {
         id: "server-port",
         category: Category::Server,
         label: "Listening port",

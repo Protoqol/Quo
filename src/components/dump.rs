@@ -23,6 +23,7 @@ pub fn DumpGroup(
     long_file_path: Signal<bool>,
     auto_group: Signal<bool>,
     auto_expand: Signal<bool>,
+    truncate_large_var_types: Signal<bool>,
 ) -> impl IntoView {
     let count = dumps.len();
 
@@ -103,6 +104,7 @@ pub fn DumpGroup(
                                         long_file_path=long_file_path
                                         is_grouped=auto_group.get()
                                         auto_expand=auto_expand
+                                        truncate_large_var_types=truncate_large_var_types
                                     />
                                     // Centered vertical line between consecutive items
                                     <Show when=move || i < last_idx && !auto_group.get()>
@@ -145,6 +147,7 @@ pub fn DumpItem(
     on_delete: Callback<String>,
     long_file_path: Signal<bool>,
     auto_expand: Signal<bool>,
+    truncate_large_var_types: Signal<bool>,
     #[prop(optional)] is_grouped: bool,
 ) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
@@ -157,7 +160,7 @@ pub fn DumpItem(
     let dump_stored = StoredValue::new(dump);
 
     let formatted_code = Memo::new(move |_| {
-        format_by_language(&dump_stored.get_value())
+        format_by_language(&dump_stored.get_value(), truncate_large_var_types.get())
     });
 
     let content_lines = Memo::new(move |_| {
@@ -556,7 +559,7 @@ pub fn DumpItem(
                     <code
                         node_ref=code_ref
                         class="code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4"
-                        inner_html=code_format(&dump_stored.get_value(), &formatted_code.get())
+                        inner_html=move || code_format(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
                     <Show when=move || is_collapsed.get()>

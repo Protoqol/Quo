@@ -216,6 +216,7 @@ pub fn SideBar(
                                                 "auto-group-dumps" => app_settings.auto_group.set(new_val),
                                                 "long-file-path"   => app_settings.long_file_path.set(new_val),
                                                 "auto-expand"      => app_settings.auto_expand.set(new_val),
+                                                "truncate-large-var-types" => app_settings.truncate_large_var_types.set(new_val),
                                                 _ => {}
                                             }
                                             // Persist to the Tauri store

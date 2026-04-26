@@ -1,16 +1,40 @@
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use rust_format::{Formatter, RustFmt};
 
-pub fn format_by_language(dump: &IncomingQuoPayload) -> String {
-    match dump.language {
-        QuoPayloadLanguage::Rust => format_rust(dump),
-        QuoPayloadLanguage::Typescript | QuoPayloadLanguage::Javascript => {
-            format_javascript_typescript(dump)
-        }
-        QuoPayloadLanguage::Php => format_php(dump),
-        QuoPayloadLanguage::Go => format_go(dump),
-        _ => format_generic(dump),
+pub fn format_by_language(dump: &IncomingQuoPayload, truncate: bool) -> String {
+    let mut dump = dump.clone();
+
+    if truncate {
+        dump.meta.variable.var_type = truncate_type(&dump.meta.variable.var_type);
     }
+
+    match dump.language {
+        QuoPayloadLanguage::Rust => format_rust(&dump),
+        QuoPayloadLanguage::Typescript | QuoPayloadLanguage::Javascript => {
+            format_javascript_typescript(&dump)
+        }
+        QuoPayloadLanguage::Php => format_php(&dump),
+        QuoPayloadLanguage::Go => format_go(&dump),
+        _ => format_generic(&dump),
+    }
+}
+
+fn truncate_type(var_type: &str) -> String {
+    if var_type.contains("::") {
+        let parts: Vec<&str> = var_type.split("::").collect();
+        if parts.len() > 2 {
+            return format!("{}::...::{}", parts[0], parts.last().unwrap());
+        }
+    }
+
+    if var_type.contains('\\') {
+        let parts: Vec<&str> = var_type.split('\\').collect();
+        if parts.len() > 2 {
+            return format!("{}\\...\\{}", parts[0], parts.last().unwrap());
+        }
+    }
+
+    var_type.to_string()
 }
 
 fn format_rust(dump: &IncomingQuoPayload) -> String {

@@ -43,6 +43,7 @@ pub struct AppSettings {
     pub auto_group: RwSignal<bool>,
     pub long_file_path: RwSignal<bool>,
     pub auto_expand: RwSignal<bool>,
+    pub truncate_large_var_types: RwSignal<bool>,
 }
 
 impl AppSettings {
@@ -52,6 +53,7 @@ impl AppSettings {
             auto_group: RwSignal::new(true),
             long_file_path: RwSignal::new(false),
             auto_expand: RwSignal::new(true),
+            truncate_large_var_types: RwSignal::new(false),
         }
     }
 }
@@ -85,6 +87,7 @@ pub fn App() -> impl IntoView {
     let auto_group = settings.auto_group;
     let long_file_path = settings.long_file_path;
     let auto_expand = settings.auto_expand;
+    let truncate_large_var_types = settings.truncate_large_var_types;
     let all_settings = settings.all_settings;
 
     // Load all settings from the Tauri store once on mount and populate the
@@ -102,6 +105,9 @@ pub fn App() -> impl IntoView {
                 }
                 if let Some(s) = all.iter().find(|s| s.id == "auto-expand") {
                     if let Some(v) = s.value.as_bool() { auto_expand.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "truncate-large-var-types") {
+                    if let Some(v) = s.value.as_bool() { truncate_large_var_types.set(v); }
                 }
                 all_settings.set(all);
             }
@@ -408,6 +414,7 @@ pub fn App() -> impl IntoView {
                                                 on_delete=Callback::new(delete_payload)
                                                 long_file_path=Signal::from(long_file_path)
                                                 auto_expand=Signal::from(auto_expand)
+                                                truncate_large_var_types=Signal::from(truncate_large_var_types)
                                             />
                                         }.into_any(),
                                         DumpEntry::Group(dumps) => view! {
@@ -417,6 +424,7 @@ pub fn App() -> impl IntoView {
                                                 long_file_path=Signal::from(long_file_path)
                                                 auto_group=Signal::from(auto_group)
                                                 auto_expand=Signal::from(auto_expand)
+                                                truncate_large_var_types=Signal::from(truncate_large_var_types)
                                             />
                                         }.into_any(),
                                     }

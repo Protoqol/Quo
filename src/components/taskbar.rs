@@ -32,6 +32,7 @@ pub fn Taskbar() -> impl IntoView {
     let set_auto_group = settings.auto_group;
     let set_long_file_path = settings.long_file_path;
     let set_auto_expand = settings.auto_expand;
+    let set_truncate_large_var_types = settings.truncate_large_var_types;
     // Shared master list — also used by Sidebar, so changes here are visible there.
     let all_settings = settings.all_settings;
 
@@ -266,6 +267,7 @@ pub fn Taskbar() -> impl IntoView {
                                                                     "auto-group-dumps" => set_auto_group.set(new_val),
                                                                     "long-file-path"   => set_long_file_path.set(new_val),
                                                                     "auto-expand"      => set_auto_expand.set(new_val),
+                                                                    "truncate-large-var-types" => set_truncate_large_var_types.set(new_val),
                                                                     _ => {}
                                                                 }
                                                                 spawn_local(async move {
