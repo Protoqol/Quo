@@ -397,14 +397,6 @@ pub fn DumpItem(
                                     {move || file_path_label.get()}
                                 </span>
                             </Show>
-                            <Show when=move || { content_lines.get() > 6 }>
-                                <button
-                                    class="bg-slate-900/50 hover:bg-slate-800 text-slate-500 hover:text-slate-300 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors"
-                                    on:click=move |_| set_manual_state.set(Some(is_collapsed.get()))
-                                >
-                                    {move || if is_collapsed.get() { "Expand" } else { "Collapse" }}
-                                </button>
-                            </Show>
                             <div
                                 class="p-1 rounded hover:bg-slate-800 cursor-pointer transition-colors"
                                 on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
@@ -517,21 +509,24 @@ pub fn DumpItem(
                     </div>
                 </div>
             </div>
-            <div class="relative group overflow-x-scroll bg-slate-900">
+            <div class="relative group bg-slate-900">
                 <div class="absolute right-4 top-1 z-10 flex flex-row items-center gap-x-2">
                     <div class="flex flex-row items-center gap-x-1.5 backdrop-blur-sm px-2 py-1 text-[12px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
                         {datetime_format(dump_stored.get_value().meta.time_epoch_ms).to_string()}
                     </div>
                 </div>
                 <div class=move || format!(
-                    "font-mono text-wrap relative bg-slate-900 {}",
-                    if is_grouped { "rounded-none" } else { "rounded-b" }
+                    "font-mono relative bg-slate-900 {} {}",
+                    if is_grouped { "rounded-none" } else { "rounded-b" },
+                    if is_collapsed.get() { "overflow-hidden" } else { "overflow-x-auto" }
                 )>
-                    <div class="absolute left-4 top-2 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
-                        <LanguageIcon
-                            lang=dump_stored.get_value().language.clone()
-                            class="w-10 h-10 text-slate-500".to_string()
-                        />
+                    <div class="sticky left-0 top-0 h-0 z-10 pointer-events-none">
+                        <div class="absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <LanguageIcon
+                                lang=dump_stored.get_value().language.clone()
+                                class="w-10 h-10 text-slate-500".to_string()
+                            />
+                        </div>
                     </div>
                     // <span
                     //     title="Copy code to clipboard"
@@ -561,16 +556,16 @@ pub fn DumpItem(
                     <code
                         node_ref=code_ref
                         class=move || format!(
-                            "code_dump select-text block px-4 pt-9 pb-4 text-wrap {}",
+                            "code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4 {}",
                             if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "" }
                         )
                         inner_html=code_format(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
                     <Show when=move || is_collapsed.get()>
-                        <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex items-end justify-center pb-2">
+                        <div class="sticky left-0 bottom-0 w-full h-12 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex items-end justify-center pb-2 z-10 pointer-events-none">
                             <button
-                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 transition-colors shadow-xl"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 opacity-50 hover:opacity-100 transition-all shadow-xl pointer-events-auto"
                                 on:click=move |_| set_manual_state.set(Some(true))
                             >
                                 "Expand"
@@ -578,9 +573,9 @@ pub fn DumpItem(
                         </div>
                     </Show>
                     <Show when=move || { !is_collapsed.get() && content_lines.get() > 6 }>
-                        <div class="flex justify-center pb-2">
+                        <div class="sticky left-0 w-full flex justify-center pb-2 z-10">
                             <button
-                                class="bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700/50 transition-colors"
+                                class="bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700/50 opacity-50 hover:opacity-100 transition-all"
                                 on:click=move |_| set_manual_state.set(Some(false))
                             >
                                 "Collapse"
