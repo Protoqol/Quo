@@ -1,6 +1,4 @@
-use crate::atoms::ToastType;
 use crate::components::LanguageIcon;
-use crate::toast;
 use crate::utils::formatter::format_by_language;
 use chrono::prelude::*;
 use chrono::{Duration, Locale};
@@ -63,8 +61,8 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                     set_fresh.set(true);
                                 }
                             }) as Box<dyn FnMut()>)
-                            .into_js_value()
-                            .unchecked_into(),
+                                .into_js_value()
+                                .unchecked_into(),
                             1000,
                         )
                         .unwrap();
@@ -93,7 +91,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                 "open_file",
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "path": path })).unwrap(),
             )
-            .await;
+                .await;
         });
         set_show_dropdown.set(false);
     });
@@ -106,7 +104,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd, "path": path }))
                     .unwrap(),
             )
-            .await;
+                .await;
         });
         set_show_dropdown.set(false);
     });
@@ -118,18 +116,18 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                 "show_in_explorer",
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "path": path })).unwrap(),
             )
-            .await;
+                .await;
         });
         set_show_dropdown.set(false);
     });
 
-    let copy_to_clipboard = StoredValue::new(move |text: String| {
-        let window = window();
-        let navigator = window.navigator();
-        let clipboard = navigator.clipboard();
-        let _ = clipboard.write_text(&text);
-        toast!("Copied to clipboard", ToastType::Success);
-    });
+    // let copy_to_clipboard = StoredValue::new(move |text: String| {
+    //     let window = window();
+    //     let navigator = window.navigator();
+    //     let clipboard = navigator.clipboard();
+    //     let _ = clipboard.write_text(&text);
+    //     toast!("Copied to clipboard", ToastType::Success);
+    // });
 
     // Close dropdown when clicking outside
     let _ = on_click_outside(dropdown_ref, move |_| set_show_dropdown.set(false));
@@ -138,6 +136,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     // Functions
     //
 
+    // @TODO collapsed struct names
     fn code_format(dump: &IncomingQuoPayload) -> String {
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
@@ -199,7 +198,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     }
 
     /// Format file path @TODO configurable full or truncated file path
-    fn file_path_format(filepath: &String) -> String {
+    fn file_path_format(filepath: &str) -> String {
         let show_full = false;
 
         let normalized = filepath.replace("\\", "/");
@@ -207,7 +206,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
         if show_full {
             normalized
         } else {
-            normalized.split('/').last().unwrap_or("").to_string()
+            normalized.split('/').next_back().unwrap_or("").to_string()
         }
     }
 
@@ -269,7 +268,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
                                 >
-                                    <path d="M12 3C10.8954 3 10 3.89543 10 5C10 6.10457 10.8954 7 12 7C13.1046 7 14 6.10457 14 5C14 3.89543 13.1046 3 12 3ZM12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10ZM12 17C10.8954 17 10 17.8954 10 19C10 20.1046 10.8954 21 12 21C13.1046 21 14 20.1046 14 19C14 17.8954 13.1046 17 12 17Z"></path>
+                                    <path d="M12 3C10.8954 3 10 3.89543 10 5C10 6.10457 10.8954 7 12 7C13.1046 7 14 6.10457 14 5C14 3.89543 13.1046 3 12 3ZM12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10ZM12 17C10.8954 17 10 17.8954 10 19C10 20.1046 10.8954 21 12 21C13.1046 21 14 20.1046 14 19C14 17.8954 13.1046 17 12 17Z" />
                                 </svg>
                             </div>
                             <Show when=move || show_dropdown.get()>
@@ -287,7 +286,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
-                                            <path d="M2 4C2 3.44772 2.44772 3 3 3H10.4142L12.4142 5H21C21.5523 5 22 5.44772 22 6V20C22 20.5523 21.5523 21 21 21L3 21C2.45 21 2 20.55 2 20V4ZM10.5858 6L9.58579 5H4V7H9.58579L10.5858 6ZM4 9V19L20 19V7H12.4142L10.4142 9H4Z"></path>
+                                            <path d="M2 4C2 3.44772 2.44772 3 3 3H10.4142L12.4142 5H21C21.5523 5 22 5.44772 22 6V20C22 20.5523 21.5523 21 21 21L3 21C2.45 21 2 20.55 2 20V4ZM10.5858 6L9.58579 5H4V7H9.58579L10.5858 6ZM4 9V19L20 19V7H12.4142L10.4142 9H4Z" />
                                         </svg>
                                         "Show in explorer"
                                     </div>
@@ -301,7 +300,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
-                                            <path d="M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM4 5V19H20V5H4ZM20 12L16.4645 15.5355L15.0503 14.1213L17.1716 12L15.0503 9.87868L16.4645 8.46447L20 12ZM6.82843 12L8.94975 14.1213L7.53553 15.5355L4 12L7.53553 8.46447L8.94975 9.87868L6.82843 12ZM11.2443 17H9.11597L12.7557 7H14.884L11.2443 17Z"></path>
+                                            <path d="M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM4 5V19H20V5H4ZM20 12L16.4645 15.5355L15.0503 14.1213L17.1716 12L15.0503 9.87868L16.4645 8.46447L20 12ZM6.82843 12L8.94975 14.1213L7.53553 15.5355L4 12L7.53553 8.46447L8.94975 9.87868L6.82843 12ZM11.2443 17H9.11597L12.7557 7H14.884L11.2443 17Z" />
                                         </svg>
                                         "Open in default editor"
                                     </div>
@@ -320,11 +319,13 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                                 .and_then(|v| v.as_str())
                                                 .unwrap_or_default()
                                                 .to_string();
+
                                             let name = editor
                                                 .get("name")
                                                 .and_then(|v| v.as_str())
                                                 .unwrap_or_default()
                                                 .to_string();
+
                                             let cmd = editor
                                                 .get("cmd")
                                                 .and_then(|v| v.as_str())
@@ -359,7 +360,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                                             fill="currentColor"
                                             class="w-4 h-4"
                                         >
-                                            <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM13.4142 13.9997L15.182 12.232L13.7678 10.8178L12 12.5855L10.2322 10.8178L8.81802 12.232L10.5858 13.9997L8.81802 15.7675L10.2322 17.1817L12 15.4139L13.7678 17.1817L15.182 15.7675L13.4142 13.9997ZM9 4V6H15V4H9Z"></path>
+                                            <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM13.4142 13.9997L15.182 12.232L13.7678 10.8178L12 12.5855L10.2322 10.8178L8.81802 12.232L10.5858 13.9997L8.81802 15.7675L10.2322 17.1817L12 15.4139L13.7678 17.1817L15.182 15.7675L13.4142 13.9997ZM9 4V6H15V4H9Z" />
                                         </svg>
                                         "Delete dump"
                                     </div>
@@ -370,50 +371,46 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                 </div>
             </div>
             <div class="relative group overflow-x-scroll bg-slate-900">
-                <div class="absolute right-4 top-2 z-10 flex flex-row items-center gap-x-2">
-                    <div class="flex flex-row items-center gap-x-1.5 bg-slate-950/80 backdrop-blur-sm border border-slate-800/50 px-2 py-1 rounded-lg text-[10px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
-                        <img
-                            class="w-3 h-3 opacity-50"
-                            src="/public/assets/icons/animated_clock.apng"
-                        />
-                        {format!("{}", datetime_format(dump.meta.time_epoch_ms))}
+                <div class="absolute right-4 top-1 z-10 flex flex-row items-center gap-x-2">
+                    <div class="flex flex-row items-center gap-x-1.5 backdrop-blur-sm px-2 py-1 text-[12px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
+                        {datetime_format(dump.meta.time_epoch_ms).to_string()}
                     </div>
                 </div>
-                <div class="font-mono text-wrap relative bg-slate-900 rounded-b">
-                    <div class="absolute left-4 top-4 pointer-events-none">
+                <div class="font-mono text-wrap relative bg-slate-900 rounded-b ">
+                    <div class="absolute left-4 top-2 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
                         <LanguageIcon
                             lang=dump.language.clone()
-                            class="w-10 h-10 opacity-[0.03]".to_string()
+                            class="w-10 h-10 text-slate-500".to_string()
                         />
                     </div>
-                    <span
-                        title="Copy code to clipboard"
-                        class="absolute bottom-4 right-4 z-10 text-slate-300 hover:text-white p-1.5 rounded-lg shadow-sm border border-slate-700/50 cursor-pointer transition-all opacity-50 group-hover:opacity-100"
-                        on:click={
-                            let content = code_format(&dump);
-                            move |_| copy_to_clipboard.get_value()(content.clone())
-                        }
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            class="w-4 h-4 cursor-pointer "
-                        >
-                            <path
-                                fill="currentColor"
-                                d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2"
-                            />
-                            <path
-                                fill="currentColor"
-                                d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z"
-                            />
-                        </svg>
-                    </span>
+                    // <span
+                    //     title="Copy code to clipboard"
+                    //     class="absolute bottom-0 right-4 z-10 text-slate-300 hover:text-white p-1.5 rounded-lg shadow-sm border border-slate-700/50 cursor-pointer transition-all opacity-50 group-hover:opacity-100"
+                    //     on:click={
+                    //         let content = code_format(&dump);
+                    //         move |_| copy_to_clipboard.get_value()(content.clone())
+                    //     }
+                    // >
+                    //     <svg
+                    //         xmlns="http://www.w3.org/2000/svg"
+                    //         width="24"
+                    //         height="24"
+                    //         viewBox="0 0 24 24"
+                    //         class="w-4 h-4 cursor-pointer "
+                    //     >
+                    //         <path
+                    //             fill="currentColor"
+                    //             d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2"
+                    //         />
+                    //         <path
+                    //             fill="currentColor"
+                    //             d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z"
+                    //         />
+                    //     </svg>
+                    // </span>
                     <code
                         node_ref=code_ref
-                        class="code_dump select-text block px-4 py-4 text-wrap"
+                        class="code_dump select-text block px-4 pt-9 pb-4 text-wrap"
                         inner_html=code_format(&dump)
                     >
                     </code>
