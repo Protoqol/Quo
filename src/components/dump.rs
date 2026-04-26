@@ -24,6 +24,8 @@ pub fn DumpGroup(
     auto_group: Signal<bool>,
     auto_expand: Signal<bool>,
     truncate_large_var_types: Signal<bool>,
+    #[prop(into)] expand_all_command: Signal<usize>,
+    #[prop(into)] collapse_all_command: Signal<usize>,
 ) -> impl IntoView {
     let count = dumps.len();
 
@@ -42,6 +44,22 @@ pub fn DumpGroup(
 
     // Collapsed state — groups start expanded
     let (collapsed, set_collapsed) = signal(false);
+
+    Effect::new(move |prev: Option<usize>| {
+        let current = expand_all_command.get();
+        if prev.is_some() && auto_group.get_untracked() {
+            set_collapsed.set(false);
+        }
+        current
+    });
+
+    Effect::new(move |prev: Option<usize>| {
+        let current = collapse_all_command.get();
+        if prev.is_some() && auto_group.get_untracked() {
+            set_collapsed.set(true);
+        }
+        current
+    });
 
     let dumps_stored = StoredValue::new(dumps);
 
@@ -105,6 +123,8 @@ pub fn DumpGroup(
                                         is_grouped=auto_group.get()
                                         auto_expand=auto_expand
                                         truncate_large_var_types=truncate_large_var_types
+                                        expand_all_command=expand_all_command
+                                        collapse_all_command=collapse_all_command
                                     />
                                     // Centered vertical line between consecutive items
                                     <Show when=move || i < last_idx && !auto_group.get()>
@@ -149,6 +169,8 @@ pub fn DumpItem(
     auto_expand: Signal<bool>,
     truncate_large_var_types: Signal<bool>,
     #[prop(optional)] is_grouped: bool,
+    #[prop(into)] expand_all_command: Signal<usize>,
+    #[prop(into)] collapse_all_command: Signal<usize>,
 ) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
     let dropdown_ref = NodeRef::<html::Div>::new();
@@ -156,8 +178,9 @@ pub fn DumpItem(
     let (show_dropdown, set_show_dropdown) = signal(false);
     let (available_editors, set_available_editors) = signal::<Vec<serde_json::Value>>(vec![]);
 
-    let (manual_state, set_manual_state) = signal::<Option<bool>>(None);
     let dump_stored = StoredValue::new(dump);
+
+    let (manual_state, set_manual_state) = signal::<Option<bool>>(None);
 
     let formatted_code = Memo::new(move |_| {
         format_by_language(&dump_stored.get_value(), truncate_large_var_types.get())
@@ -165,6 +188,22 @@ pub fn DumpItem(
 
     let content_lines = Memo::new(move |_| {
         formatted_code.get().lines().count()
+    });
+
+    Effect::new(move |prev: Option<usize>| {
+        let current = expand_all_command.get();
+        if prev.is_some() && content_lines.get_untracked() > 6 {
+            set_manual_state.set(Some(true));
+        }
+        current
+    });
+
+    Effect::new(move |prev: Option<usize>| {
+        let current = collapse_all_command.get();
+        if prev.is_some() && content_lines.get_untracked() > 6 {
+            set_manual_state.set(Some(false));
+        }
+        current
     });
 
     let is_collapsed = Memo::new(move |_| {

@@ -2,6 +2,7 @@ use crate::atoms::{provide_toast_context, ToastType, Toaster};
 use crate::components::{DumpGroup, DumpItem};
 use crate::components::SideBar;
 use crate::toast;
+use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
@@ -77,6 +78,9 @@ pub fn App() -> impl IntoView {
 
     let (search_query, set_search_query) = signal(String::new());
 
+    let (expand_all_command, set_expand_all_command) = signal(0usize);
+    let (collapse_all_command, set_collapse_all_command) = signal(0usize);
+
     let (server_host, set_server_host, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_host");
     let (server_port, set_server_port, _) =
@@ -89,6 +93,12 @@ pub fn App() -> impl IntoView {
     let auto_expand = settings.auto_expand;
     let truncate_large_var_types = settings.truncate_large_var_types;
     let all_settings = settings.all_settings;
+
+    let (is_all_expanded, set_is_all_expanded) = signal(auto_expand.get_untracked());
+
+    Effect::new(move |_| {
+        set_is_all_expanded.set(auto_expand.get());
+    });
 
     // Load all settings from the Tauri store once on mount and populate the
     // shared signal so Taskbar and Sidebar can both read from it.
@@ -184,6 +194,24 @@ pub fn App() -> impl IntoView {
             toast!("Dump not deleted", ToastType::Error)
         }
     };
+
+    let has_expandable_items = Memo::new(move |_| {
+        let entries = dump_entries();
+        let auto_group_enabled = auto_group.get();
+        let truncate = truncate_large_var_types.get();
+
+        entries.iter().any(|entry| match entry {
+            DumpEntry::Single(payload) => {
+                format_by_language(payload, truncate).lines().count() > 6
+            }
+            DumpEntry::Group(payloads) => {
+                auto_group_enabled
+                    || payloads
+                        .iter()
+                        .any(|p| format_by_language(p, truncate).lines().count() > 6)
+            }
+        })
+    });
 
     let search_results_count = move || {
         let query = search_query.get();
@@ -364,19 +392,57 @@ pub fn App() -> impl IntoView {
                             </Show>
                         </label>
                     </div>
+
                 </header>
                 <div class="quo-body">
                     <div id="quo">
-                        <Show
-                            when=move || !search_results_count().is_empty()
-                            fallback=|| {
-                                view! {
-                                    <span id="searchResult" class="opacity-0 -mt-4 -mb-2">-</span>
+                        <div class="flex items-center justify-between -mt-4 -mb-2">
+                            <Show
+                                when=move || !search_results_count().is_empty()
+                                fallback=|| {
+                                    view! {
+                                        <span id="searchResult" class="opacity-0">-</span>
+                                    }
                                 }
-                            }
-                            >
-                            <span id="searchResult" class="text-slate-600 -mt-4 -mb-2">{search_results_count}</span>
-                        </Show>
+                                >
+                                <span id="searchResult" class="text-slate-600 text-xs font-bold uppercase tracking-wider">{search_results_count}</span>
+                            </Show>
+
+                            <Show when=move || has_expandable_items.get()>
+                                <div class="flex items-center gap-x-2">
+                                    <button
+                                        class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                        on:click=move |_| {
+                                            if is_all_expanded.get() {
+                                                set_collapse_all_command.update(|v| *v += 1);
+                                                set_is_all_expanded.set(false);
+                                            } else {
+                                                set_expand_all_command.update(|v| *v += 1);
+                                                set_is_all_expanded.set(true);
+                                            }
+                                        }
+                                        title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
+                                    >
+                                        <Show
+                                            when=move || is_all_expanded.get()
+                                            fallback=move || view! {
+                                                "Expand all"
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                    <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
+                                                    <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
+                                                </svg>
+                                            }
+                                        >
+                                            "Collapse all"
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
+                                                <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
+                                            </svg>
+                                        </Show>
+                                    </button>
+                                </div>
+                            </Show>
+                        </div>
                         <Show
                             when=move || !payloads.get().is_empty()
                             fallback=|| {
@@ -415,6 +481,8 @@ pub fn App() -> impl IntoView {
                                                 long_file_path=Signal::from(long_file_path)
                                                 auto_expand=Signal::from(auto_expand)
                                                 truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                expand_all_command=expand_all_command
+                                                collapse_all_command=collapse_all_command
                                             />
                                         }.into_any(),
                                         DumpEntry::Group(dumps) => view! {
@@ -425,6 +493,8 @@ pub fn App() -> impl IntoView {
                                                 auto_group=Signal::from(auto_group)
                                                 auto_expand=Signal::from(auto_expand)
                                                 truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                expand_all_command=expand_all_command
+                                                collapse_all_command=collapse_all_command
                                             />
                                         }.into_any(),
                                     }
