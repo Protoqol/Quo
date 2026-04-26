@@ -518,7 +518,7 @@ pub fn DumpItem(
                 <div class=move || format!(
                     "font-mono relative bg-slate-900 {} {}",
                     if is_grouped { "rounded-none" } else { "rounded-b" },
-                    if is_collapsed.get() { "overflow-hidden" } else { "overflow-x-auto" }
+                    if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "overflow-x-auto" }
                 )>
                     <div class="sticky left-0 top-0 h-0 z-10 pointer-events-none">
                         <div class="absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -555,17 +555,14 @@ pub fn DumpItem(
                     // </span>
                     <code
                         node_ref=code_ref
-                        class=move || format!(
-                            "code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4 {}",
-                            if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "" }
-                        )
+                        class="code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4"
                         inner_html=code_format(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
                     <Show when=move || is_collapsed.get()>
-                        <div class="sticky left-0 bottom-0 w-full h-12 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex items-end justify-center pb-2 z-10 pointer-events-none">
+                        <div class="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent flex items-end justify-center pb-3 z-10 pointer-events-none">
                             <button
-                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 opacity-50 hover:opacity-100 transition-all shadow-xl pointer-events-auto"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 transition-colors shadow-xl pointer-events-auto"
                                 on:click=move |_| set_manual_state.set(Some(true))
                             >
                                 "Expand"

@@ -220,7 +220,7 @@ pub fn Taskbar() -> impl IntoView {
                             />
                         </nav>
                         // Main panel: settings for active category + static "About" panel
-                        <div class="flex-1 p-6 overflow-y-auto bg-slate-800 text-slate-300">
+                        <div class="flex-1 p-6 overflow-y-auto [scrollbar-gutter:stable] bg-slate-800 text-slate-300">
                             <Show when=move || active_category.get() != "About">
                                 <div class="space-y-4">
                                     <For
