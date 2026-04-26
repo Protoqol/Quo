@@ -335,6 +335,27 @@ pub fn App() -> impl IntoView {
                                 }
                                 prop:value=search_query
                             />
+                            <Show when=move || !search_query.get().is_empty()>
+                                <button
+                                    class="clear-button"
+                                    on:click=move |_| {
+                                        set_search_query.set(String::new());
+                                        if let Some(input) = search_input_ref.get() {
+                                            let _ = input.focus();
+                                        }
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        width="16"
+                                        height="16"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M12 10.586L16.95 5.63605L18.364 7.05026L13.414 12L18.364 16.9498L16.95 18.364L12 13.414L7.05026 18.364L5.63605 16.95L10.586 12L5.63605 7.05026L7.05026 5.63605L12 10.586Z" />
+                                    </svg>
+                                </button>
+                            </Show>
                         </label>
                     </div>
                 </header>
