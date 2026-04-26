@@ -1,7 +1,7 @@
+use crate::app::{AppSettings, SettingDto};
 use leptos::prelude::*;
 use leptos::serde_json;
 use leptos::task::spawn_local;
-use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -23,31 +23,29 @@ extern "C" {
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
-#[derive(Clone, Debug, Deserialize)]
-struct SettingDto {
-    id: String,
-    category: String,
-    label: String,
-    description: String,
-    value: serde_json::Value,
-}
-
 #[component]
 pub fn Taskbar() -> impl IntoView {
     let app_window = getCurrentWindow();
+    // Consume the shared settings context so toggles immediately propagate
+    // to App (and dump list) without a round-trip or page reload.
+    let settings = use_context::<AppSettings>().expect("AppSettings context missing");
+    let set_auto_group = settings.auto_group;
+    let set_long_file_path = settings.long_file_path;
+    let set_auto_expand = settings.auto_expand;
+    // Shared master list — also used by Sidebar, so changes here are visible there.
+    let all_settings = settings.all_settings;
 
     let (show_menu, set_show_menu) = signal(false);
     let (show_settings, set_show_settings) = signal(false);
     let (active_category, set_active_category) = signal("UI".to_string());
 
-    // Reload settings from the backend every time the settings modal is opened
-    let (all_settings, set_all_settings) = signal::<Vec<SettingDto>>(vec![]);
+    // Reload settings from the backend into the shared signal every time the modal opens.
     Effect::new(move |_| {
         if show_settings.get() {
             spawn_local(async move {
                 let result = invoke("get_settings", JsValue::NULL).await;
-                if let Ok(settings) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
-                    set_all_settings.set(settings);
+                if let Ok(fresh) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
+                    all_settings.set(fresh);
                 }
             });
         }
@@ -257,13 +255,19 @@ pub fn Taskbar() -> impl IntoView {
                                                             on:click=move |_| {
                                                                 let new_val = !checked.get_untracked();
                                                                 let id = stored_id.get_value();
-                                                                // Optimistically update all_settings so the
-                                                                // toggle flips instantly without a round-trip.
-                                                                set_all_settings.update(|list| {
+                                                                // Update the shared signal — Sidebar sees this instantly.
+                                                                all_settings.update(|list| {
                                                                     if let Some(s) = list.iter_mut().find(|s| s.id == id) {
                                                                         s.value = serde_json::json!(new_val);
                                                                     }
                                                                 });
+                                                                // Keep dedicated signals in sync so dump list reacts.
+                                                                match id.as_str() {
+                                                                    "auto-group-dumps" => set_auto_group.set(new_val),
+                                                                    "long-file-path"   => set_long_file_path.set(new_val),
+                                                                    "auto-expand"      => set_auto_expand.set(new_val),
+                                                                    _ => {}
+                                                                }
                                                                 spawn_local(async move {
                                                                     let args = serde_wasm_bindgen::to_value(
                                                                         &serde_json::json!({ "id": id, "value": new_val })

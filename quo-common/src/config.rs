@@ -27,6 +27,8 @@ pub struct Setting {
     pub label: &'static str,
     pub description: &'static str,
     pub default: DefaultValue,
+    /// Whether this setting should appear in the sidebar quick-settings panel.
+    pub show_in_sidebar: bool,
 }
 
 pub const CATEGORIES: &[Category] = &[Category::Ui, Category::Server, Category::Privacy, Category::About];
@@ -38,13 +40,15 @@ pub const SETTINGS: &[Setting] = &[
         label: "Auto-expand structures",
         description: "Automatically expand larger data structures",
         default: DefaultValue::Bool(true),
+        show_in_sidebar: true,
     },
     Setting {
         id: "auto-group-dumps",
         category: Category::Ui,
-        label: "Auto group dumps",
+        label: "Group dumps",
         description: "Group multiple variables dumped at once",
-        default: DefaultValue::Bool(false),
+        default: DefaultValue::Bool(true),
+        show_in_sidebar: true,
     },
     Setting {
         id: "long-file-path",
@@ -52,6 +56,7 @@ pub const SETTINGS: &[Setting] = &[
         label: "Show full file path",
         description: "Show full path instead of truncated version",
         default: DefaultValue::Bool(false),
+        show_in_sidebar: true,
     },
     Setting {
         id: "server-port",
@@ -59,6 +64,7 @@ pub const SETTINGS: &[Setting] = &[
         label: "Listening port",
         description: "Port the Quo server listens on",
         default: DefaultValue::Int(7779),
+        show_in_sidebar: false,
     },
     Setting {
         id: "analytics",
@@ -66,6 +72,7 @@ pub const SETTINGS: &[Setting] = &[
         label: "Send anonymous analytics",
         description: "Help improve Quo by sending anonymous usage data",
         default: DefaultValue::Bool(false),
+        show_in_sidebar: false,
     },
 ];
 

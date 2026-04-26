@@ -1,16 +1,18 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
-use crate::components::DumpItem;
+use crate::components::{DumpGroup, DumpItem};
 use crate::components::SideBar;
 use crate::toast;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
+use leptos::serde_json;
 use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
+use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -20,6 +22,46 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"])]
     async fn listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> JsValue;
+}
+
+/// Full setting DTO — shared between Taskbar, Sidebar, and App.
+#[derive(Clone, Debug, Deserialize)]
+pub struct SettingDto {
+    pub id: String,
+    pub category: String,
+    pub label: String,
+    pub description: String,
+    pub show_in_sidebar: bool,
+    pub value: serde_json::Value,
+}
+
+/// Shared reactive settings that both `App`, `Taskbar`, and `Sidebar` read/write.
+#[derive(Clone, Copy)]
+pub struct AppSettings {
+    /// Master list of all settings — single source of truth.
+    pub all_settings: RwSignal<Vec<SettingDto>>,
+    pub auto_group: RwSignal<bool>,
+    pub long_file_path: RwSignal<bool>,
+    pub auto_expand: RwSignal<bool>,
+}
+
+impl AppSettings {
+    pub fn new() -> Self {
+        Self {
+            all_settings: RwSignal::new(vec![]),
+            auto_group: RwSignal::new(true),
+            long_file_path: RwSignal::new(false),
+            auto_expand: RwSignal::new(true),
+        }
+    }
+}
+
+/// One entry in the grouped view-model: either a single payload or a
+/// group of payloads sharing the same `grouping_hash`.
+#[derive(Clone)]
+enum DumpEntry {
+    Single(IncomingQuoPayload),
+    Group(Vec<IncomingQuoPayload>),
 }
 
 #[component]
@@ -35,6 +77,72 @@ pub fn App() -> impl IntoView {
         use_local_storage::<String, JsonSerdeCodec>("server_host");
     let (server_port, set_server_port, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_port");
+
+    // Consume settings from the shared context provided by main.rs
+    let settings = use_context::<AppSettings>().expect("AppSettings context missing");
+    let auto_group = settings.auto_group;
+    let long_file_path = settings.long_file_path;
+    let auto_expand = settings.auto_expand;
+    let all_settings = settings.all_settings;
+
+    // Load all settings from the Tauri store once on mount and populate the
+    // shared signal so Taskbar and Sidebar can both read from it.
+    Effect::new(move |_| {
+        spawn_local(async move {
+            let result = invoke("get_settings", JsValue::NULL).await;
+            if let Ok(all) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
+                // Sync the two dedicated signals first
+                if let Some(s) = all.iter().find(|s| s.id == "auto-group-dumps") {
+                    if let Some(v) = s.value.as_bool() { auto_group.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "long-file-path") {
+                    if let Some(v) = s.value.as_bool() { long_file_path.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "auto-expand") {
+                    if let Some(v) = s.value.as_bool() { auto_expand.set(v); }
+                }
+                all_settings.set(all);
+            }
+        });
+    });
+
+    // Compute view-model: grouped by hash if auto-group is on, or always
+    // grouped by hash if they are consecutive (for the vertical line).
+    let dump_entries = move || {
+        let mut sorted = payloads.get().clone();
+        sorted.sort_by(|a, b| b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms));
+
+        // Group consecutive payloads that share the same `grouping_hash`.
+        let mut entries: Vec<DumpEntry> = Vec::new();
+        for payload in sorted {
+            let hash = payload.meta.variable.grouping_hash.as_deref().unwrap_or("").to_string();
+            let merged = if let Some(DumpEntry::Group(ref mut group)) = entries.last_mut() {
+                let group_hash = group.first()
+                    .and_then(|p| p.meta.variable.grouping_hash.as_deref())
+                    .unwrap_or("");
+                if !hash.is_empty() && group_hash == hash {
+                    group.push(payload.clone());
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            if !merged {
+                entries.push(DumpEntry::Group(vec![payload]));
+            }
+        }
+
+        // Unwrap single-item groups back to Single.
+        entries
+            .into_iter()
+            .map(|e| match e {
+                DumpEntry::Group(mut v) if v.len() == 1 => DumpEntry::Single(v.remove(0)),
+                other => other,
+            })
+            .collect::<Vec<_>>()
+    };
 
     let delete_payload = move |uid: String| {
         let backup = payloads.get_untracked();
@@ -210,21 +318,34 @@ pub fn App() -> impl IntoView {
                             }
                         >
                             <For
-                                each=move || {
-                                    let mut sorted_payloads = payloads.get().clone();
-                                    sorted_payloads
-                                        .sort_by(|a, b| {
-                                            b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms)
-                                        });
-                                    sorted_payloads.into_iter()
+                                each=dump_entries
+                                key=|entry| match entry {
+                                    DumpEntry::Single(p) => p.meta.uid.clone(),
+                                    DumpEntry::Group(g) => g
+                                        .iter()
+                                        .map(|p| p.meta.uid.as_str())
+                                        .collect::<Vec<_>>()
+                                        .join(","),
                                 }
-                                key=|payload| payload.meta.uid.clone()
-                                children=move |payload: IncomingQuoPayload| {
-                                    view! {
-                                        <DumpItem
-                                            dump=payload
-                                            on_delete=Callback::new(delete_payload)
-                                        />
+                                children=move |entry| {
+                                    match entry {
+                                        DumpEntry::Single(payload) => view! {
+                                            <DumpItem
+                                                dump=payload
+                                                on_delete=Callback::new(delete_payload)
+                                                long_file_path=Signal::from(long_file_path)
+                                                auto_expand=Signal::from(auto_expand)
+                                            />
+                                        }.into_any(),
+                                        DumpEntry::Group(dumps) => view! {
+                                            <DumpGroup
+                                                dumps=dumps
+                                                on_delete=Callback::new(delete_payload)
+                                                long_file_path=Signal::from(long_file_path)
+                                                auto_group=Signal::from(auto_group)
+                                                auto_expand=Signal::from(auto_expand)
+                                            />
+                                        }.into_any(),
                                     }
                                 }
                             />

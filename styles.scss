@@ -220,7 +220,7 @@ body {
         @apply flex-1 overflow-y-auto p-8;
 
         #quo {
-          @apply w-full mx-auto;
+          @apply w-full mx-auto flex flex-col gap-y-4;
 
           .empty-state {
             @apply flex flex-col items-center justify-center h-64 text-center;
@@ -236,7 +236,7 @@ body {
         }
 
         .quo-dump-container {
-          @apply flex flex-col rounded-2xl mb-6 shadow-sm transition-all duration-300;
+          @apply flex flex-col rounded-2xl mb-4 shadow-sm transition-all duration-300;
 
           &:hover {
             @apply shadow-md border-slate-300;

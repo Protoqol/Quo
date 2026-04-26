@@ -14,6 +14,112 @@ use syntect::html::highlighted_html_for_string;
 use syntect::parsing::SyntaxSet;
 use wasm_bindgen::prelude::*;
 
+/// A group of payloads that originated from the same `quo(...)` call,
+/// identified by a shared `grouping_hash`.
+#[component]
+pub fn DumpGroup(
+    dumps: Vec<IncomingQuoPayload>,
+    on_delete: Callback<String>,
+    long_file_path: Signal<bool>,
+    auto_group: Signal<bool>,
+    auto_expand: Signal<bool>,
+) -> impl IntoView {
+    let count = dumps.len();
+
+    // Collect variable names for the header summary, e.g. "foo, bar, baz"
+    let var_names = StoredValue::new(dumps
+        .iter()
+        .map(|d| d.meta.variable.name.as_str())
+        .collect::<Vec<_>>()
+        .join(", "));
+
+    // Call-site file shown in the header (from the first dump)
+    let call_site = StoredValue::new(dumps
+        .first()
+        .map(|f| f.meta.sender_origin.split('/').next_back().unwrap_or("").to_string())
+        .unwrap_or_default());
+
+    // Collapsed state — groups start expanded
+    let (collapsed, set_collapsed) = signal(false);
+
+    let dumps_stored = StoredValue::new(dumps);
+
+    view! {
+        <div class=move || format!(
+            "quo-dump-group relative animate-slide-in-top {}",
+            if auto_group.get() { "rounded-lg border border-accent/20 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
+        )>
+            // Group header bar — click anywhere to expand/collapse
+            <Show when=move || auto_group.get()>
+                <div
+                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-accent/20 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
+                    on:click=move |_| set_collapsed.update(|v| *v = !*v)
+                    title="Click to expand / collapse group"
+                >
+                    // Collapse/expand chevron
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class=move || format!(
+                            "w-3 h-3 shrink-0 text-accent/60 transition-transform duration-200 {}",
+                            if collapsed.get() { "-rotate-90" } else { "rotate-0" }
+                        )
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                    >
+                        <path d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z" />
+                    </svg>
+
+                    // Count badge
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-accent/20 text-accent text-[10px] font-bold shrink-0">
+                        {count} " items"
+                    </span>
+
+                    // Variable names summary
+                    <span class="text-xs text-slate-400 font-medium font-mono truncate max-w-[50%]" title=move || var_names.get_value()>
+                        {move || var_names.get_value()}
+                    </span>
+
+                    // Call site (filename)
+                    <span class="text-xs text-slate-500 ml-auto font-mono shrink-0">
+                        {move || call_site.get_value()}
+                    </span>
+                </div>
+            </Show>
+
+            // Each dump inside the group, separated by a centered vertical line
+            <Show when=move || !collapsed.get()>
+                <div class="flex flex-col">
+                    {move || {
+                        let items = dumps_stored.get_value();
+                        let last_idx = items.len().saturating_sub(1);
+                        items
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, dump)| {
+                                view! {
+                                    <DumpItem
+                                        dump=dump
+                                        on_delete=on_delete
+                                        long_file_path=long_file_path
+                                        is_grouped=auto_group.get()
+                                        auto_expand=auto_expand
+                                    />
+                                    // Centered vertical line between consecutive items
+                                    <Show when=move || i < last_idx && !auto_group.get()>
+                                        <div class="flex justify-center -mt-4 h-4">
+                                            <div class="w-[4px] bg-slate-600 h-full"></div>
+                                        </div>
+                                    </Show>
+                                }
+                            })
+                            .collect_view()
+                    }}
+                </div>
+            </Show>
+        </div>
+    }
+}
+
 static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
 static THEME: OnceLock<Theme> = OnceLock::new();
 
@@ -34,15 +140,39 @@ const TIME_FORMAT: &str = "%H:%M:%S.%3f";
 const DEFAULT_LOCALE: Locale = Locale::nl_NL;
 
 #[component]
-pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl IntoView {
+pub fn DumpItem(
+    dump: IncomingQuoPayload,
+    on_delete: Callback<String>,
+    long_file_path: Signal<bool>,
+    auto_expand: Signal<bool>,
+    #[prop(optional)] is_grouped: bool,
+) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
     let dropdown_ref = NodeRef::<html::Div>::new();
 
     let (show_dropdown, set_show_dropdown) = signal(false);
     let (available_editors, set_available_editors) = signal::<Vec<serde_json::Value>>(vec![]);
 
+    let (manual_state, set_manual_state) = signal::<Option<bool>>(None);
+    let dump_stored = StoredValue::new(dump);
+
+    let formatted_code = Memo::new(move |_| {
+        format_by_language(&dump_stored.get_value())
+    });
+
+    let content_lines = Memo::new(move |_| {
+        formatted_code.get().lines().count()
+    });
+
+    let is_collapsed = Memo::new(move |_| {
+        match manual_state.get() {
+            Some(expanded) => !expanded,
+            None => !auto_expand.get() && content_lines.get() > 6,
+        }
+    });
+
     let is_fresh = {
-        let dump_time = DateTime::from_timestamp_millis(dump.meta.time_epoch_ms)
+        let dump_time = DateTime::from_timestamp_millis(dump_stored.get_value().meta.time_epoch_ms)
             .unwrap_or_else(|| Local::now().with_timezone(&Utc).into());
         let (fresh, set_fresh) =
             signal(Utc::now().signed_duration_since(dump_time) < Duration::seconds(15));
@@ -76,9 +206,15 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
         fresh
     };
 
-    let sender_origin = StoredValue::new(dump.meta.sender_origin.clone());
+    let sender_origin = StoredValue::new(dump_stored.get_value().meta.sender_origin.clone());
 
-    let delete_uid = dump.meta.uid.clone();
+    // Reactive file path label — updates when the setting changes
+    let sender_origin_raw = dump_stored.get_value().meta.sender_origin.clone();
+    let file_path_label = Memo::new(move |_| {
+        file_path_format(&sender_origin_raw, long_file_path.get())
+    });
+
+    let delete_uid = dump_stored.get_value().meta.uid.clone();
     let delete_self = StoredValue::new(move || {
         on_delete.run(delete_uid.clone());
     });
@@ -137,7 +273,7 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
     //
 
     // @TODO collapsed struct names
-    fn code_format(dump: &IncomingQuoPayload) -> String {
+    fn code_format(dump: &IncomingQuoPayload, formatted_code: &str) -> String {
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
             let mut cursor = std::io::Cursor::new(CODE_THEME);
@@ -146,18 +282,13 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
 
         let syntax = ss.find_syntax_by_extension("rs").unwrap();
 
-        let code = match dump.language {
-            QuoPayloadLanguage::Php => format!("<?php\n{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Rust => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Python => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Javascript => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Typescript => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Ruby => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Go => format!("{}", format_by_language(&dump)),
-            QuoPayloadLanguage::Unknown => format!("{}", format_by_language(&dump)),
+        let to_highlight = if dump.language == QuoPayloadLanguage::Php {
+            format!("<?php\n{}", formatted_code)
+        } else {
+            formatted_code.to_string()
         };
 
-        let html = highlighted_html_for_string(&code, &ss, syntax, theme).unwrap();
+        let html = highlighted_html_for_string(&to_highlight, &ss, syntax, theme).unwrap();
 
         if dump.language == QuoPayloadLanguage::Php {
             if let Some(pos) = html.find("&lt;?php") {
@@ -197,10 +328,8 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
         "".to_string()
     }
 
-    /// Format file path @TODO configurable full or truncated file path
-    fn file_path_format(filepath: &str) -> String {
-        let show_full = false;
-
+    /// Format file path — controlled by the `long-file-path` setting
+    fn file_path_format(filepath: &str, show_full: bool) -> String {
         let normalized = filepath.replace("\\", "/");
 
         if show_full {
@@ -233,17 +362,25 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent"></span>
                 </span>
             </Show>
-            <div class="bg-slate-950 flex flex-row justify-between py-2 pl-4 pr-2 rounded-t border-b border-slate-900">
+            <div class=move || format!(
+                "flex flex-row justify-between py-2 pl-4 pr-2 border-b border-slate-900/50 {}",
+                if is_grouped { "bg-slate-900/60 rounded-none" } else { "bg-slate-950 rounded-t" }
+            )>
                 <div
                     data-identifier="dump_header"
                     class="text-slate-500 font-normal w-full flex flex-row justify-between items-center"
                 >
                     <div data-identifier="dump_project" class="flex-none flex items-center gap-x-3">
-                        <span
-                            title="Filter dumps on this origin"
-                            class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
-                        >
-                            {dump.meta.origin.clone()}
+                        <Show when=move || !is_grouped>
+                            <span
+                                title="Filter dumps on this origin"
+                                class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
+                            >
+                                {dump_stored.get_value().meta.origin.clone()}
+                            </span>
+                        </Show>
+                        <span class="text-xs font-mono text-accent/90 font-bold bg-accent/10 px-2 py-0.5 rounded">
+                            {dump_stored.get_value().meta.variable.name.clone()}
                         </span>
                     </div>
                     <div
@@ -251,13 +388,23 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                         class="flex-1 min-w-0 overflow-visible relative ml-4"
                     >
                         <div class="flex flex-row justify-end items-center gap-x-2 relative">
-                            <span
-                                class="text-sm text-slate-500 text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-slate-300 transition-colors max-w-[300px]"
-                                title=format!("{}", &dump.meta.sender_origin.replace("\\", "/"))
-                                on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
-                            >
-                                {file_path_format(&dump.meta.sender_origin)}
-                            </span>
+                            <Show when=move || !is_grouped>
+                                <span
+                                    class="text-sm text-slate-500 text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-slate-300 transition-colors"
+                                    title=move || file_path_label.get()
+                                    on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
+                                >
+                                    {move || file_path_label.get()}
+                                </span>
+                            </Show>
+                            <Show when=move || { content_lines.get() > 6 }>
+                                <button
+                                    class="bg-slate-900/50 hover:bg-slate-800 text-slate-500 hover:text-slate-300 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                    on:click=move |_| set_manual_state.set(Some(is_collapsed.get()))
+                                >
+                                    {move || if is_collapsed.get() { "Expand" } else { "Collapse" }}
+                                </button>
+                            </Show>
                             <div
                                 class="p-1 rounded hover:bg-slate-800 cursor-pointer transition-colors"
                                 on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
@@ -373,13 +520,16 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
             <div class="relative group overflow-x-scroll bg-slate-900">
                 <div class="absolute right-4 top-1 z-10 flex flex-row items-center gap-x-2">
                     <div class="flex flex-row items-center gap-x-1.5 backdrop-blur-sm px-2 py-1 text-[12px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
-                        {datetime_format(dump.meta.time_epoch_ms).to_string()}
+                        {datetime_format(dump_stored.get_value().meta.time_epoch_ms).to_string()}
                     </div>
                 </div>
-                <div class="font-mono text-wrap relative bg-slate-900 rounded-b ">
+                <div class=move || format!(
+                    "font-mono text-wrap relative bg-slate-900 {}",
+                    if is_grouped { "rounded-none" } else { "rounded-b" }
+                )>
                     <div class="absolute left-4 top-2 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
                         <LanguageIcon
-                            lang=dump.language.clone()
+                            lang=dump_stored.get_value().language.clone()
                             class="w-10 h-10 text-slate-500".to_string()
                         />
                     </div>
@@ -410,10 +560,33 @@ pub fn DumpItem(dump: IncomingQuoPayload, on_delete: Callback<String>) -> impl I
                     // </span>
                     <code
                         node_ref=code_ref
-                        class="code_dump select-text block px-4 pt-9 pb-4 text-wrap"
-                        inner_html=code_format(&dump)
+                        class=move || format!(
+                            "code_dump select-text block px-4 pt-9 pb-4 text-wrap {}",
+                            if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "" }
+                        )
+                        inner_html=code_format(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
+                    <Show when=move || is_collapsed.get()>
+                        <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex items-end justify-center pb-2">
+                            <button
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 transition-colors shadow-xl"
+                                on:click=move |_| set_manual_state.set(Some(true))
+                            >
+                                "Expand"
+                            </button>
+                        </div>
+                    </Show>
+                    <Show when=move || { !is_collapsed.get() && content_lines.get() > 6 }>
+                        <div class="flex justify-center pb-2">
+                            <button
+                                class="bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700/50 transition-colors"
+                                on:click=move |_| set_manual_state.set(Some(false))
+                            >
+                                "Collapse"
+                            </button>
+                        </div>
+                    </Show>
                 </div>
             </div>
         </div>
