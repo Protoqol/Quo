@@ -73,6 +73,8 @@ pub fn App() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
+    let (search_query, set_search_query) = signal(String::new());
+
     let (server_host, set_server_host, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_host");
     let (server_port, set_server_port, _) =
@@ -106,10 +108,28 @@ pub fn App() -> impl IntoView {
         });
     });
 
+    let filtered_payloads = move || {
+        let query = search_query.get().to_lowercase();
+        let mut all = payloads.get().clone();
+        if !query.is_empty() {
+            all.retain(|p| {
+                p.meta.variable.var_type.to_lowercase().contains(&query)
+                    || p.meta.variable.name.to_lowercase().contains(&query)
+                    || p.meta.variable.value.to_lowercase().contains(&query)
+                    || p.meta.origin.to_lowercase().contains(&query)
+                    || p.meta.variable.memory_address
+                        .as_ref()
+                        .map(|addr| addr.to_lowercase().contains(&query))
+                        .unwrap_or(false)
+            });
+        }
+        all
+    };
+
     // Compute view-model: grouped by hash if auto-group is on, or always
     // grouped by hash if they are consecutive (for the vertical line).
     let dump_entries = move || {
-        let mut sorted = payloads.get().clone();
+        let mut sorted = filtered_payloads();
         sorted.sort_by(|a, b| b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms));
 
         // Group consecutive payloads that share the same `grouping_hash`.
@@ -156,6 +176,22 @@ pub fn App() -> impl IntoView {
         } else {
             // @TODO check why
             toast!("Dump not deleted", ToastType::Error)
+        }
+    };
+
+    let search_results_count = move || {
+        let query = search_query.get();
+
+        if query.is_empty() {
+            return String::new();
+        }
+
+        let count = filtered_payloads().len();
+
+        if count == 1 {
+            "1 result".to_string()
+        } else {
+            format!("{} results", count)
         }
     };
 
@@ -294,13 +330,26 @@ pub fn App() -> impl IntoView {
                                 autocomplete="off"
                                 autocapitalize="none"
                                 spellcheck="false"
+                                on:input=move |ev| {
+                                    set_search_query.set(event_target_value(&ev));
+                                }
+                                prop:value=search_query
                             />
                         </label>
-                        <span id="searchResult"></span>
                     </div>
                 </header>
                 <div class="quo-body">
                     <div id="quo">
+                        <Show
+                            when=move || !search_results_count().is_empty()
+                            fallback=|| {
+                                view! {
+                                    <span id="searchResult" class="opacity-0 -mt-4 -mb-2">-</span>
+                                }
+                            }
+                            >
+                            <span id="searchResult" class="text-slate-600 -mt-4 -mb-2">{search_results_count}</span>
+                        </Show>
                         <Show
                             when=move || !payloads.get().is_empty()
                             fallback=|| {
