@@ -18,7 +18,7 @@ terminal or browser console.
 
 Integrating Quo into your workflow is a simple two-step process.
 
-1. **Install the Desktop App**: [Download the latest version here](/download) or via the release page on GitHub for your
+1. **Install the Desktop App**: [Download the latest version here](https://quo.protoqol.sh/download?utm_source=github) or via the release page on GitHub for your
    operating system.
 2. **Add a Companion Package**: Choose the package for your language below and follow the installation instructions.
 
@@ -28,9 +28,13 @@ Integrating Quo into your workflow is a simple two-step process.
 
 Use the `quo-rust` crate to send variables with simple macro calls. 
 
+```bash
+cargo add quo-rust
+```
+
 ---
 
-## PHP (work in progress)
+## PHP [`quo-php`](https://github.com/Protoqol/Quo-php)
 
 The PHP companion package allows you to dump values from any PHP application.
 
