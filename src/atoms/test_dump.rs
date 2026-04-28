@@ -1,10 +1,11 @@
 use leptos::prelude::*;
-use quo::quo;
 
 #[component]
 pub fn TestDump() -> impl IntoView {
     #[cfg(debug_assertions)]
     {
+        use quo::quo;
+        
         fn test_str() {
             let cool_variable = "Test variable";
             quo!(cool_variable);
@@ -34,6 +35,10 @@ pub fn TestDump() -> impl IntoView {
             quo!(42 * 42);
         }
 
+        fn test_grouped() {
+            quo!("string", 32, 43.53);
+        }
+
         view! {
             <div class="w-full flex flex-col justify-center items-center gap-y-2 my-2">
                 <pre>Debug functions</pre>
@@ -45,6 +50,9 @@ pub fn TestDump() -> impl IntoView {
                 </div>
                 <div on:click=move |_| test_expression() class="w-3/4 cursor-pointer bg-pink-700 hover:bg-pink-800 py-1 px-2 rounded">
                     "quo!(42 * 42)"
+                </div>
+                <div on:click=move |_| test_grouped() class="w-3/4 cursor-pointer bg-pink-700 hover:bg-pink-800 py-1 px-2 rounded">
+                    "quo!(\"string\", 32, 43.53)"
                 </div>
             </div>
         }

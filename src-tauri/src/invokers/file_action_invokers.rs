@@ -100,12 +100,28 @@ pub async fn get_available_editors() -> Vec<Editor> {
             ("sublime", "Sublime Text", vec!["subl.exe"]),
             ("zed", "Zed", vec!["zed.exe"]),
             ("intellij", "IntelliJ IDEA", vec!["idea64.exe", "idea.cmd"]),
-            ("rustrover", "RustRover", vec!["rustrover64.exe", "rustrover.cmd"]),
-            ("webstorm", "WebStorm", vec!["webstorm64.exe", "webstorm.cmd"]),
-            ("phpstorm", "PhpStorm", vec!["phpstorm64.exe", "phpstorm.cmd"]),
+            (
+                "rustrover",
+                "RustRover",
+                vec!["rustrover64.exe", "rustrover.cmd"],
+            ),
+            (
+                "webstorm",
+                "WebStorm",
+                vec!["webstorm64.exe", "webstorm.cmd"],
+            ),
+            (
+                "phpstorm",
+                "PhpStorm",
+                vec!["phpstorm64.exe", "phpstorm.cmd"],
+            ),
             ("pycharm", "PyCharm", vec!["pycharm64.exe", "pycharm.cmd"]),
             ("goland", "GoLand", vec!["goland64.exe", "goland.cmd"]),
-            ("datagrip", "DataGrip", vec!["datagrip64.exe", "datagrip.cmd"]),
+            (
+                "datagrip",
+                "DataGrip",
+                vec!["datagrip64.exe", "datagrip.cmd"],
+            ),
             ("clion", "CLion", vec!["clion64.exe", "clion.cmd"]),
             ("rider", "Rider", vec!["rider64.exe", "rider.cmd"]),
         ];
@@ -245,7 +261,7 @@ pub async fn open_in_editor(cmd: String, path: String) {
         if protocol == "vscode" {
             // vscode://file/{full path to file}:line:column
             let url = format!("vscode://file/{}", path.replace("\\", "/"));
-            
+
             #[cfg(target_os = "windows")]
             {
                 let _ = create_command("cmd")
@@ -258,37 +274,40 @@ pub async fn open_in_editor(cmd: String, path: String) {
 
             #[cfg(target_os = "macos")]
             {
-                let _ = tokio::process::Command::new("open")
-                    .arg(url)
-                    .spawn();
+                let _ = tokio::process::Command::new("open").arg(url).spawn();
             }
 
             #[cfg(target_os = "linux")]
             {
-                let _ = tokio::process::Command::new("xdg-open")
-                    .arg(url)
-                    .spawn();
+                let _ = tokio::process::Command::new("xdg-open").arg(url).spawn();
             }
         }
     } else {
         let mut command = create_command(cmd.as_str());
-        
-        let is_jetbrains = cmd.contains("idea") || cmd.contains("rustrover") || cmd.contains("webstorm") ||
-                          cmd.contains("phpstorm") || cmd.contains("pycharm") || cmd.contains("goland") || 
-                          cmd.contains("datagrip") || cmd.contains("clion") || cmd.contains("rider");
+
+        let is_jetbrains = cmd.contains("idea")
+            || cmd.contains("rustrover")
+            || cmd.contains("webstorm")
+            || cmd.contains("phpstorm")
+            || cmd.contains("pycharm")
+            || cmd.contains("goland")
+            || cmd.contains("datagrip")
+            || cmd.contains("clion")
+            || cmd.contains("rider");
 
         if is_jetbrains {
             let mut parts = path.split(':');
             let base_path = parts.next().unwrap_or("");
-            
-            let (actual_path, remaining_parts) = if cfg!(target_os = "windows") && base_path.len() == 1 {
-                let drive = base_path;
-                let rest = parts.next().unwrap_or("");
-                let full_path = format!("{}:{}", drive, rest);
-                (full_path, parts.collect::<Vec<_>>())
-            } else {
-                (base_path.to_string(), parts.collect::<Vec<_>>())
-            };
+
+            let (actual_path, remaining_parts) =
+                if cfg!(target_os = "windows") && base_path.len() == 1 {
+                    let drive = base_path;
+                    let rest = parts.next().unwrap_or("");
+                    let full_path = format!("{}:{}", drive, rest);
+                    (full_path, parts.collect::<Vec<_>>())
+                } else {
+                    (base_path.to_string(), parts.collect::<Vec<_>>())
+                };
 
             if let Some(line) = remaining_parts.get(0) {
                 command.arg("--line").arg(line);
@@ -296,7 +315,7 @@ pub async fn open_in_editor(cmd: String, path: String) {
                     command.arg("--column").arg(column);
                 }
             }
-            
+
             #[cfg(target_os = "windows")]
             {
                 command.arg(actual_path.replace("/", "\\"));

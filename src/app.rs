@@ -1,17 +1,19 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
-use crate::components::DumpItem;
+use crate::components::{DumpGroup, DumpItem};
 use crate::components::SideBar;
 use crate::toast;
+use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
+use leptos::serde_json;
 use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
-use quo::quo;
 use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
+use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -23,6 +25,48 @@ extern "C" {
     async fn listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> JsValue;
 }
 
+/// Full setting DTO — shared between Taskbar, Sidebar, and App.
+#[derive(Clone, Debug, Deserialize)]
+pub struct SettingDto {
+    pub id: String,
+    pub category: String,
+    pub label: String,
+    pub description: String,
+    pub show_in_sidebar: bool,
+    pub value: serde_json::Value,
+}
+
+/// Shared reactive settings that both `App`, `Taskbar`, and `Sidebar` read/write.
+#[derive(Clone, Copy)]
+pub struct AppSettings {
+    /// Master list of all settings — single source of truth.
+    pub all_settings: RwSignal<Vec<SettingDto>>,
+    pub auto_group: RwSignal<bool>,
+    pub long_file_path: RwSignal<bool>,
+    pub auto_expand: RwSignal<bool>,
+    pub truncate_large_var_types: RwSignal<bool>,
+}
+
+impl AppSettings {
+    pub fn new() -> Self {
+        Self {
+            all_settings: RwSignal::new(vec![]),
+            auto_group: RwSignal::new(true),
+            long_file_path: RwSignal::new(false),
+            auto_expand: RwSignal::new(true),
+            truncate_large_var_types: RwSignal::new(false),
+        }
+    }
+}
+
+/// One entry in the grouped view-model: either a single payload or a
+/// group of payloads sharing the same `grouping_hash`.
+#[derive(Clone)]
+enum DumpEntry {
+    Single(IncomingQuoPayload),
+    Group(Vec<IncomingQuoPayload>),
+}
+
 #[component]
 pub fn App() -> impl IntoView {
     provide_toast_context();
@@ -32,10 +76,109 @@ pub fn App() -> impl IntoView {
     let (payloads, set_payloads, _) =
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
+    let (search_query, set_search_query) = signal(String::new());
+
+    let (expand_all_command, set_expand_all_command) = signal(0usize);
+    let (collapse_all_command, set_collapse_all_command) = signal(0usize);
+
     let (server_host, set_server_host, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_host");
     let (server_port, set_server_port, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_port");
+
+    // Consume settings from the shared context provided by main.rs
+    let settings = use_context::<AppSettings>().expect("AppSettings context missing");
+    let auto_group = settings.auto_group;
+    let long_file_path = settings.long_file_path;
+    let auto_expand = settings.auto_expand;
+    let truncate_large_var_types = settings.truncate_large_var_types;
+    let all_settings = settings.all_settings;
+
+    let (is_all_expanded, set_is_all_expanded) = signal(auto_expand.get_untracked());
+
+    Effect::new(move |_| {
+        set_is_all_expanded.set(auto_expand.get());
+    });
+
+    // Load all settings from the Tauri store once on mount and populate the
+    // shared signal so Taskbar and Sidebar can both read from it.
+    Effect::new(move |_| {
+        spawn_local(async move {
+            let result = invoke("get_settings", JsValue::NULL).await;
+            if let Ok(all) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
+                // Sync the two dedicated signals first
+                if let Some(s) = all.iter().find(|s| s.id == "auto-group-dumps") {
+                    if let Some(v) = s.value.as_bool() { auto_group.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "long-file-path") {
+                    if let Some(v) = s.value.as_bool() { long_file_path.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "auto-expand") {
+                    if let Some(v) = s.value.as_bool() { auto_expand.set(v); }
+                }
+                if let Some(s) = all.iter().find(|s| s.id == "truncate-large-var-types") {
+                    if let Some(v) = s.value.as_bool() { truncate_large_var_types.set(v); }
+                }
+                all_settings.set(all);
+            }
+        });
+    });
+
+    let filtered_payloads = move || {
+        let query = search_query.get().to_lowercase();
+        let mut all = payloads.get().clone();
+        if !query.is_empty() {
+            all.retain(|p| {
+                p.meta.variable.var_type.to_lowercase().contains(&query)
+                    || p.meta.variable.name.to_lowercase().contains(&query)
+                    || p.meta.variable.value.to_lowercase().contains(&query)
+                    || p.meta.origin.to_lowercase().contains(&query)
+                    || p.meta.variable.memory_address
+                        .as_ref()
+                        .map(|addr| addr.to_lowercase().contains(&query))
+                        .unwrap_or(false)
+            });
+        }
+        all
+    };
+
+    // Compute view-model: grouped by hash if auto-group is on, or always
+    // grouped by hash if they are consecutive (for the vertical line).
+    let dump_entries = move || {
+        let mut sorted = filtered_payloads();
+        sorted.sort_by(|a, b| b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms));
+
+        // Group consecutive payloads that share the same `grouping_hash`.
+        let mut entries: Vec<DumpEntry> = Vec::new();
+        for payload in sorted {
+            let hash = payload.meta.variable.grouping_hash.as_deref().unwrap_or("").to_string();
+            let merged = if let Some(DumpEntry::Group(ref mut group)) = entries.last_mut() {
+                let group_hash = group.first()
+                    .and_then(|p| p.meta.variable.grouping_hash.as_deref())
+                    .unwrap_or("");
+                if !hash.is_empty() && group_hash == hash {
+                    group.push(payload.clone());
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            if !merged {
+                entries.push(DumpEntry::Group(vec![payload]));
+            }
+        }
+
+        // Unwrap single-item groups back to Single.
+        entries
+            .into_iter()
+            .map(|e| match e {
+                DumpEntry::Group(mut v) if v.len() == 1 => DumpEntry::Single(v.remove(0)),
+                other => other,
+            })
+            .collect::<Vec<_>>()
+    };
 
     let delete_payload = move |uid: String| {
         let backup = payloads.get_untracked();
@@ -49,6 +192,40 @@ pub fn App() -> impl IntoView {
         } else {
             // @TODO check why
             toast!("Dump not deleted", ToastType::Error)
+        }
+    };
+
+    let has_expandable_items = Memo::new(move |_| {
+        let entries = dump_entries();
+        let auto_group_enabled = auto_group.get();
+        let truncate = truncate_large_var_types.get();
+
+        entries.iter().any(|entry| match entry {
+            DumpEntry::Single(payload) => {
+                format_by_language(payload, truncate).lines().count() > 6
+            }
+            DumpEntry::Group(payloads) => {
+                auto_group_enabled
+                    || payloads
+                        .iter()
+                        .any(|p| format_by_language(p, truncate).lines().count() > 6)
+            }
+        })
+    });
+
+    let search_results_count = move || {
+        let query = search_query.get();
+
+        if query.is_empty() {
+            return String::new();
+        }
+
+        let count = filtered_payloads().len();
+
+        if count == 1 {
+            "1 result".to_string()
+        } else {
+            format!("{} results", count)
         }
     };
 
@@ -177,20 +354,95 @@ pub fn App() -> impl IntoView {
                                 height="16"
                                 fill="currentColor"
                             >
-                                <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"></path>
+                                <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z" />
                             </svg>
                             <input
                                 type="text"
                                 id="search"
                                 node_ref=search_input_ref
                                 placeholder="Search payloads... (Press '/' to focus)"
+                                autocomplete="off"
+                                autocapitalize="none"
+                                spellcheck="false"
+                                on:input=move |ev| {
+                                    set_search_query.set(event_target_value(&ev));
+                                }
+                                prop:value=search_query
                             />
+                            <Show when=move || !search_query.get().is_empty()>
+                                <button
+                                    class="clear-button"
+                                    on:click=move |_| {
+                                        set_search_query.set(String::new());
+                                        if let Some(input) = search_input_ref.get() {
+                                            let _ = input.focus();
+                                        }
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        width="16"
+                                        height="16"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M12 10.586L16.95 5.63605L18.364 7.05026L13.414 12L18.364 16.9498L16.95 18.364L12 13.414L7.05026 18.364L5.63605 16.95L10.586 12L5.63605 7.05026L7.05026 5.63605L12 10.586Z" />
+                                    </svg>
+                                </button>
+                            </Show>
                         </label>
-                        <span id="searchResult"></span>
                     </div>
+
                 </header>
                 <div class="quo-body">
                     <div id="quo">
+                        <div class="flex items-center justify-between -mt-4 -mb-2">
+                            <Show
+                                when=move || !search_results_count().is_empty()
+                                fallback=|| {
+                                    view! {
+                                        <span id="searchResult" class="opacity-0">-</span>
+                                    }
+                                }
+                                >
+                                <span id="searchResult" class="text-slate-600 text-xs font-bold uppercase tracking-wider">{search_results_count}</span>
+                            </Show>
+
+                            <Show when=move || has_expandable_items.get()>
+                                <div class="flex items-center gap-x-2">
+                                    <button
+                                        class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                        on:click=move |_| {
+                                            if is_all_expanded.get() {
+                                                set_collapse_all_command.update(|v| *v += 1);
+                                                set_is_all_expanded.set(false);
+                                            } else {
+                                                set_expand_all_command.update(|v| *v += 1);
+                                                set_is_all_expanded.set(true);
+                                            }
+                                        }
+                                        title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
+                                    >
+                                        <Show
+                                            when=move || is_all_expanded.get()
+                                            fallback=move || view! {
+                                                "Expand all"
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                    <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
+                                                    <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
+                                                </svg>
+                                            }
+                                        >
+                                            "Collapse all"
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
+                                                <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
+                                            </svg>
+                                        </Show>
+                                    </button>
+                                </div>
+                            </Show>
+                        </div>
                         <Show
                             when=move || !payloads.get().is_empty()
                             fallback=|| {
@@ -211,21 +463,40 @@ pub fn App() -> impl IntoView {
                             }
                         >
                             <For
-                                each=move || {
-                                    let mut sorted_payloads = payloads.get().clone();
-                                    sorted_payloads
-                                        .sort_by(|a, b| {
-                                            b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms)
-                                        });
-                                    sorted_payloads.into_iter()
+                                each=dump_entries
+                                key=|entry| match entry {
+                                    DumpEntry::Single(p) => p.meta.uid.clone(),
+                                    DumpEntry::Group(g) => g
+                                        .iter()
+                                        .map(|p| p.meta.uid.as_str())
+                                        .collect::<Vec<_>>()
+                                        .join(","),
                                 }
-                                key=|payload| payload.meta.uid.clone()
-                                children=move |payload: IncomingQuoPayload| {
-                                    view! {
-                                        <DumpItem
-                                            dump=payload
-                                            on_delete=Callback::new(delete_payload)
-                                        />
+                                children=move |entry| {
+                                    match entry {
+                                        DumpEntry::Single(payload) => view! {
+                                            <DumpItem
+                                                dump=payload
+                                                on_delete=Callback::new(delete_payload)
+                                                long_file_path=Signal::from(long_file_path)
+                                                auto_expand=Signal::from(auto_expand)
+                                                truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                expand_all_command=expand_all_command
+                                                collapse_all_command=collapse_all_command
+                                            />
+                                        }.into_any(),
+                                        DumpEntry::Group(dumps) => view! {
+                                            <DumpGroup
+                                                dumps=dumps
+                                                on_delete=Callback::new(delete_payload)
+                                                long_file_path=Signal::from(long_file_path)
+                                                auto_group=Signal::from(auto_group)
+                                                auto_expand=Signal::from(auto_expand)
+                                                truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                expand_all_command=expand_all_command
+                                                collapse_all_command=collapse_all_command
+                                            />
+                                        }.into_any(),
                                     }
                                 }
                             />

@@ -1,3 +1,4 @@
+use crate::app::{AppSettings, SettingDto};
 use crate::atoms::ToastType;
 use crate::atoms::TestDump;
 use crate::components::LanguageIcon;
@@ -7,16 +8,17 @@ use gloo_timers::callback::Timeout;
 use itertools::Itertools;
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
+use leptos::serde_json;
+use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use leptos_use::{use_clipboard, UseClipboardReturn};
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use wasm_bindgen::prelude::*;
 
-#[derive(Clone, PartialEq)]
-struct ToggleSetting {
-    id: String,
-    title: String,
-    description: String,
-    position: bool, // Toggle position, true = on, false = off.
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
+    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
 #[component]
@@ -59,32 +61,14 @@ pub fn SideBar(
         }
     };
 
-    let toggle_settings: Vec<ToggleSetting> = vec![
-        ToggleSetting {
-            id: "auto-group-dumps".to_string(),
-            title: "Auto group dumps".to_string(),
-            description:
-                "When dumping multiple variables at once Quo will automatically group those together."
-                    .to_string(),
-            position: false,
-        },
-        ToggleSetting {
-            id: "auto-expand".to_string(),
-            title: "Collapse data".to_string(),
-            description:
-                "Automatically expand larger data structures"
-                    .to_string(),
-            position: true,
-        },
-        ToggleSetting {
-            id: "long-file-path".to_string(),
-            title: "Show full file path".to_string(),
-            description:
-                "Show full file path instead of the truncated version"
-                    .to_string(),
-            position: false,
-        }
-    ];
+    // Consume the shared AppSettings context — all_settings is the single source of truth.
+    let app_settings = use_context::<AppSettings>().expect("AppSettings context missing");
+    let all_settings = app_settings.all_settings;
+
+    // Derive the sidebar subset reactively from the shared signal (no separate fetch needed).
+    let sidebar_settings = move || -> Vec<SettingDto> {
+        all_settings.get().into_iter().filter(|s| s.show_in_sidebar).collect()
+    };
 
     let copy_address = move |server_host: String, server_port: String, is_supported: bool| {
         if !is_supported {
@@ -192,26 +176,63 @@ pub fn SideBar(
                         </span>
                     </div>
                     <For
-                        each=move || toggle_settings.clone()
-                        key=|setting| setting.title.clone()
-                        children=|setting: ToggleSetting| {
+                        each=sidebar_settings
+                        key=|setting| setting.id.clone()
+                        children=move |setting| {
+                            let stored_id = StoredValue::new(setting.id.clone());
+                            // Derive checked state from the shared all_settings signal.
+                            let checked = Memo::new(move |_| {
+                                all_settings
+                                    .get()
+                                    .into_iter()
+                                    .find(|s| s.id == stored_id.get_value())
+                                    .and_then(|s| s.value.as_bool())
+                                    .unwrap_or(false)
+                            });
                             view! {
                                 <label
                                     class="flex items-center justify-between cursor-pointer group mb-3"
-                                    title=setting.description
+                                    title=setting.description.clone()
                                 >
                                     <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
-                                        {setting.title}
+                                        {setting.label.clone()}
                                     </span>
-                                    <div class="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            id="autoGroupToggle"
-                                            class="sr-only peer"
-                                            checked=setting.position
-                                        />
-                                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
-                                    </div>
+                                    <button
+                                        class=move || format!(
+                                            "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {}",
+                                            if checked.get() { "bg-accent" } else { "bg-slate-600" }
+                                        )
+                                        on:click=move |_| {
+                                            let new_val = !checked.get_untracked();
+                                            let id = stored_id.get_value();
+                                            // Update the shared signal — Taskbar modal sees this instantly.
+                                            all_settings.update(|list| {
+                                                if let Some(s) = list.iter_mut().find(|s| s.id == id) {
+                                                    s.value = serde_json::json!(new_val);
+                                                }
+                                            });
+                                            // Keep dedicated signals in sync so dump list reacts.
+                                            match id.as_str() {
+                                                "auto-group-dumps" => app_settings.auto_group.set(new_val),
+                                                "long-file-path"   => app_settings.long_file_path.set(new_val),
+                                                "auto-expand"      => app_settings.auto_expand.set(new_val),
+                                                "truncate-large-var-types" => app_settings.truncate_large_var_types.set(new_val),
+                                                _ => {}
+                                            }
+                                            // Persist to the Tauri store
+                                            spawn_local(async move {
+                                                let args = serde_wasm_bindgen::to_value(
+                                                    &serde_json::json!({ "id": id, "value": new_val })
+                                                ).unwrap();
+                                                invoke("set_setting", args).await;
+                                            });
+                                        }
+                                    >
+                                        <span class=move || format!(
+                                            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {}",
+                                            if checked.get() { "translate-x-4" } else { "translate-x-0" }
+                                        ) />
+                                    </button>
                                 </label>
                             }
                         }
