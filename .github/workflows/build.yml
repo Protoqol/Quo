@@ -23,26 +23,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate Changelog
-        id: changelog
-        shell: bash
-        run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || "")
-          if [ -z "$PREV_TAG" ]; then
-            LOG=$(git log --pretty=format:"* %s")
-          else
-            LOG=$(git log --pretty=format:"* %s" $PREV_TAG..HEAD)
-          fi
-          CHANGELOG=$(echo "$LOG" | grep -E "^\* \((feat|fix|ui)\)" || true)
-          if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="No changes starting with (feat), (fix), or (ui) found."
-          fi
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -61,7 +41,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: ". -> target"
+          workspaces: './src-tauri -> target'
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -86,7 +66,7 @@ jobs:
         with:
           tagName: quo-v__VERSION__
           releaseName: 'Quo v__VERSION__'
-          releaseBody: "${{ steps.changelog.outputs.body }}"
-          releaseDraft: false
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
