@@ -4,11 +4,11 @@ use leptos::prelude::*;
 pub fn TestDump() -> impl IntoView {
     #[cfg(debug_assertions)]
     {
-        use quo::quo;
+        // 
         
         fn test_str() {
             let cool_variable = "Test variable";
-            quo!(cool_variable);
+            // quo!(cool_variable);
         }
 
         fn test_struct() {
@@ -28,15 +28,15 @@ pub fn TestDump() -> impl IntoView {
                 array: ["This".to_string(), "is".to_string(), "array".to_string()],
             };
 
-            quo!(cool_variable);
+            // quo!(cool_variable);
         }
 
         fn test_expression() {
-            quo!(42 * 42);
+            // quo!(42 * 42);
         }
 
         fn test_grouped() {
-            quo!("string", 32, 43.53);
+            // quo!("string", 32, 43.53);
         }
 
         view! {

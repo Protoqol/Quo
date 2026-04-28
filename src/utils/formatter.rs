@@ -79,21 +79,27 @@ fn format_rust(dump: &IncomingQuoPayload) -> String {
         Ok(formatted) => {
             let trimmed = formatted.trim();
             if let Some(start) = trimmed.find('{') {
+
                 if let Some(end) = trimmed.rfind('}') {
                     let content = &trimmed[start + 1..end];
                     let lines: Vec<&str> = content.lines().collect();
+
                     if lines.is_empty() {
                         return String::new();
                     }
 
                     // Determine common indentation to strip
                     let mut min_indent = usize::MAX;
+
                     for line in lines.iter().skip(1) {
                         let trimmed = line.trim_end();
+
                         if trimmed.is_empty() {
                             continue;
                         }
+
                         let indent = trimmed.chars().take_while(|c| c.is_whitespace()).count();
+
                         if indent < min_indent {
                             min_indent = indent;
                         }
@@ -104,8 +110,10 @@ fn format_rust(dump: &IncomingQuoPayload) -> String {
                     }
 
                     let mut result = String::new();
+
                     for (i, line) in lines.iter().enumerate() {
                         let line = line.trim_end();
+
                         let trimmed_line = if i == 0 {
                             line.trim_start()
                         } else if line.len() >= min_indent {
@@ -114,15 +122,18 @@ fn format_rust(dump: &IncomingQuoPayload) -> String {
                             line.trim_start()
                         };
                         result.push_str(trimmed_line);
+
                         if i < lines.len() - 1 {
                             result.push('\n');
                         }
                     }
 
                     let result = result.trim();
+
                     if result.ends_with(';') {
                         return result[..result.len() - 1].trim().to_string();
                     }
+
                     return result.to_string();
                 }
             }
@@ -162,12 +173,12 @@ fn format_javascript_typescript(dump: &IncomingQuoPayload) -> String {
 fn format_php(dump: &IncomingQuoPayload) -> String {
     // @TODO find better way display type UI wise
     format!(
-        "// @var {}\n{}{} = {}",
+        "\n// @var {}\n{}{} = {}",
         dump.meta.variable.var_type,
         if dump.meta.variable.is_constant {
             "const "
         } else {
-            "$"
+            ""
         },
         dump.meta.variable.name,
         format_code_snippet(&dump.meta.variable.value, 4),
