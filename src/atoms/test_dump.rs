@@ -1,10 +1,11 @@
 use leptos::prelude::*;
-use quo::quo;
 
 #[component]
 pub fn TestDump() -> impl IntoView {
     #[cfg(debug_assertions)]
     {
+        use quo::quo;
+        
         fn test_str() {
             let cool_variable = "Test variable";
             quo!(cool_variable);
