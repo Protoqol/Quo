@@ -1,5 +1,5 @@
 use crate::events::payload_received::send_incoming_payload_to_frontend;
-use crate::server::router::{full, respond};
+use crate::server::router::{respond};
 use http_body_util::combinators::BoxBody;
 use http_body_util::BodyExt;
 use hyper::body::Bytes;
