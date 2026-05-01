@@ -1,5 +1,9 @@
+use dprint_plugin_json::configuration::ConfigurationBuilder as JSONConfigBuilder;
+use dprint_plugin_typescript::configuration::ConfigurationBuilder as JSConfigBuilder;
+use dprint_plugin_typescript::FormatTextOptions;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use rust_format::{Formatter, RustFmt};
+use std::path::Path;
 
 pub fn format_by_language(dump: &IncomingQuoPayload, truncate: bool) -> String {
     let mut dump = dump.clone();
@@ -79,7 +83,6 @@ fn format_rust(dump: &IncomingQuoPayload) -> String {
         Ok(formatted) => {
             let trimmed = formatted.trim();
             if let Some(start) = trimmed.find('{') {
-
                 if let Some(end) = trimmed.rfind('}') {
                     let content = &trimmed[start + 1..end];
                     let lines: Vec<&str> = content.lines().collect();
@@ -152,22 +155,96 @@ fn format_rust(dump: &IncomingQuoPayload) -> String {
 }
 
 fn format_javascript_typescript(dump: &IncomingQuoPayload) -> String {
-    let declaration = format!(
-        "{} {}: {}",
-        if dump.meta.variable.is_constant {
-            "const"
-        } else {
-            "let"
-        },
-        dump.meta.variable.name,
-        dump.meta.variable.var_type,
-    );
+    let declaration = match dump.meta.variable.is_expression {
+        false => format!(
+            "{} {}: {}",
+            if dump.meta.variable.is_constant {
+                "const"
+            } else if dump.meta.variable.is_expression {
+                "type"
+            } else {
+                "let"
+            },
+            dump.meta.variable.name,
+            dump.meta.variable.var_type,
+        ),
+        true => {
+            let is_multiline = dump.meta.variable.value.contains('\n')
+                || dump.meta.variable.value.starts_with('[')
+                || dump.meta.variable.value.starts_with('{');
 
-    format!(
-        "{} = {}",
-        declaration,
-        format_code_snippet(&dump.meta.variable.value, 4)
-    )
+            if is_multiline {
+                format!("(expr): {}", dump.meta.variable.var_type)
+            } else {
+                format!(
+                    "({}): {}",
+                    dump.meta.variable.name, dump.meta.variable.var_type
+                )
+            }
+        }
+    };
+
+    let value =
+        if dump.meta.variable.var_type == "string" && !dump.meta.variable.value.contains("\"") {
+            format!("\"{}\"", dump.meta.variable.value)
+        } else {
+            dump.meta.variable.value.to_string()
+        };
+
+    format!("{} = {}", declaration, format_js_ts(&value))
+}
+
+fn format_js_ts(code: &str) -> String {
+    let mut config_builder = JSConfigBuilder::new();
+    config_builder
+        .line_width(80)
+        .indent_width(4)
+        .quote_style(dprint_plugin_typescript::configuration::QuoteStyle::AlwaysDouble)
+        .semi_colons(dprint_plugin_typescript::configuration::SemiColons::Always)
+        .object_expression_prefer_single_line(false)
+        .array_expression_prefer_single_line(false)
+        .object_pattern_prefer_single_line(false)
+        .array_pattern_prefer_single_line(false)
+        .space_surrounding_properties(true)
+        .type_annotation_space_before_colon(true)
+        .object_expression_space_surrounding_properties(true)
+        .object_pattern_space_surrounding_properties(true);
+
+    let config = config_builder.build();
+
+    let options = FormatTextOptions {
+        path: Path::new("snippet.ts"),
+        extension: None,
+        text: code.to_string(),
+        config: &config,
+        external_formatter: None,
+    };
+
+    let formatted = match dprint_plugin_typescript::format_text(options) {
+        Ok(Some(formatted)) => formatted.trim().to_string(),
+        _ => format_code_snippet(code, 4),
+    };
+
+    add_json_colon_spaces(&formatted)
+}
+
+fn add_json_colon_spaces(code: &str) -> String {
+    code.lines()
+        .map(|line| {
+            // Only process lines that look like JSON key-value pairs,
+            // i.e. the first non-whitespace char is a quote (a quoted key).
+            let trimmed = line.trim_start();
+            if trimmed.starts_with('"') {
+                if let Some(colon_pos) = line.find("\":") {
+                    let before = &line[..colon_pos + 1]; // include the closing quote
+                    let after = &line[colon_pos + 2..]; // skip the ":"
+                    return format!("{} : {}", before, after.trim_start());
+                }
+            }
+            line.to_string()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn format_php(dump: &IncomingQuoPayload) -> String {
@@ -181,7 +258,7 @@ fn format_php(dump: &IncomingQuoPayload) -> String {
             ""
         },
         dump.meta.variable.name,
-        format_code_snippet(&dump.meta.variable.value, 4),
+        format_js_ts(&dump.meta.variable.value),
     )
 }
 
@@ -190,7 +267,7 @@ fn format_go(dump: &IncomingQuoPayload) -> String {
         "var {} {} = {}",
         dump.meta.variable.name,
         dump.meta.variable.var_type,
-        format_code_snippet(&dump.meta.variable.value, 4)
+        format_js_ts(&dump.meta.variable.value)
     )
 }
 
@@ -209,8 +286,23 @@ fn format_generic(dump: &IncomingQuoPayload) -> String {
     format!(
         "{} = {}",
         declaration,
-        format_code_snippet(&dump.meta.variable.value, 4)
+        format_json(&dump.meta.variable.value)
     )
+}
+
+fn format_json(code: &str) -> String {
+    let mut config_builder = JSONConfigBuilder::new();
+    config_builder
+        .indent_width(4)
+        .object_prefer_single_line(false)
+        .array_prefer_single_line(false);
+
+    let config = config_builder.build();
+
+    match dprint_plugin_json::format_text(Path::new("snippet.json"), code, &config) {
+        Ok(Some(formatted)) => formatted.trim().to_string(),
+        _ => format_code_snippet(code, 4),
+    }
 }
 
 fn format_code_snippet(code: &str, indent_size: usize) -> String {

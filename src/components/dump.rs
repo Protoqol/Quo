@@ -30,17 +30,28 @@ pub fn DumpGroup(
     let count = dumps.len();
 
     // Collect variable names for the header summary, e.g. "foo, bar, baz"
-    let var_names = StoredValue::new(dumps
-        .iter()
-        .map(|d| d.meta.variable.name.as_str())
-        .collect::<Vec<_>>()
-        .join(", "));
+    let var_names = StoredValue::new(
+        dumps
+            .iter()
+            .map(|d| d.meta.variable.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", "),
+    );
 
     // Call-site file shown in the header (from the first dump)
-    let call_site = StoredValue::new(dumps
-        .first()
-        .map(|f| f.meta.sender_origin.split('/').next_back().unwrap_or("").to_string())
-        .unwrap_or_default());
+    let call_site = StoredValue::new(
+        dumps
+            .first()
+            .map(|f| {
+                f.meta
+                    .sender_origin
+                    .split('/')
+                    .next_back()
+                    .unwrap_or("")
+                    .to_string()
+            })
+            .unwrap_or_default(),
+    );
 
     // Collapsed state — groups start expanded
     let (collapsed, set_collapsed) = signal(false);
@@ -186,9 +197,7 @@ pub fn DumpItem(
         format_by_language(&dump_stored.get_value(), truncate_large_var_types.get())
     });
 
-    let content_lines = Memo::new(move |_| {
-        formatted_code.get().lines().count()
-    });
+    let content_lines = Memo::new(move |_| formatted_code.get().lines().count());
 
     Effect::new(move |prev: Option<usize>| {
         let current = expand_all_command.get();
@@ -206,11 +215,9 @@ pub fn DumpItem(
         current
     });
 
-    let is_collapsed = Memo::new(move |_| {
-        match manual_state.get() {
-            Some(expanded) => !expanded,
-            None => !auto_expand.get() && content_lines.get() > 6,
-        }
+    let is_collapsed = Memo::new(move |_| match manual_state.get() {
+        Some(expanded) => !expanded,
+        None => !auto_expand.get() && content_lines.get() > 6,
     });
 
     let is_fresh = {
@@ -233,8 +240,8 @@ pub fn DumpItem(
                                     set_fresh.set(true);
                                 }
                             }) as Box<dyn FnMut()>)
-                                .into_js_value()
-                                .unchecked_into(),
+                            .into_js_value()
+                            .unchecked_into(),
                             1000,
                         )
                         .unwrap();
@@ -252,9 +259,8 @@ pub fn DumpItem(
 
     // Reactive file path label — updates when the setting changes
     let sender_origin_raw = dump_stored.get_value().meta.sender_origin.clone();
-    let file_path_label = Memo::new(move |_| {
-        file_path_format(&sender_origin_raw, long_file_path.get())
-    });
+    let file_path_label =
+        Memo::new(move |_| file_path_format(&sender_origin_raw, long_file_path.get()));
 
     let delete_uid = dump_stored.get_value().meta.uid.clone();
     let delete_self = StoredValue::new(move || {
@@ -269,7 +275,7 @@ pub fn DumpItem(
                 "open_file",
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "path": path })).unwrap(),
             )
-                .await;
+            .await;
         });
         set_show_dropdown.set(false);
     });
@@ -282,7 +288,7 @@ pub fn DumpItem(
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd, "path": path }))
                     .unwrap(),
             )
-                .await;
+            .await;
         });
         set_show_dropdown.set(false);
     });
@@ -294,7 +300,7 @@ pub fn DumpItem(
                 "show_in_explorer",
                 serde_wasm_bindgen::to_value(&serde_json::json!({ "path": path })).unwrap(),
             )
-                .await;
+            .await;
         });
         set_show_dropdown.set(false);
     });
@@ -314,7 +320,6 @@ pub fn DumpItem(
     // Functions
     //
 
-    // @TODO collapsed struct names
     fn code_format(dump: &IncomingQuoPayload, formatted_code: &str) -> String {
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
@@ -322,10 +327,22 @@ pub fn DumpItem(
             ThemeSet::load_from_reader(&mut cursor).expect("Failed to load embedded theme")
         });
 
-        let syntax = ss.find_syntax_by_extension("rs").unwrap();
+        let resolved_file_extension_for_syntax = match dump.language {
+            QuoPayloadLanguage::Javascript => "js",
+            // @TODO TypeScript syntax highlighting
+            QuoPayloadLanguage::Typescript => "js",
+            QuoPayloadLanguage::Rust => "rs",
+            QuoPayloadLanguage::Php => "php",
+            QuoPayloadLanguage::Python => "py",
+            QuoPayloadLanguage::Ruby => "rb",
+            QuoPayloadLanguage::Go => "go",
+            QuoPayloadLanguage::Unknown => "txt",
+        };
+
+        let syntax = ss.find_syntax_by_extension(resolved_file_extension_for_syntax).unwrap();
 
         let to_highlight = if dump.language == QuoPayloadLanguage::Php {
-            format!("<?php\n{}", formatted_code)
+            format!("<?php{}", formatted_code)
         } else {
             formatted_code.to_string()
         };
@@ -343,7 +360,7 @@ pub fn DumpItem(
                 }
             }
 
-            return html.replace("&lt;?php", "").replace("<?php", "");
+            return html.replace("&lt;?php\n", "").replace("<?php\n", "");
         }
 
         html
@@ -397,7 +414,8 @@ pub fn DumpItem(
     });
 
     view! {
-        <div class="quo-dump-container relative animate-slide-in-top group/item transition-all duration-300">
+        <div data-grouping-hash=move || format!("{}", dump_stored.get_value().meta.variable.grouping_hash.unwrap().to_string())
+            class="quo-dump-container relative animate-slide-in-top group/item transition-all duration-300">
             <Show when=move || is_fresh.get()>
                 <span class="absolute -top-1 -left-1 flex h-2.5 w-2.5 z-20">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>

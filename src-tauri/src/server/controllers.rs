@@ -13,6 +13,7 @@ use tauri::AppHandle;
 pub async fn handle_incoming_payload(
     req: Request<hyper::body::Incoming>,
     app: AppHandle,
+    origin: Option<String>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
     let body_bytes = match req.collect().await {
         Ok(b) => b.to_bytes(),
@@ -20,6 +21,7 @@ pub async fn handle_incoming_payload(
             return Ok(respond(
                 format!("Unparseable payload: {}", e.to_string()),
                 StatusCode::BAD_REQUEST,
+                origin,
             ));
         }
     };
@@ -28,6 +30,7 @@ pub async fn handle_incoming_payload(
         return Ok(respond(
             "Empty payload".to_string(),
             StatusCode::BAD_REQUEST,
+            origin,
         ));
     }
 
@@ -40,6 +43,7 @@ pub async fn handle_incoming_payload(
                     e.to_string()
                 ),
                 StatusCode::BAD_REQUEST,
+                origin,
             ));
         }
     };
@@ -48,5 +52,5 @@ pub async fn handle_incoming_payload(
 
     println!("Payload received and sent to frontend");
 
-    Ok(Response::new(full("OK")))
+    Ok(respond("OK".to_string(), StatusCode::OK, origin))
 }

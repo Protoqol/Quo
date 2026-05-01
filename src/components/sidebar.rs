@@ -1,6 +1,5 @@
 use crate::app::{AppSettings, SettingDto};
 use crate::atoms::ToastType;
-use crate::atoms::TestDump;
 use crate::components::LanguageIcon;
 use crate::toast;
 use codee::string::JsonSerdeCodec;
@@ -136,7 +135,6 @@ pub fn SideBar(
                     />
                 </div>
             </nav>
-            <TestDump/>
             <div
                 title="Copy Quo address"
                 class="cursor-pointer flex flex-row justify-center items-center w-full"

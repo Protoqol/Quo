@@ -146,7 +146,12 @@ pub fn App() -> impl IntoView {
     // grouped by hash if they are consecutive (for the vertical line).
     let dump_entries = move || {
         let mut sorted = filtered_payloads();
-        sorted.sort_by(|a, b| b.meta.time_epoch_ms.cmp(&a.meta.time_epoch_ms));
+        sorted.sort_by(|a, b| {
+            b.meta
+                .time_epoch_ms
+                .cmp(&a.meta.time_epoch_ms)
+                .then_with(|| b.meta.id.cmp(&a.meta.id))
+        });
 
         // Group consecutive payloads that share the same `grouping_hash`.
         let mut entries: Vec<DumpEntry> = Vec::new();
@@ -167,6 +172,13 @@ pub fn App() -> impl IntoView {
             };
             if !merged {
                 entries.push(DumpEntry::Group(vec![payload]));
+            }
+        }
+
+        // Within each group, sort by ID descending.
+        for entry in &mut entries {
+            if let DumpEntry::Group(ref mut group) = entry {
+                group.sort_by(|a, b| b.meta.id.cmp(&a.meta.id));
             }
         }
 
