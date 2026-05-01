@@ -1,7 +1,6 @@
 use dprint_plugin_json::configuration::ConfigurationBuilder as JSONConfigBuilder;
 use dprint_plugin_typescript::configuration::ConfigurationBuilder as JSConfigBuilder;
 use dprint_plugin_typescript::FormatTextOptions;
-use leptos::svg::line;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use rust_format::{Formatter, RustFmt};
 use std::path::Path;

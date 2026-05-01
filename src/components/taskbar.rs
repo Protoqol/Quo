@@ -295,7 +295,7 @@ pub fn Taskbar() -> impl IntoView {
                                     <h3 class="text-white font-semibold mb-2">"About Quo"</h3>
                                     <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-700">
                                         <p class="text-sm font-bold text-white">"Quo Debugging Client"</p>
-                                        <p class="text-xs text-slate-500 mt-1">"Version 0.1.0"</p>
+                                        <p class="text-xs text-slate-500 mt-1">"Version 0.1.2"</p>
                                         <p class="text-xs text-slate-500 mt-4">"Developed by Protoqol"</p>
                                     </div>
                                 </div>
