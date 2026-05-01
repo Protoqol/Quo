@@ -9,6 +9,10 @@ pub async fn router(
     request: Request<hyper::body::Incoming>,
     app: AppHandle,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
+    if request.method() == Method::OPTIONS {
+        return Ok(respond("".to_string(), StatusCode::OK));
+    }
+
     match (request.method(), request.uri().path()) {
         (&Method::GET, "/") => Ok(respond("Quo is listening".to_string(), StatusCode::OK)),
         (&Method::POST, "/payload") => handle_incoming_payload(request, app).await,
@@ -23,6 +27,10 @@ pub async fn router(
 pub fn respond(s: String, status_code: StatusCode) -> Response<BoxBody<Bytes, hyper::Error>> {
     Response::builder()
         .status(status_code)
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        .header("Access-Control-Allow-Headers", "*")
+        .header("Access-Control-Max-Age", "86400")
         .body(full(s))
         .expect("Valid response body")
 }

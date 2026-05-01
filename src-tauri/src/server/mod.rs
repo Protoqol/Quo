@@ -29,6 +29,8 @@ pub fn setup_server(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         // @TODO custom host
         let host = [127, 0, 0, 1];
+
+        // @TODO handle no port available
         let port_to_use = free_local_port_in_range(7312..=7400).unwrap();
 
         let addr = SocketAddr::from((host, port_to_use));

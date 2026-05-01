@@ -48,5 +48,5 @@ pub async fn handle_incoming_payload(
 
     println!("Payload received and sent to frontend");
 
-    Ok(Response::new(full("OK")))
+    Ok(respond("OK".to_string(), StatusCode::OK))
 }
