@@ -110,7 +110,7 @@ quo([$userId, $username]);
 
 ---
 
-## JavaScript / TypeScript (work in progress)
+## JavaScript / TypeScript [`quo-ts`](https://github.com/Protoqol/Quo-ts)
 
 Use the JavaScript package in Node.js or browser projects to dump runtime values.
 
