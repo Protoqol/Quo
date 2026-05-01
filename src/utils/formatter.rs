@@ -1,6 +1,7 @@
 use dprint_plugin_json::configuration::ConfigurationBuilder as JSONConfigBuilder;
 use dprint_plugin_typescript::configuration::ConfigurationBuilder as JSConfigBuilder;
 use dprint_plugin_typescript::FormatTextOptions;
+use leptos::svg::line;
 use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
 use rust_format::{Formatter, RustFmt};
 use std::path::Path;
@@ -184,11 +185,14 @@ fn format_javascript_typescript(dump: &IncomingQuoPayload) -> String {
         }
     };
 
-    format!(
-        "{} = {}",
-        declaration,
-        format_js_ts(&dump.meta.variable.value)
-    )
+    let value =
+        if dump.meta.variable.var_type == "string" && !dump.meta.variable.value.contains("\"") {
+            format!("\"{}\"", dump.meta.variable.value)
+        } else {
+            dump.meta.variable.value.to_string()
+        };
+
+    format!("{} = {}", declaration, format_js_ts(&value))
 }
 
 fn format_js_ts(code: &str) -> String {
