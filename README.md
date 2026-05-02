@@ -9,7 +9,7 @@ terminal or browser console.
 ## Features
 
 - **Real-time Inspection**: See variables as they are dumped from your code.
-- **Cross-platform**: Works on Windows, macOS (x86 + ARM), and Linux.
+- **Cross-platform**: Supports for Windows, macOS (x86 + ARM), and Linux.
 - **Multi-language Support**: Official companion packages for Rust, PHP, and JavaScript/TypeScript.
 - **Diff payloads**: Ability to diff two different payloads and see their differences (useful for large JSON payloads).
 
@@ -71,10 +71,6 @@ fn main() {
     let user_id = 42;
     let user = User { id: 1, username: "jdoe".to_string() };
 
-    // Dump a single variable
-    quo!(user_id);
-
-    // Dump multiple variables at once
     quo!(user_id, user);
 }
 ```
@@ -105,7 +101,7 @@ require_once 'vendor/autoload.php';
 $userId = 42;
 $username = 'dev_user';
 
-quo([$userId, $username]);
+quo($userId, $username);
 ```
 
 ---
@@ -132,7 +128,10 @@ import {quo} from "@protoqol/quo-ts";
 const userId = 42;
 const username = "dev_user";
 
-quo([userId, username]);
+quo(userId, username);
+
+// Or if quo not importable and not on Node
+window.quo(userId, username);
 ```
 
 ## License
