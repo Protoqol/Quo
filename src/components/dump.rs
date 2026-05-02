@@ -445,7 +445,7 @@ pub fn DumpItem(
                         }
                     }
                 >
-                    <div class="absolute top-3 right-10">
+                    <div class="absolute bottom-3 right-6">
                          <div class=move || format!(
                             "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {}",
                             if is_selected.get() { "bg-accent border-accent" } else { "border-slate-500 bg-transparent" }

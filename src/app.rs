@@ -1,14 +1,14 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
-use crate::components::{DumpGroup, DumpItem};
 use crate::components::SideBar;
+use crate::components::{DumpGroup, DumpItem};
 use crate::toast;
 use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;
 use leptos::ev;
 use leptos::html;
-use leptos::serde_json;
 use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
+use leptos::serde_json;
 use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use quo_common::events::ConnectionEstablishedEvent;
@@ -157,16 +157,24 @@ pub fn App() -> impl IntoView {
             if let Ok(all) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
                 // Sync the two dedicated signals first
                 if let Some(s) = all.iter().find(|s| s.id == "auto-group-dumps") {
-                    if let Some(v) = s.value.as_bool() { auto_group.set(v); }
+                    if let Some(v) = s.value.as_bool() {
+                        auto_group.set(v);
+                    }
                 }
                 if let Some(s) = all.iter().find(|s| s.id == "long-file-path") {
-                    if let Some(v) = s.value.as_bool() { long_file_path.set(v); }
+                    if let Some(v) = s.value.as_bool() {
+                        long_file_path.set(v);
+                    }
                 }
                 if let Some(s) = all.iter().find(|s| s.id == "auto-expand") {
-                    if let Some(v) = s.value.as_bool() { auto_expand.set(v); }
+                    if let Some(v) = s.value.as_bool() {
+                        auto_expand.set(v);
+                    }
                 }
                 if let Some(s) = all.iter().find(|s| s.id == "truncate-large-var-types") {
-                    if let Some(v) = s.value.as_bool() { truncate_large_var_types.set(v); }
+                    if let Some(v) = s.value.as_bool() {
+                        truncate_large_var_types.set(v);
+                    }
                 }
                 all_settings.set(all);
             }
@@ -182,7 +190,9 @@ pub fn App() -> impl IntoView {
                     || p.meta.variable.name.to_lowercase().contains(&query)
                     || p.meta.variable.value.to_lowercase().contains(&query)
                     || p.meta.origin.to_lowercase().contains(&query)
-                    || p.meta.variable.memory_address
+                    || p.meta
+                        .variable
+                        .memory_address
                         .as_ref()
                         .map(|addr| addr.to_lowercase().contains(&query))
                         .unwrap_or(false)
@@ -205,9 +215,16 @@ pub fn App() -> impl IntoView {
         // Group consecutive payloads that share the same `grouping_hash`.
         let mut entries: Vec<DumpEntry> = Vec::new();
         for payload in sorted {
-            let hash = payload.meta.variable.grouping_hash.as_deref().unwrap_or("").to_string();
+            let hash = payload
+                .meta
+                .variable
+                .grouping_hash
+                .as_deref()
+                .unwrap_or("")
+                .to_string();
             let merged = if let Some(DumpEntry::Group(ref mut group)) = entries.last_mut() {
-                let group_hash = group.first()
+                let group_hash = group
+                    .first()
                     .and_then(|p| p.meta.variable.grouping_hash.as_deref())
                     .unwrap_or("");
                 if !hash.is_empty() && group_hash == hash {
@@ -262,9 +279,7 @@ pub fn App() -> impl IntoView {
         let truncate = truncate_large_var_types.get();
 
         entries.iter().any(|entry| match entry {
-            DumpEntry::Single(payload) => {
-                format_by_language(payload, truncate).lines().count() > 6
-            }
+            DumpEntry::Single(payload) => format_by_language(payload, truncate).lines().count() > 6,
             DumpEntry::Group(payloads) => {
                 auto_group_enabled
                     || payloads
@@ -457,9 +472,9 @@ pub fn App() -> impl IntoView {
                 <div class="quo-body">
                     <div id="quo" class="relative">
                         <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
-                            <div class="absolute top-4 left-4 z-[70] animate-bounce-in">
+                            <div class="absolute -bottom-8 right-4 z-[70]">
                                 <button
-                                    class="bg-accent text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 hover:scale-110 transition-all"
+                                    class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
                                     on:click=perform_diff
                                 >
                                     "Diff selected payloads"
@@ -526,11 +541,11 @@ pub fn App() -> impl IntoView {
                                                 set_selected_payload_uids.set(vec![]);
                                             }
                                         }
-                                        title="Diff payloads"
+                                        title="Compare 2 payloads with eachother"
                                     >
                                         "Diff payloads"
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+                                            <path fill="currentColor" d="M112 154a6 6 0 0 0-6 6v33.52l-41.07-41.08a9.93 9.93 0 0 1-2.93-7.07v-52a30 30 0 1 0-12 0v52a21.88 21.88 0 0 0 6.44 15.56L97.52 202H64a6 6 0 0 0 0 12h48a6 6 0 0 0 6-6v-48a6 6 0 0 0-6-6M38 64a18 18 0 1 1 18 18a18 18 0 0 1-18-18m168 98.6v-52a21.88 21.88 0 0 0-6.44-15.56L158.48 54H192a6 6 0 0 0 0-12h-48a6 6 0 0 0-6 6v48a6 6 0 0 0 12 0V62.48l41.07 41.08a9.93 9.93 0 0 1 2.93 7.07v52a30 30 0 1 0 12 0Zm-6 47.4a18 18 0 1 1 18-18a18 18 0 0 1-18 18"/>
                                         </svg>
                                     </button>
                                 </div>
@@ -623,11 +638,13 @@ pub fn App() -> impl IntoView {
                             </svg>
                         </button>
                     </div>
-                    <div class="p-4 overflow-auto font-mono text-sm whitespace-pre-wrap">
+                    <div class="select-text p-4 overflow-auto font-mono text-sm whitespace-pre-wrap">
                         {move || {
                             let diff = diff_result.get().unwrap_or_default();
                             let lines: Vec<String> = diff.lines().map(|s| s.to_string()).collect();
-                            lines.into_iter().map(|line| {
+                            let len = lines.len();
+
+                            lines.into_iter().enumerate().map(|(i, mut line)| {
                                 let color = if line.starts_with('+') {
                                     "text-green-400 bg-green-400/10"
                                 } else if line.starts_with('-') {
@@ -635,6 +652,11 @@ pub fn App() -> impl IntoView {
                                 } else {
                                     "text-slate-400"
                                 };
+
+                                if i == 0 || i == len - 1 {
+                                    line = line.trim_start().to_string();
+                                }
+
                                 view! {
                                     <div class=format!("px-2 py-0.5 rounded {}", color)>{line}</div>
                                 }
