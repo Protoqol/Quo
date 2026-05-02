@@ -56,7 +56,6 @@ pub fn DumpGroup(
             .unwrap_or_default(),
     );
 
-    // Collapsed state — groups start expanded
     let (collapsed, set_collapsed) = signal(false);
 
     Effect::new(move |prev: Option<usize>| {
@@ -82,7 +81,6 @@ pub fn DumpGroup(
             "quo-dump-group relative animate-slide-in-top {}",
             if auto_group.get() { "rounded-lg border border-accent/20 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
         )>
-            // Group header bar — click anywhere to expand/collapse
             <Show when=move || auto_group.get()>
                 <div
                     class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-accent/20 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
@@ -142,8 +140,8 @@ pub fn DumpGroup(
                                         expand_all_command=expand_all_command
                                         collapse_all_command=collapse_all_command
                                         is_selectable=is_selectable
-                                        is_selected=Signal::derive(move || {
-                                            selected_uids.get().contains(&uid_for_select)
+                                        selection_index=Signal::derive(move || {
+                                            selected_uids.get().iter().position(|u| u == &uid_for_select)
                                         })
                                         on_select=Callback::new(move |_| {
                                             if let Some(on_select) = on_select {
@@ -197,7 +195,7 @@ pub fn DumpItem(
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
     #[prop(optional, into)] is_selectable: Signal<bool>,
-    #[prop(optional, into)] is_selected: Signal<bool>,
+    #[prop(optional, into)] selection_index: Signal<Option<usize>>,
     #[prop(optional)] on_select: Option<Callback<()>>,
 ) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
@@ -274,7 +272,6 @@ pub fn DumpItem(
 
     let sender_origin = StoredValue::new(dump_stored.get_value().meta.sender_origin.clone());
 
-    // Reactive file path label — updates when the setting changes
     let sender_origin_raw = dump_stored.get_value().meta.sender_origin.clone();
     let file_path_label =
         Memo::new(move |_| file_path_format(&sender_origin_raw, long_file_path.get()));
@@ -404,7 +401,6 @@ pub fn DumpItem(
         "".to_string()
     }
 
-    /// Format file path — controlled by the `long-file-path` setting
     fn file_path_format(filepath: &str, show_full: bool) -> String {
         let normalized = filepath.replace("\\", "/");
 
@@ -437,7 +433,7 @@ pub fn DumpItem(
                 <div
                     class=move || format!(
                         "absolute inset-0 z-[60] cursor-pointer transition-all duration-200 rounded {}",
-                        if is_selected.get() { "bg-accent/10 border-2 border-accent" } else { "hover:bg-accent/5 border-2 border-transparent" }
+                        if selection_index.get().is_some() { "bg-accent/10 border-2 border-accent" } else { "hover:bg-accent/5 border-2 border-transparent" }
                     )
                     on:click=move |_| {
                         if let Some(on_select) = on_select {
@@ -447,14 +443,10 @@ pub fn DumpItem(
                 >
                     <div class="absolute bottom-3 right-6">
                          <div class=move || format!(
-                            "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {}",
-                            if is_selected.get() { "bg-accent border-accent" } else { "border-slate-500 bg-transparent" }
+                            "w-auto px-2 h-5 rounded border-2 flex items-center justify-center transition-colors font-bold text-[10px] uppercase {}",
+                            if selection_index.get().is_some() { "bg-accent border-accent text-slate-950" } else { "border-slate-500 bg-transparent text-transparent" }
                          )>
-                            <Show when=move || is_selected.get()>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </Show>
+                            {move || selection_index.get().map(|i| if i == 0 { "Source" } else { "Comparison" }).unwrap_or_default()}
                          </div>
                     </div>
                 </div>

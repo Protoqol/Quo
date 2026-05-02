@@ -24,6 +24,7 @@ extern "C" {
 pub fn SideBar(
     #[prop(into)] server_host: Signal<String>,
     #[prop(into)] server_port: Signal<String>,
+    #[prop(optional)] on_clear: Option<Callback<()>>,
 ) -> impl IntoView {
     let UseClipboardReturn {
         is_supported,
@@ -41,6 +42,11 @@ pub fn SideBar(
         if !payloads.get().is_empty() {
             set_clear_button_disabled.set(true);
             set_clear_button_txt.set("Clearing...".to_string());
+            
+            if let Some(on_clear) = on_clear {
+                on_clear.run(());
+            }
+
             set_payloads.set(vec![]);
 
             let timeout = Timeout::new(3_000, move || {
@@ -60,7 +66,6 @@ pub fn SideBar(
         }
     };
 
-    // Consume the shared AppSettings context — all_settings is the single source of truth.
     let app_settings = use_context::<AppSettings>().expect("AppSettings context missing");
     let all_settings = app_settings.all_settings;
 
@@ -211,13 +216,13 @@ pub fn SideBar(
                                         on:click=move |_| {
                                             let new_val = !checked.get_untracked();
                                             let id = stored_id.get_value();
-                                            // Update the shared signal — Taskbar modal sees this instantly.
+
                                             all_settings.update(|list| {
                                                 if let Some(s) = list.iter_mut().find(|s| s.id == id) {
                                                     s.value = serde_json::json!(new_val);
                                                 }
                                             });
-                                            // Keep dedicated signals in sync so dump list reacts.
+
                                             match id.as_str() {
                                                 "auto-group-dumps" => app_settings.auto_group.set(new_val),
                                                 "long-file-path"   => app_settings.long_file_path.set(new_val),

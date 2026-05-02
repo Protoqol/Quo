@@ -1,6 +1,6 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
 use crate::components::SideBar;
-use crate::components::{DumpGroup, DumpItem};
+use crate::components::{DiffModal, DumpGroup, DumpItem};
 use crate::toast;
 use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;
@@ -25,7 +25,6 @@ extern "C" {
     async fn listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> JsValue;
 }
 
-/// Full setting DTO — shared between Taskbar, Sidebar, and App.
 #[derive(Clone, Debug, Deserialize)]
 pub struct SettingDto {
     pub id: String,
@@ -36,10 +35,8 @@ pub struct SettingDto {
     pub value: serde_json::Value,
 }
 
-/// Shared reactive settings that both `App`, `Taskbar`, and `Sidebar` read/write.
 #[derive(Clone, Copy)]
 pub struct AppSettings {
-    /// Master list of all settings — single source of truth.
     pub all_settings: RwSignal<Vec<SettingDto>>,
     pub auto_group: RwSignal<bool>,
     pub long_file_path: RwSignal<bool>,
@@ -98,7 +95,6 @@ pub fn App() -> impl IntoView {
 
     let (is_diff_mode, set_is_diff_mode) = signal(false);
     let (selected_payload_uids, set_selected_payload_uids) = signal::<Vec<String>>(vec![]);
-    let (diff_result, set_diff_result) = signal::<Option<String>>(None);
     let (show_diff_modal, set_show_diff_modal) = signal(false);
 
     let toggle_payload_selection = move |uid: String| {
@@ -114,35 +110,6 @@ pub fn App() -> impl IntoView {
                 );
             }
         });
-    };
-
-    let perform_diff = move |_| {
-        let uids = selected_payload_uids.get();
-        if uids.len() != 2 {
-            return;
-        }
-
-        let all_payloads = payloads.get();
-        let p1 = all_payloads.iter().find(|p| p.meta.uid == uids[0]);
-        let p2 = all_payloads.iter().find(|p| p.meta.uid == uids[1]);
-
-        if let (Some(p1), Some(p2)) = (p1, p2) {
-            let s1 = format_by_language(p1, false);
-            let s2 = format_by_language(p2, false);
-
-            spawn_local(async move {
-                let diff = invoke(
-                    "get_diff_for_snippets",
-                    serde_wasm_bindgen::to_value(&serde_json::json!({ "first": s1, "second": s2 }))
-                        .unwrap(),
-                )
-                .await;
-                if let Ok(diff_str) = serde_wasm_bindgen::from_value::<String>(diff) {
-                    set_diff_result.set(Some(diff_str));
-                    set_show_diff_modal.set(true);
-                }
-            });
-        }
     };
 
     Effect::new(move |_| {
@@ -404,7 +371,14 @@ pub fn App() -> impl IntoView {
     view! {
         <div class="quo-layout">
             <Toaster />
-            <SideBar server_host server_port />
+            <SideBar
+                server_host
+                server_port
+                on_clear=Callback::new(move |_| {
+                    set_selected_payload_uids.set(vec![]);
+                    set_is_diff_mode.set(false);
+                })
+            />
             <main class="quo-main">
                 <header class="quo-main-header">
                     <div class="input-container">
@@ -463,7 +437,7 @@ pub fn App() -> impl IntoView {
                             <div class="absolute -bottom-8 right-4 z-[70]">
                                 <button
                                     class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
-                                    on:click=perform_diff
+                                    on:click=move |_| set_show_diff_modal.set(true)
                                 >
                                     "Diff selected payloads"
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -583,7 +557,7 @@ pub fn App() -> impl IntoView {
                                                     expand_all_command=expand_all_command
                                                     collapse_all_command=collapse_all_command
                                                     is_selectable=is_diff_mode
-                                                    is_selected=Signal::derive(move || selected_payload_uids.get().contains(&uid_for_select))
+                                                    selection_index=Signal::derive(move || selected_payload_uids.get().iter().position(|u| u == &uid_for_select))
                                                     on_select=Callback::new(move |_| toggle_payload_selection(uid_for_on_select.clone()))
                                                 />
                                             }.into_any()
@@ -612,56 +586,11 @@ pub fn App() -> impl IntoView {
             </main>
         </div>
 
-        <Show when=move || show_diff_modal.get()>
-            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
-                    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                        <h3 class="text-lg font-bold text-slate-200">"Payload Diff"</h3>
-                        <button
-                            class="text-slate-500 hover:text-slate-300"
-                            on:click=move |_| set_show_diff_modal.set(false)
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="select-text p-4 overflow-auto font-mono text-sm whitespace-pre-wrap">
-                        {move || {
-                            let diff = diff_result.get().unwrap_or_default();
-                            let lines: Vec<String> = diff.lines().map(|s| s.to_string()).collect();
-                            let len = lines.len();
-                            
-                            // @TODO do we want syntax highlighting or not?
-                            lines.into_iter().enumerate().map(|(i, mut line)| {
-                                let color = if line.starts_with('+') {
-                                    "text-green-400 bg-green-400/10"
-                                } else if line.starts_with('-') {
-                                    "text-red-400 bg-red-400/10"
-                                } else {
-                                    "text-slate-400"
-                                };
-
-                                if i == 0 || i == len - 1 {
-                                    line = line.trim_start().to_string();
-                                }
-
-                                view! {
-                                    <div class=format!("px-2 py-0.5 rounded {}", color)>{line}</div>
-                                }
-                            }).collect_view()
-                        }}
-                    </div>
-                    <div class="p-4 border-t border-slate-800 flex justify-end">
-                        <button
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded font-bold transition-colors"
-                            on:click=move |_| set_show_diff_modal.set(false)
-                        >
-                            "Close"
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Show>
+        <DiffModal
+            show=show_diff_modal
+            selected_uids=selected_payload_uids
+            payloads=payloads
+            on_close=Callback::new(move |_| set_show_diff_modal.set(false))
+        />
     }
 }
