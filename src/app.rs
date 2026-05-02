@@ -351,10 +351,9 @@ pub fn App() -> impl IntoView {
                         success,
                     } = event.payload;
 
-                    set_server_host.set(host);
-                    set_server_port.set(port.to_string());
-
                     if success {
+                        set_server_host.set(host);
+                        set_server_port.set(port.to_string());
                         console_log("Connection established")
                     } else {
                         console_log("Connection NOT established")
@@ -367,18 +366,8 @@ pub fn App() -> impl IntoView {
             };
         }) as Box<dyn FnMut(JsValue)>);
 
-        // When app is closed remove server_host & server_port from localstorage to prevent being out-of-date
         let handle_app_exit = Closure::wrap(Box::new(move |_obj: JsValue| {
-            let _ = window()
-                .local_storage()
-                .unwrap()
-                .unwrap()
-                .remove_item("server_host");
-            let _ = window()
-                .local_storage()
-                .unwrap()
-                .unwrap()
-                .remove_item("server_port");
+            //
         }) as Box<dyn FnMut(JsValue)>);
 
         spawn_local(async move {
@@ -398,10 +387,9 @@ pub fn App() -> impl IntoView {
                         success,
                     } = event;
 
-                    set_server_host.set(host);
-                    set_server_port.set(port.to_string());
-
                     if success {
+                        set_server_host.set(host);
+                        set_server_port.set(port.to_string());
                         console_log("Initial connection info loaded")
                     }
                 }
@@ -643,7 +631,8 @@ pub fn App() -> impl IntoView {
                             let diff = diff_result.get().unwrap_or_default();
                             let lines: Vec<String> = diff.lines().map(|s| s.to_string()).collect();
                             let len = lines.len();
-
+                            
+                            // @TODO do we want syntax highlighting or not?
                             lines.into_iter().enumerate().map(|(i, mut line)| {
                                 let color = if line.starts_with('+') {
                                     "text-green-400 bg-green-400/10"

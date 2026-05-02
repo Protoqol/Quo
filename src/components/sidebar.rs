@@ -146,7 +146,15 @@ pub fn SideBar(
             >
                 <div class="flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-slate-600 mb-4 bg-slate-950 rounded hover:text-slate-500">
                     <pre class="cursor-pointer select-text">
-                        {format!("http://{}:{}", server_host.get(), server_port.get())}
+                        {move || {
+                            let host = server_host.get();
+                            let port = server_port.get();
+                            if host.is_empty() || port.is_empty() || port == "0" {
+                                "Waiting for Quo server...".to_string()
+                            } else {
+                                format!("http://{}:{}", host, port)
+                            }
+                        }}
                     </pre>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

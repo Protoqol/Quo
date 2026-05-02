@@ -9,9 +9,9 @@ terminal or browser console.
 ## Features
 
 - **Real-time Inspection**: See variables as they are dumped from your code.
-- **Cross-platform**: Works on Windows, macOS, and Linux.
+- **Cross-platform**: Works on Windows, macOS (x86 + ARM), and Linux.
 - **Multi-language Support**: Official companion packages for Rust, PHP, and JavaScript/TypeScript.
-- **Zero-config Fallback**: Macro calls safely no-op if the desktop app is not running.
+- **Diff payloads**: Ability to diff two different payloads and see their differences (useful for large JSON payloads).
 
 ## Getting started
 
