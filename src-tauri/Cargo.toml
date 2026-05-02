@@ -25,4 +25,5 @@ hyper-util = { version = "0.1", features = ["full"] }
 http-body-util = "0.1"
 quo-common = { path = "../quo-common" }
 tauri-plugin-store = "2"
+similar = "3.1.0"
 

@@ -26,6 +26,9 @@ pub fn DumpGroup(
     truncate_large_var_types: Signal<bool>,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
+    #[prop(optional, into)] is_selectable: Signal<bool>,
+    #[prop(optional, into)] selected_uids: Signal<Vec<String>>,
+    #[prop(optional)] on_select: Option<Callback<String>>,
 ) -> impl IntoView {
     let count = dumps.len();
 
@@ -126,6 +129,8 @@ pub fn DumpGroup(
                             .into_iter()
                             .enumerate()
                             .map(|(i, dump)| {
+                                let uid_for_select = dump.meta.uid.clone();
+                                let uid_for_on_select = dump.meta.uid.clone();
                                 view! {
                                     <DumpItem
                                         dump=dump
@@ -136,6 +141,15 @@ pub fn DumpGroup(
                                         truncate_large_var_types=truncate_large_var_types
                                         expand_all_command=expand_all_command
                                         collapse_all_command=collapse_all_command
+                                        is_selectable=is_selectable
+                                        is_selected=Signal::derive(move || {
+                                            selected_uids.get().contains(&uid_for_select)
+                                        })
+                                        on_select=Callback::new(move |_| {
+                                            if let Some(on_select) = on_select {
+                                                on_select.run(uid_for_on_select.clone());
+                                            }
+                                        })
                                     />
                                     // Centered vertical line between consecutive items
                                     <Show when=move || i < last_idx && !auto_group.get()>
@@ -182,6 +196,9 @@ pub fn DumpItem(
     #[prop(optional)] is_grouped: bool,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
+    #[prop(optional, into)] is_selectable: Signal<bool>,
+    #[prop(optional, into)] is_selected: Signal<bool>,
+    #[prop(optional)] on_select: Option<Callback<()>>,
 ) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
     let dropdown_ref = NodeRef::<html::Div>::new();
@@ -416,6 +433,32 @@ pub fn DumpItem(
     view! {
         <div data-grouping-hash=move || format!("{}", dump_stored.get_value().meta.variable.grouping_hash.unwrap().to_string())
             class="quo-dump-container relative animate-slide-in-top group/item transition-all duration-300">
+            <Show when=move || is_selectable.get()>
+                <div
+                    class=move || format!(
+                        "absolute inset-0 z-[60] cursor-pointer transition-all duration-200 rounded {}",
+                        if is_selected.get() { "bg-accent/10 border-2 border-accent" } else { "hover:bg-accent/5 border-2 border-transparent" }
+                    )
+                    on:click=move |_| {
+                        if let Some(on_select) = on_select {
+                            on_select.run(());
+                        }
+                    }
+                >
+                    <div class="absolute top-3 right-10">
+                         <div class=move || format!(
+                            "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {}",
+                            if is_selected.get() { "bg-accent border-accent" } else { "border-slate-500 bg-transparent" }
+                         )>
+                            <Show when=move || is_selected.get()>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </Show>
+                         </div>
+                    </div>
+                </div>
+            </Show>
             <Show when=move || is_fresh.get()>
                 <span class="absolute -top-1 -left-1 flex h-2.5 w-2.5 z-20">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>

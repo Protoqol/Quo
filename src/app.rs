@@ -96,6 +96,55 @@ pub fn App() -> impl IntoView {
 
     let (is_all_expanded, set_is_all_expanded) = signal(auto_expand.get_untracked());
 
+    let (is_diff_mode, set_is_diff_mode) = signal(false);
+    let (selected_payload_uids, set_selected_payload_uids) = signal::<Vec<String>>(vec![]);
+    let (diff_result, set_diff_result) = signal::<Option<String>>(None);
+    let (show_diff_modal, set_show_diff_modal) = signal(false);
+
+    let toggle_payload_selection = move |uid: String| {
+        set_selected_payload_uids.update(|uids| {
+            if let Some(pos) = uids.iter().position(|u| u == &uid) {
+                uids.remove(pos);
+            } else if uids.len() < 2 {
+                uids.push(uid);
+            } else {
+                toast!(
+                    "You can only select up to 2 payloads to diff.",
+                    ToastType::Warning
+                );
+            }
+        });
+    };
+
+    let perform_diff = move |_| {
+        let uids = selected_payload_uids.get();
+        if uids.len() != 2 {
+            return;
+        }
+
+        let all_payloads = payloads.get();
+        let p1 = all_payloads.iter().find(|p| p.meta.uid == uids[0]);
+        let p2 = all_payloads.iter().find(|p| p.meta.uid == uids[1]);
+
+        if let (Some(p1), Some(p2)) = (p1, p2) {
+            let s1 = format_by_language(p1, false);
+            let s2 = format_by_language(p2, false);
+
+            spawn_local(async move {
+                let diff = invoke(
+                    "get_diff_for_snippets",
+                    serde_wasm_bindgen::to_value(&serde_json::json!({ "first": s1, "second": s2 }))
+                        .unwrap(),
+                )
+                .await;
+                if let Ok(diff_str) = serde_wasm_bindgen::from_value::<String>(diff) {
+                    set_diff_result.set(Some(diff_str));
+                    set_show_diff_modal.set(true);
+                }
+            });
+        }
+    };
+
     Effect::new(move |_| {
         set_is_all_expanded.set(auto_expand.get());
     });
@@ -251,7 +300,6 @@ pub fn App() -> impl IntoView {
     });
 
     Effect::new(move |_| {
-
         let handle_payload_received_event = Closure::wrap(Box::new(move |event_obj: JsValue| {
             #[derive(serde::Deserialize)]
             struct TauriEvent<T> {
@@ -407,7 +455,20 @@ pub fn App() -> impl IntoView {
 
                 </header>
                 <div class="quo-body">
-                    <div id="quo">
+                    <div id="quo" class="relative">
+                        <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
+                            <div class="absolute top-4 left-4 z-[70] animate-bounce-in">
+                                <button
+                                    class="bg-accent text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 hover:scale-110 transition-all"
+                                    on:click=perform_diff
+                                >
+                                    "Diff selected payloads"
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </Show>
                         <div class="flex items-center justify-between -mt-4 -mb-2">
                             <Show
                                 when=move || !search_results_count().is_empty()
@@ -420,37 +481,57 @@ pub fn App() -> impl IntoView {
                                 <span id="searchResult" class="text-slate-600 text-xs font-bold uppercase tracking-wider">{search_results_count}</span>
                             </Show>
 
-                            <Show when=move || has_expandable_items.get()>
+                            <Show when=move || !payloads.get().is_empty()>
                                 <div class="flex items-center gap-x-2">
+                                    <Show when=move || has_expandable_items.get()>
+                                        <button
+                                            class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                            on:click=move |_| {
+                                                if is_all_expanded.get() {
+                                                    set_collapse_all_command.update(|v| *v += 1);
+                                                    set_is_all_expanded.set(false);
+                                                } else {
+                                                    set_expand_all_command.update(|v| *v += 1);
+                                                    set_is_all_expanded.set(true);
+                                                }
+                                            }
+                                            title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
+                                        >
+                                            <Show
+                                                when=move || is_all_expanded.get()
+                                                fallback=move || view! {
+                                                    "Expand all"
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                        <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
+                                                        <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
+                                                    </svg>
+                                                }
+                                            >
+                                                "Collapse all"
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                    <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
+                                                    <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
+                                                </svg>
+                                            </Show>
+                                        </button>
+                                    </Show>
                                     <button
-                                        class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                        class=move || format!(
+                                            "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 p-2 rounded-lg {}",
+                                            if is_diff_mode.get() { "text-accent bg-slate-800" } else { "text-slate-500 hover:text-accent hover:bg-slate-800" }
+                                        )
                                         on:click=move |_| {
-                                            if is_all_expanded.get() {
-                                                set_collapse_all_command.update(|v| *v += 1);
-                                                set_is_all_expanded.set(false);
-                                            } else {
-                                                set_expand_all_command.update(|v| *v += 1);
-                                                set_is_all_expanded.set(true);
+                                            set_is_diff_mode.update(|v| *v = !*v);
+                                            if !is_diff_mode.get() {
+                                                set_selected_payload_uids.set(vec![]);
                                             }
                                         }
-                                        title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
+                                        title="Diff payloads"
                                     >
-                                        <Show
-                                            when=move || is_all_expanded.get()
-                                            fallback=move || view! {
-                                                "Expand all"
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                                    <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
-                                                    <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
-                                                </svg>
-                                            }
-                                        >
-                                            "Collapse all"
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                                <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
-                                                <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
-                                            </svg>
-                                        </Show>
+                                        "Diff payloads"
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                            <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+                                        </svg>
                                     </button>
                                 </div>
                             </Show>
@@ -486,17 +567,24 @@ pub fn App() -> impl IntoView {
                                 }
                                 children=move |entry| {
                                     match entry {
-                                        DumpEntry::Single(payload) => view! {
-                                            <DumpItem
-                                                dump=payload
-                                                on_delete=Callback::new(delete_payload)
-                                                long_file_path=Signal::from(long_file_path)
-                                                auto_expand=Signal::from(auto_expand)
-                                                truncate_large_var_types=Signal::from(truncate_large_var_types)
-                                                expand_all_command=expand_all_command
-                                                collapse_all_command=collapse_all_command
-                                            />
-                                        }.into_any(),
+                                        DumpEntry::Single(payload) => {
+                                            let uid_for_select = payload.meta.uid.clone();
+                                            let uid_for_on_select = payload.meta.uid.clone();
+                                            view! {
+                                                <DumpItem
+                                                    dump=payload
+                                                    on_delete=Callback::new(delete_payload)
+                                                    long_file_path=Signal::from(long_file_path)
+                                                    auto_expand=Signal::from(auto_expand)
+                                                    truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                    expand_all_command=expand_all_command
+                                                    collapse_all_command=collapse_all_command
+                                                    is_selectable=is_diff_mode
+                                                    is_selected=Signal::derive(move || selected_payload_uids.get().contains(&uid_for_select))
+                                                    on_select=Callback::new(move |_| toggle_payload_selection(uid_for_on_select.clone()))
+                                                />
+                                            }.into_any()
+                                        },
                                         DumpEntry::Group(dumps) => view! {
                                             <DumpGroup
                                                 dumps=dumps
@@ -507,6 +595,9 @@ pub fn App() -> impl IntoView {
                                                 truncate_large_var_types=Signal::from(truncate_large_var_types)
                                                 expand_all_command=expand_all_command
                                                 collapse_all_command=collapse_all_command
+                                                is_selectable=is_diff_mode
+                                                selected_uids=selected_payload_uids
+                                                on_select=Callback::new(toggle_payload_selection)
                                             />
                                         }.into_any(),
                                     }
@@ -517,5 +608,49 @@ pub fn App() -> impl IntoView {
                 </div>
             </main>
         </div>
+
+        <Show when=move || show_diff_modal.get()>
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+                    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-200">"Payload Diff"</h3>
+                        <button
+                            class="text-slate-500 hover:text-slate-300"
+                            on:click=move |_| set_show_diff_modal.set(false)
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-4 overflow-auto font-mono text-sm whitespace-pre-wrap">
+                        {move || {
+                            let diff = diff_result.get().unwrap_or_default();
+                            let lines: Vec<String> = diff.lines().map(|s| s.to_string()).collect();
+                            lines.into_iter().map(|line| {
+                                let color = if line.starts_with('+') {
+                                    "text-green-400 bg-green-400/10"
+                                } else if line.starts_with('-') {
+                                    "text-red-400 bg-red-400/10"
+                                } else {
+                                    "text-slate-400"
+                                };
+                                view! {
+                                    <div class=format!("px-2 py-0.5 rounded {}", color)>{line}</div>
+                                }
+                            }).collect_view()
+                        }}
+                    </div>
+                    <div class="p-4 border-t border-slate-800 flex justify-end">
+                        <button
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded font-bold transition-colors"
+                            on:click=move |_| set_show_diff_modal.set(false)
+                        >
+                            "Close"
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Show>
     }
 }
