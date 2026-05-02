@@ -26,7 +26,7 @@ pub fn DiffModal(
 
     let format_time = |epoch: i64| {
         DateTime::from_timestamp_millis(epoch)
-            .map(|dt| dt.with_timezone(&Local).format("%H:%M:%S").to_string())
+            .map(|dt| dt.with_timezone(&Local).format("%H:%M:%S.%3f").to_string())
             .unwrap_or_default()
     };
 
@@ -86,7 +86,7 @@ pub fn DiffModal(
                         </button>
                     </div>
                     <Show when=move || diff.get().is_some()>
-                        <div class="px-6 py-3 border-b border-slate-800 bg-slate-900/50 flex flex-row gap-8 items-center shrink-0">
+                        <div class="px-6 py-3 border-b border-slate-800 bg-slate-900/50 flex flex-row justify-between gap-8 items-center shrink-0">
                             <div class="flex items-center gap-3 text-xs font-mono">
                                 <span class="px-2 h-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap">"Source"</span>
                                 {move || p1_info.get().map(|p| view! {
@@ -97,14 +97,16 @@ pub fn DiffModal(
                                 })}
                             </div>
 
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8"><path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path></svg>
+
                             <div class="flex items-center gap-3 text-xs font-mono">
-                                <span class="px-2 h-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap">"Comparison"</span>
                                 {move || p2_info.get().map(|p| view! {
                                     <div class="flex flex-col">
                                         <span class="text-slate-200 font-bold">{p.meta.variable.name.clone()}</span>
                                         <span class="text-slate-500">{p.meta.origin.clone()} " - " {format_time(p.meta.time_epoch_ms)}</span>
                                     </div>
                                 })}
+                                <span class="px-2 h-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap">"Comparison"</span>
                             </div>
                         </div>
                     </Show>

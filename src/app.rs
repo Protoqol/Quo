@@ -432,20 +432,20 @@ pub fn App() -> impl IntoView {
 
                 </header>
                 <div class="quo-body">
+                   <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
+                       <div class="absolute bottom-8 right-4 z-[70]">
+                           <button
+                               class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
+                               on:click=move |_| set_show_diff_modal.set(true)
+                           >
+                               "Diff selected payloads"
+                               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                   <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+                               </svg>
+                           </button>
+                       </div>
+                   </Show>
                     <div id="quo" class="relative">
-                        <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
-                            <div class="absolute -bottom-8 right-4 z-[70]">
-                                <button
-                                    class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
-                                    on:click=move |_| set_show_diff_modal.set(true)
-                                >
-                                    "Diff selected payloads"
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </Show>
                         <div class="flex items-center justify-between -mt-4 -mb-2">
                             <Show
                                 when=move || !search_results_count().is_empty()
