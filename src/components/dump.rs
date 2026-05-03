@@ -26,6 +26,8 @@ pub fn DumpGroup(
     truncate_large_var_types: Signal<bool>,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
     #[prop(optional, into)] is_selectable: Signal<bool>,
     #[prop(optional, into)] selected_uids: Signal<Vec<String>>,
     #[prop(optional)] on_select: Option<Callback<String>>,
@@ -79,11 +81,11 @@ pub fn DumpGroup(
     view! {
         <div class=move || format!(
             "quo-dump-group relative animate-slide-in-top {}",
-            if auto_group.get() { "rounded-lg border border-accent/20 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
+            if auto_group.get() { "rounded-lg border border-slate-700 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
         )>
             <Show when=move || auto_group.get()>
                 <div
-                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-accent/20 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
+                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-slate-700 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
                     on:click=move |_| set_collapsed.update(|v| *v = !*v)
                     title="Click to expand / collapse group"
                 >
@@ -91,7 +93,7 @@ pub fn DumpGroup(
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class=move || format!(
-                            "w-3 h-3 shrink-0 text-accent/60 transition-transform duration-200 {}",
+                            "w-3 h-3 shrink-0 text-slate-500 transition-transform duration-200 {}",
                             if collapsed.get() { "-rotate-90" } else { "rotate-0" }
                         )
                         viewBox="0 0 24 24"
@@ -101,7 +103,7 @@ pub fn DumpGroup(
                     </svg>
 
                     // Count badge
-                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-accent/20 text-accent text-[10px] font-bold shrink-0">
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold shrink-0">
                         {count} " items"
                     </span>
 
@@ -139,6 +141,8 @@ pub fn DumpGroup(
                                         truncate_large_var_types=truncate_large_var_types
                                         expand_all_command=expand_all_command
                                         collapse_all_command=collapse_all_command
+                                        selected_group=selected_group
+                                        set_selected_group=set_selected_group
                                         is_selectable=is_selectable
                                         selection_index=Signal::derive(move || {
                                             selected_uids.get().iter().position(|u| u == &uid_for_select)
@@ -191,6 +195,8 @@ pub fn DumpItem(
     long_file_path: Signal<bool>,
     auto_expand: Signal<bool>,
     truncate_large_var_types: Signal<bool>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
     #[prop(optional)] is_grouped: bool,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
@@ -470,6 +476,16 @@ pub fn DumpItem(
                             <span
                                 title="Filter dumps on this origin"
                                 class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
+                                on:click={
+                                    let origin = dump_stored.get_value().meta.origin.clone();
+                                    move |_| {
+                                        if selected_group.get_untracked() == Some(origin.clone()) {
+                                            set_selected_group.set(None);
+                                        } else {
+                                            set_selected_group.set(Some(origin.clone()));
+                                        }
+                                    }
+                                }
                             >
                                 {dump_stored.get_value().meta.origin.clone()}
                             </span>

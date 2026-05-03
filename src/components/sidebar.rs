@@ -24,6 +24,8 @@ extern "C" {
 pub fn SideBar(
     #[prop(into)] server_host: Signal<String>,
     #[prop(into)] server_port: Signal<String>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
     #[prop(optional)] on_clear: Option<Callback<()>>,
 ) -> impl IntoView {
     let UseClipboardReturn {
@@ -103,7 +105,10 @@ pub fn SideBar(
             </div>
             <nav class="quo-nav">
                 <div id="quo-tabs-container" class="quo-origin-tabs">
-                    <h2 class="text-md font-bold uppercase tracking-wider text-slate-500">
+                    <h2
+                        class="text-md font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-slate-400 transition-colors"
+                        on:click=move |_| set_selected_group.set(None)
+                    >
                         Groups
                         <small class="text-xs font-normal tracking-normal normal-case ml-2 text-slate-600">
                             Click to filter
@@ -122,13 +127,30 @@ pub fn SideBar(
                                 .collect::<Vec<_>>()
                         }
                         key=|(group, _items)| group.clone()
-                        children=|(group, items): (String, Vec<IncomingQuoPayload>)| {
+                        children=move |(group, items): (String, Vec<IncomingQuoPayload>)| {
                             let language: QuoPayloadLanguage = match items.first() {
                                 Some(payload) => payload.language.clone(),
                                 None => QuoPayloadLanguage::Unknown,
                             };
+                            let group_for_click = group.clone();
+                            let group_for_style = group.clone();
+
                             view! {
-                                <div class="flex flex-row justify-between items-center font-mono border-[1px] border-transparent bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all text-slate-500 hover:text-slate-400">
+                                <div
+                                    class=move || format!("flex flex-row justify-between items-center font-mono border-[1px] bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all {}",
+                                        if selected_group.get() == Some(group_for_style.clone()) { "border-accent" } else { "border-transparent text-slate-500 hover:text-slate-400" }
+                                    )
+                                    on:click={
+                                        let group = group_for_click.clone();
+                                        move |_| {
+                                            if selected_group.get_untracked() == Some(group.clone()) {
+                                                set_selected_group.set(None);
+                                            } else {
+                                                set_selected_group.set(Some(group.clone()));
+                                            }
+                                        }
+                                    }
+                                >
                                     <span class="flex flex-row gap-x-2">
                                         <LanguageIcon lang=language class="mt-[4px]".to_string() />
                                         <p class="font-medium">{format!("{}", group)}</p>

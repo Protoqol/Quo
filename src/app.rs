@@ -74,6 +74,7 @@ pub fn App() -> impl IntoView {
         use_local_storage::<Vec<IncomingQuoPayload>, JsonSerdeCodec>("payloads");
 
     let (search_query, set_search_query) = signal(String::new());
+    let (selected_group, set_selected_group) = signal::<Option<String>>(None);
 
     let (expand_all_command, set_expand_all_command) = signal(0usize);
     let (collapse_all_command, set_collapse_all_command) = signal(0usize);
@@ -150,7 +151,13 @@ pub fn App() -> impl IntoView {
 
     let filtered_payloads = move || {
         let query = search_query.get().to_lowercase();
+        let group_filter = selected_group.get();
         let mut all = payloads.get().clone();
+
+        if let Some(group) = group_filter {
+            all.retain(|p| p.meta.origin == group);
+        }
+
         if !query.is_empty() {
             all.retain(|p| {
                 p.meta.variable.var_type.to_lowercase().contains(&query)
@@ -374,9 +381,12 @@ pub fn App() -> impl IntoView {
             <SideBar
                 server_host
                 server_port
+                selected_group
+                set_selected_group
                 on_clear=Callback::new(move |_| {
                     set_selected_payload_uids.set(vec![]);
                     set_is_diff_mode.set(false);
+                    set_selected_group.set(None);
                 })
             />
             <main class="quo-main">
@@ -554,6 +564,8 @@ pub fn App() -> impl IntoView {
                                                     long_file_path=Signal::from(long_file_path)
                                                     auto_expand=Signal::from(auto_expand)
                                                     truncate_large_var_types=Signal::from(truncate_large_var_types)
+                                                    selected_group=selected_group
+                                                    set_selected_group=set_selected_group
                                                     expand_all_command=expand_all_command
                                                     collapse_all_command=collapse_all_command
                                                     is_selectable=is_diff_mode
@@ -572,6 +584,8 @@ pub fn App() -> impl IntoView {
                                                 truncate_large_var_types=Signal::from(truncate_large_var_types)
                                                 expand_all_command=expand_all_command
                                                 collapse_all_command=collapse_all_command
+                                                selected_group=selected_group
+                                                set_selected_group=set_selected_group
                                                 is_selectable=is_diff_mode
                                                 selected_uids=selected_payload_uids
                                                 on_select=Callback::new(toggle_payload_selection)
