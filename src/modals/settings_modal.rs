@@ -86,12 +86,18 @@ pub fn SettingsModal(
                                     view! {
                                         <button
                                             class=move || format!(
-                                                "w-full text-left px-4 py-2 rounded-lg text-sm font-medium mb-1 transition-all border {}",
+                                                "w-full text-left px-4 py-2 rounded-lg text-sm font-medium mb-1 transition-all border flex items-center justify-between {}",
                                                 if active_category.get() == categories_for_class { "bg-accent/10 text-accent border-accent/20" } else { "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-transparent" }
                                             )
                                             on:click=move |_| set_active_category.set(categories_for_click.clone())
                                         >
-                                            {categories_for_display}
+                                            <span>{categories_for_display.clone()}</span>
+                                            <Show when=move || categories_for_display == "About" && settings.update_available.get()>
+                                                <span class="relative flex h-2 w-2">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                                                </span>
+                                            </Show>
                                         </button>
                                     }
                                 }
@@ -173,6 +179,32 @@ pub fn SettingsModal(
                                         <p class="text-xs text-slate-500 mt-1">{move || format!("Version v{}", VERSION)}</p>
                                         <p class="text-xs text-slate-500 mt-4">"Developed by Protoqol"</p>
                                     </div>
+                                    <Show when=move || settings.update_available.get()>
+                                        <div class="bg-accent/10 p-4 rounded-lg border border-accent/20">
+                                            <p class="text-xs text-accent font-medium">
+                                                {move || format!("A new version (v{}) is available!", settings.latest_version.get().unwrap_or_default())}
+                                            </p>
+                                            <p class="text-xs text-slate-400 mt-1">
+                                                "Download the new version at "
+                                                <a 
+                                                    href=format!("https://quo.protoqol.sh/download?utm_source=app-{}", VERSION) 
+                                                    target="_blank" 
+                                                    class="text-accent hover:underline"
+                                                >
+                                                    "quo.protoqol.sh/download"
+                                                </a>
+                                                " or via "
+                                                <a 
+                                                    href="https://github.com/Protoqol/Quo/releases" 
+                                                    target="_blank" 
+                                                    class="text-accent hover:underline"
+                                                >
+                                                    "GitHub"
+                                                </a>
+                                                "."
+                                            </p>
+                                        </div>
+                                    </Show>
                                 </div>
                             </Show>
                         </div>

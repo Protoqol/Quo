@@ -5,6 +5,7 @@ use crate::modals::DiffModal;
 use crate::toast;
 use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;
+use gloo_net::http::Request;
 use leptos::ev;
 use leptos::html;
 use leptos::leptos_dom::logging::console_log;
@@ -43,6 +44,8 @@ pub struct AppSettings {
     pub long_file_path: RwSignal<bool>,
     pub auto_expand: RwSignal<bool>,
     pub truncate_large_var_types: RwSignal<bool>,
+    pub update_available: RwSignal<bool>,
+    pub latest_version: RwSignal<Option<String>>,
 }
 
 impl AppSettings {
@@ -53,6 +56,8 @@ impl AppSettings {
             long_file_path: RwSignal::new(false),
             auto_expand: RwSignal::new(true),
             truncate_large_var_types: RwSignal::new(false),
+            update_available: RwSignal::new(false),
+            latest_version: RwSignal::new(None),
         }
     }
 }
@@ -92,12 +97,47 @@ pub fn App() -> impl IntoView {
     let auto_expand = settings.auto_expand;
     let truncate_large_var_types = settings.truncate_large_var_types;
     let all_settings = settings.all_settings;
+    let update_available = settings.update_available;
+    let latest_version_signal = settings.latest_version;
 
     let (is_all_expanded, set_is_all_expanded) = signal(auto_expand.get_untracked());
 
     let (is_diff_mode, set_is_diff_mode) = signal(false);
     let (selected_payload_uids, set_selected_payload_uids) = signal::<Vec<String>>(vec![]);
     let (show_diff_modal, set_show_diff_modal) = signal(false);
+
+    Effect::new(move |_| {
+        spawn_local(async move {
+            if let Ok(response) = Request::get("https://api.github.com/repos/Protoqol/Quo/releases/latest")
+                .header("User-Agent", "Quo-Client")
+                .send()
+                .await {
+                if let Ok(json) = response.json::<serde_json::Value>().await {
+                    if let Some(tag_name) = json["tag_name"].as_str() {
+                        let latest_version = tag_name.replace("quo-v", "");
+                        let current_version = env!("CARGO_PKG_VERSION");
+                        
+                        let is_update = |curr: &str, lat: &str| {
+                            let c: Vec<u32> = curr.split('.').filter_map(|s| s.parse().ok()).collect();
+                            let l: Vec<u32> = lat.split('.').filter_map(|s| s.parse().ok()).collect();
+                            for i in 0..3 {
+                                let cv = c.get(i).unwrap_or(&0);
+                                let lv = l.get(i).unwrap_or(&0);
+                                if lv > cv { return true; }
+                                if lv < cv { return false; }
+                            }
+                            false
+                        };
+
+                        if is_update(current_version, &latest_version) {
+                            latest_version_signal.set(Some(latest_version));
+                            update_available.set(true);
+                        }
+                    }
+                }
+            }
+        });
+    });
 
     let toggle_payload_selection = move |uid: String| {
         set_selected_payload_uids.update(|uids| {

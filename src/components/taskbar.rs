@@ -1,3 +1,4 @@
+use crate::app::AppSettings;
 use crate::modals::SettingsModal;
 use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
@@ -23,6 +24,8 @@ extern "C" {
 
 #[component]
 pub fn Taskbar() -> impl IntoView {
+    let settings = use_context::<AppSettings>().expect("AppSettings context missing");
+    let update_available = settings.update_available;
     let app_window = getCurrentWindow();
     let (show_menu, set_show_menu) = signal(false);
     let (show_settings, set_show_settings) = signal(false);
@@ -42,16 +45,24 @@ pub fn Taskbar() -> impl IntoView {
                     class="w-64 h-[30px] bg-slate-950 flex items-center justify-between px-2"
                 >
                     <div class="relative flex items-center">
-                        <svg
-                            on:click=move |_| set_show_menu.update(|v| *v = !*v)
-                            title="Open Quo settings"
-                            class="w-5 h-5 fill-slate-500 hover:fill-slate-300 transition-colors cursor-pointer"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                        >
-                            <path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" />
-                        </svg>
+                        <div class="relative">
+                            <svg
+                                on:click=move |_| set_show_menu.update(|v| *v = !*v)
+                                title="Open Quo settings"
+                                class="w-5 h-5 fill-slate-500 hover:fill-slate-300 transition-colors cursor-pointer"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                            >
+                                <path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" />
+                            </svg>
+                            <Show when=move || update_available.get()>
+                                <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                                </span>
+                            </Show>
+                        </div>
 
                         <Show when=move || show_menu.get()>
                             <div class="absolute top-[30px] left-2 w-56 bg-slate-900 border border-slate-800 rounded shadow-xl z-[100] overflow-hidden flex flex-col">
