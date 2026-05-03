@@ -86,7 +86,7 @@ The PHP companion package allows you to dump values from any PHP application.
 Install the package via Composer:
 
 ```bash
-composer require protoqol/quo-php
+composer require --dev protoqol/quo-php
 ```
 
 ### Quick Start
@@ -115,7 +115,7 @@ Use the JavaScript package in Node.js or browser projects to dump runtime values
 Install the package via npm or yarn:
 
 ```bash
-npm install @protoqol/quo-ts
+npm install -D @protoqol/quo-ts
 ```
 
 ### Quick Start
