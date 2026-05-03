@@ -26,6 +26,11 @@ pub fn DumpGroup(
     truncate_large_var_types: Signal<bool>,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
+    #[prop(optional, into)] is_selectable: Signal<bool>,
+    #[prop(optional, into)] selected_uids: Signal<Vec<String>>,
+    #[prop(optional)] on_select: Option<Callback<String>>,
 ) -> impl IntoView {
     let count = dumps.len();
 
@@ -53,7 +58,6 @@ pub fn DumpGroup(
             .unwrap_or_default(),
     );
 
-    // Collapsed state — groups start expanded
     let (collapsed, set_collapsed) = signal(false);
 
     Effect::new(move |prev: Option<usize>| {
@@ -77,12 +81,11 @@ pub fn DumpGroup(
     view! {
         <div class=move || format!(
             "quo-dump-group relative animate-slide-in-top {}",
-            if auto_group.get() { "rounded-lg border border-accent/20 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
+            if auto_group.get() { "rounded-lg border border-slate-700 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
         )>
-            // Group header bar — click anywhere to expand/collapse
             <Show when=move || auto_group.get()>
                 <div
-                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-accent/20 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
+                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-slate-700 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
                     on:click=move |_| set_collapsed.update(|v| *v = !*v)
                     title="Click to expand / collapse group"
                 >
@@ -90,7 +93,7 @@ pub fn DumpGroup(
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class=move || format!(
-                            "w-3 h-3 shrink-0 text-accent/60 transition-transform duration-200 {}",
+                            "w-3 h-3 shrink-0 text-slate-500 transition-transform duration-200 {}",
                             if collapsed.get() { "-rotate-90" } else { "rotate-0" }
                         )
                         viewBox="0 0 24 24"
@@ -100,7 +103,7 @@ pub fn DumpGroup(
                     </svg>
 
                     // Count badge
-                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-accent/20 text-accent text-[10px] font-bold shrink-0">
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold shrink-0">
                         {count} " items"
                     </span>
 
@@ -126,6 +129,8 @@ pub fn DumpGroup(
                             .into_iter()
                             .enumerate()
                             .map(|(i, dump)| {
+                                let uid_for_select = dump.meta.uid.clone();
+                                let uid_for_on_select = dump.meta.uid.clone();
                                 view! {
                                     <DumpItem
                                         dump=dump
@@ -136,6 +141,17 @@ pub fn DumpGroup(
                                         truncate_large_var_types=truncate_large_var_types
                                         expand_all_command=expand_all_command
                                         collapse_all_command=collapse_all_command
+                                        selected_group=selected_group
+                                        set_selected_group=set_selected_group
+                                        is_selectable=is_selectable
+                                        selection_index=Signal::derive(move || {
+                                            selected_uids.get().iter().position(|u| u == &uid_for_select)
+                                        })
+                                        on_select=Callback::new(move |_| {
+                                            if let Some(on_select) = on_select {
+                                                on_select.run(uid_for_on_select.clone());
+                                            }
+                                        })
                                     />
                                     // Centered vertical line between consecutive items
                                     <Show when=move || i < last_idx && !auto_group.get()>
@@ -179,9 +195,14 @@ pub fn DumpItem(
     long_file_path: Signal<bool>,
     auto_expand: Signal<bool>,
     truncate_large_var_types: Signal<bool>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
     #[prop(optional)] is_grouped: bool,
     #[prop(into)] expand_all_command: Signal<usize>,
     #[prop(into)] collapse_all_command: Signal<usize>,
+    #[prop(optional, into)] is_selectable: Signal<bool>,
+    #[prop(optional, into)] selection_index: Signal<Option<usize>>,
+    #[prop(optional)] on_select: Option<Callback<()>>,
 ) -> impl IntoView {
     let code_ref = NodeRef::<html::Code>::new();
     let dropdown_ref = NodeRef::<html::Div>::new();
@@ -257,7 +278,6 @@ pub fn DumpItem(
 
     let sender_origin = StoredValue::new(dump_stored.get_value().meta.sender_origin.clone());
 
-    // Reactive file path label — updates when the setting changes
     let sender_origin_raw = dump_stored.get_value().meta.sender_origin.clone();
     let file_path_label =
         Memo::new(move |_| file_path_format(&sender_origin_raw, long_file_path.get()));
@@ -387,7 +407,6 @@ pub fn DumpItem(
         "".to_string()
     }
 
-    /// Format file path — controlled by the `long-file-path` setting
     fn file_path_format(filepath: &str, show_full: bool) -> String {
         let normalized = filepath.replace("\\", "/");
 
@@ -416,6 +435,28 @@ pub fn DumpItem(
     view! {
         <div data-grouping-hash=move || format!("{}", dump_stored.get_value().meta.variable.grouping_hash.unwrap().to_string())
             class="quo-dump-container relative animate-slide-in-top group/item transition-all duration-300">
+            <Show when=move || is_selectable.get()>
+                <div
+                    class=move || format!(
+                        "absolute inset-0 z-[60] cursor-pointer transition-all duration-200 rounded {}",
+                        if selection_index.get().is_some() { "bg-accent/10 border-2 border-accent" } else { "hover:bg-accent/5 border-2 border-transparent" }
+                    )
+                    on:click=move |_| {
+                        if let Some(on_select) = on_select {
+                            on_select.run(());
+                        }
+                    }
+                >
+                    <div class="absolute bottom-3 right-6">
+                         <div class=move || format!(
+                            "w-auto px-2 h-5 rounded border-2 flex items-center justify-center transition-colors font-bold text-[10px] uppercase {}",
+                            if selection_index.get().is_some() { "bg-accent border-accent text-slate-950" } else { "border-slate-500 bg-transparent text-transparent" }
+                         )>
+                            {move || selection_index.get().map(|i| if i == 0 { "Source" } else { "Comparison" }).unwrap_or_default()}
+                         </div>
+                    </div>
+                </div>
+            </Show>
             <Show when=move || is_fresh.get()>
                 <span class="absolute -top-1 -left-1 flex h-2.5 w-2.5 z-20">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
@@ -435,6 +476,16 @@ pub fn DumpItem(
                             <span
                                 title="Filter dumps on this origin"
                                 class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
+                                on:click={
+                                    let origin = dump_stored.get_value().meta.origin.clone();
+                                    move |_| {
+                                        if selected_group.get_untracked() == Some(origin.clone()) {
+                                            set_selected_group.set(None);
+                                        } else {
+                                            set_selected_group.set(Some(origin.clone()));
+                                        }
+                                    }
+                                }
                             >
                                 {dump_stored.get_value().meta.origin.clone()}
                             </span>

@@ -4,6 +4,7 @@ mod server;
 mod stores;
 
 use crate::invokers::config_invokers::{get_settings, set_setting};
+use crate::invokers::payload_diff::{get_diff_for_snippets};
 use crate::invokers::file_action_invokers::{
     get_available_editors, open_file, open_in_editor, show_in_explorer,
 };
@@ -38,7 +39,8 @@ pub fn run() {
             get_available_editors,
             open_in_editor,
             get_settings,
-            set_setting
+            set_setting,
+            get_diff_for_snippets
         ])
         .setup(|app| setup(app))
         .on_window_event(|window, event| {

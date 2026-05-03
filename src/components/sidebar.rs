@@ -24,6 +24,9 @@ extern "C" {
 pub fn SideBar(
     #[prop(into)] server_host: Signal<String>,
     #[prop(into)] server_port: Signal<String>,
+    #[prop(into)] selected_group: Signal<Option<String>>,
+    set_selected_group: WriteSignal<Option<String>>,
+    #[prop(optional)] on_clear: Option<Callback<()>>,
 ) -> impl IntoView {
     let UseClipboardReturn {
         is_supported,
@@ -41,6 +44,11 @@ pub fn SideBar(
         if !payloads.get().is_empty() {
             set_clear_button_disabled.set(true);
             set_clear_button_txt.set("Clearing...".to_string());
+            
+            if let Some(on_clear) = on_clear {
+                on_clear.run(());
+            }
+
             set_payloads.set(vec![]);
 
             let timeout = Timeout::new(3_000, move || {
@@ -60,7 +68,6 @@ pub fn SideBar(
         }
     };
 
-    // Consume the shared AppSettings context — all_settings is the single source of truth.
     let app_settings = use_context::<AppSettings>().expect("AppSettings context missing");
     let all_settings = app_settings.all_settings;
 
@@ -98,7 +105,10 @@ pub fn SideBar(
             </div>
             <nav class="quo-nav">
                 <div id="quo-tabs-container" class="quo-origin-tabs">
-                    <h2 class="text-md font-bold uppercase tracking-wider text-slate-500">
+                    <h2
+                        class="text-md font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-slate-400 transition-colors"
+                        on:click=move |_| set_selected_group.set(None)
+                    >
                         Groups
                         <small class="text-xs font-normal tracking-normal normal-case ml-2 text-slate-600">
                             Click to filter
@@ -117,13 +127,30 @@ pub fn SideBar(
                                 .collect::<Vec<_>>()
                         }
                         key=|(group, _items)| group.clone()
-                        children=|(group, items): (String, Vec<IncomingQuoPayload>)| {
+                        children=move |(group, items): (String, Vec<IncomingQuoPayload>)| {
                             let language: QuoPayloadLanguage = match items.first() {
                                 Some(payload) => payload.language.clone(),
                                 None => QuoPayloadLanguage::Unknown,
                             };
+                            let group_for_click = group.clone();
+                            let group_for_style = group.clone();
+
                             view! {
-                                <div class="flex flex-row justify-between items-center font-mono border-[1px] border-transparent bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all text-slate-500 hover:text-slate-400">
+                                <div
+                                    class=move || format!("flex flex-row justify-between items-center font-mono border-[1px] bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all {}",
+                                        if selected_group.get() == Some(group_for_style.clone()) { "border-accent" } else { "border-transparent text-slate-500 hover:text-slate-400" }
+                                    )
+                                    on:click={
+                                        let group = group_for_click.clone();
+                                        move |_| {
+                                            if selected_group.get_untracked() == Some(group.clone()) {
+                                                set_selected_group.set(None);
+                                            } else {
+                                                set_selected_group.set(Some(group.clone()));
+                                            }
+                                        }
+                                    }
+                                >
                                     <span class="flex flex-row gap-x-2">
                                         <LanguageIcon lang=language class="mt-[4px]".to_string() />
                                         <p class="font-medium">{format!("{}", group)}</p>
@@ -146,7 +173,15 @@ pub fn SideBar(
             >
                 <div class="flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-slate-600 mb-4 bg-slate-950 rounded hover:text-slate-500">
                     <pre class="cursor-pointer select-text">
-                        {format!("http://{}:{}", server_host.get(), server_port.get())}
+                        {move || {
+                            let host = server_host.get();
+                            let port = server_port.get();
+                            if host.is_empty() || port.is_empty() || port == "0" {
+                                "Waiting for Quo server...".to_string()
+                            } else {
+                                format!("http://{}:{}", host, port)
+                            }
+                        }}
                     </pre>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -203,13 +238,13 @@ pub fn SideBar(
                                         on:click=move |_| {
                                             let new_val = !checked.get_untracked();
                                             let id = stored_id.get_value();
-                                            // Update the shared signal — Taskbar modal sees this instantly.
+
                                             all_settings.update(|list| {
                                                 if let Some(s) = list.iter_mut().find(|s| s.id == id) {
                                                     s.value = serde_json::json!(new_val);
                                                 }
                                             });
-                                            // Keep dedicated signals in sync so dump list reacts.
+
                                             match id.as_str() {
                                                 "auto-group-dumps" => app_settings.auto_group.set(new_val),
                                                 "long-file-path"   => app_settings.long_file_path.set(new_val),

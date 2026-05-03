@@ -9,9 +9,9 @@ terminal or browser console.
 ## Features
 
 - **Real-time Inspection**: See variables as they are dumped from your code.
-- **Cross-platform**: Works on Windows, macOS, and Linux.
-- **Multi-language Support**: Official companion packages for Rust, PHP, and JavaScript/TypeScript.
-- **Zero-config Fallback**: Macro calls safely no-op if the desktop app is not running.
+- **Cross-platform**: Supports Windows, macOS (x86 + ARM), and Linux.
+- **Multi-language Support**: Official companion packages for Rust (Native and WASM), PHP (^7.1), and JavaScript/TypeScript (Node and Browser).
+- **Diff payloads**: Ability to diff two different payloads and see their differences (useful for large JSON payloads).
 
 ## Getting started
 
@@ -71,10 +71,6 @@ fn main() {
     let user_id = 42;
     let user = User { id: 1, username: "jdoe".to_string() };
 
-    // Dump a single variable
-    quo!(user_id);
-
-    // Dump multiple variables at once
     quo!(user_id, user);
 }
 ```
@@ -105,12 +101,12 @@ require_once 'vendor/autoload.php';
 $userId = 42;
 $username = 'dev_user';
 
-quo([$userId, $username]);
+quo($userId, $username);
 ```
 
 ---
 
-## JavaScript / TypeScript (work in progress)
+## JavaScript / TypeScript [`quo-ts`](https://github.com/Protoqol/Quo-ts)
 
 Use the JavaScript package in Node.js or browser projects to dump runtime values.
 
@@ -132,7 +128,10 @@ import {quo} from "@protoqol/quo-ts";
 const userId = 42;
 const username = "dev_user";
 
-quo([userId, username]);
+quo(userId, username);
+
+// Or if quo not importable and not on Node
+window.quo(userId, username);
 ```
 
 ## License
