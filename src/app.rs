@@ -1,6 +1,7 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
 use crate::components::SideBar;
-use crate::components::{DiffModal, DumpGroup, DumpItem};
+use crate::components::{DumpGroup, DumpItem};
+use crate::modals::DiffModal;
 use crate::toast;
 use crate::utils::formatter::format_by_language;
 use codee::string::JsonSerdeCodec;

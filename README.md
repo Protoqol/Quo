@@ -9,8 +9,8 @@ terminal or browser console.
 ## Features
 
 - **Real-time Inspection**: See variables as they are dumped from your code.
-- **Cross-platform**: Supports for Windows, macOS (x86 + ARM), and Linux.
-- **Multi-language Support**: Official companion packages for Rust, PHP, and JavaScript/TypeScript.
+- **Cross-platform**: Supports Windows, macOS (x86 + ARM), and Linux.
+- **Multi-language Support**: Official companion packages for Rust (Native and WASM), PHP (^7.1), and JavaScript/TypeScript (Node and Browser).
 - **Diff payloads**: Ability to diff two different payloads and see their differences (useful for large JSON payloads).
 
 ## Getting started

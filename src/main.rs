@@ -1,5 +1,6 @@
 mod app;
 mod components;
+mod modals;
 pub mod atoms;
 pub mod utils;
 
