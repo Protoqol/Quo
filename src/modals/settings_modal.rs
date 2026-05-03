@@ -4,6 +4,8 @@ use leptos::serde_json;
 use leptos::task::spawn_local;
 use wasm_bindgen::prelude::*;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
@@ -24,7 +26,6 @@ pub fn SettingsModal(
 
     let (active_category, set_active_category) = signal("UI".to_string());
 
-    // Reload settings from the backend into the shared signal every time the modal opens.
     Effect::new(move |_| {
         if show.get() {
             spawn_local(async move {
@@ -36,25 +37,24 @@ pub fn SettingsModal(
         }
     });
 
-    // Derived: settings for the active category
     let active_settings = move || {
         let cat = active_category.get();
         all_settings.get().into_iter().filter(|s| s.category == cat).collect::<Vec<_>>()
     };
 
-    // Derived: ordered unique categories from loaded settings (falls back to built-in order)
     let categories = move || {
         let mut seen = std::collections::HashSet::new();
-        let mut cats: Vec<String> = all_settings
+        let mut categories: Vec<String> = all_settings
             .get()
             .into_iter()
             .filter_map(|s| if seen.insert(s.category.clone()) { Some(s.category) } else { None })
             .collect();
-        // Always include "About" even though it has no dynamic settings
+
         if !seen.contains("About") {
-            cats.push("About".to_string());
+            categories.push("About".to_string());
         }
-        cats
+
+        categories
     };
 
     view! {
@@ -74,24 +74,24 @@ pub fn SettingsModal(
                         </button>
                     </div>
                     <div class="flex flex-1 overflow-hidden">
-                        // Sidebar: categories derived from loaded settings
                         <nav class="w-48 border-r border-slate-700 p-2 bg-slate-950">
                             <For
                                 each=categories
                                 key=|cat| cat.clone()
                                 children=move |cat| {
-                                    let cat_for_class = cat.clone();
-                                    let cat_for_click = cat.clone();
-                                    let cat_for_display = cat.clone();
+                                    let categories_for_class = cat.clone();
+                                    let categories_for_click = cat.clone();
+                                    let categories_for_display = cat.clone();
+
                                     view! {
                                         <button
                                             class=move || format!(
                                                 "w-full text-left px-4 py-2 rounded-lg text-sm font-medium mb-1 transition-all border {}",
-                                                if active_category.get() == cat_for_class { "bg-accent/10 text-accent border-accent/20" } else { "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-transparent" }
+                                                if active_category.get() == categories_for_class { "bg-accent/10 text-accent border-accent/20" } else { "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-transparent" }
                                             )
-                                            on:click=move |_| set_active_category.set(cat_for_click.clone())
+                                            on:click=move |_| set_active_category.set(categories_for_click.clone())
                                         >
-                                            {cat_for_display}
+                                            {categories_for_display}
                                         </button>
                                     }
                                 }
@@ -106,10 +106,7 @@ pub fn SettingsModal(
                                         key=|s| s.id.clone()
                                         children=move |setting| {
                                             let is_bool = setting.value.is_boolean();
-                                            // Store the id so every closure can copy it cheaply.
                                             let stored_id = StoredValue::new(setting.id.clone());
-                                            // Memo reads from all_settings; it is Copy and can be
-                                            // captured independently by as many closures as needed.
                                             let checked = Memo::new(move |_| {
                                                 all_settings
                                                     .get()
@@ -118,6 +115,7 @@ pub fn SettingsModal(
                                                     .and_then(|s| s.value.as_bool())
                                                     .unwrap_or(false)
                                             });
+
                                             view! {
                                                 <div class="flex items-start justify-between gap-4 py-3 border-b border-slate-700 last:border-0">
                                                     <div>
@@ -172,7 +170,7 @@ pub fn SettingsModal(
                                     <h3 class="text-white font-semibold mb-2">"About Quo"</h3>
                                     <div class="bg-slate-950/50 p-4 rounded-lg border border-slate-700">
                                         <p class="text-sm font-bold text-white">"Quo Debugging Client"</p>
-                                        <p class="text-xs text-slate-500 mt-1">"Version 0.1.2"</p>
+                                        <p class="text-xs text-slate-500 mt-1">{move || format!("Version v{}", VERSION)}</p>
                                         <p class="text-xs text-slate-500 mt-4">"Developed by Protoqol"</p>
                                     </div>
                                 </div>
