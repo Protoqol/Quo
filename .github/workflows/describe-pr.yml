@@ -27,16 +27,33 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
-            
-            const messages = [
-                    ...new Set(
-                        commits.map(c => c.commit.message.split('\n')[0])
-                    )
-                ]
-                .map(m => `- ${m}`).join('\n');
-            
+
+            const typeOrder = ['feat', 'fix', 'chore'];
+
+            const counts = commits.reduce((acc, c) => {
+              const msg = c.commit.message.split('\n')[0];
+              acc[msg] = (acc[msg] || 0) + 1;
+              return acc;
+            }, {});
+
+            const getType = msg => {
+              const match = msg.match(/^\((\w+)\)/);
+              return match ? match[1] : 'other';
+            };
+
+            const messages = Object.entries(counts)
+              .sort(([a], [b]) => {
+                const ai = typeOrder.indexOf(getType(a));
+                const bi = typeOrder.indexOf(getType(b));
+                const an = ai === -1 ? typeOrder.length : ai;
+                const bn = bi === -1 ? typeOrder.length : bi;
+                return an - bn;
+              })
+              .map(([msg, count]) => `- ${msg}${count > 1 ? ` (x${count})` : ''}`)
+              .join('\n');
+
             const body = `## Changes\n\n${messages}`;
-            
+
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
