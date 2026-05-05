@@ -1,0 +1,85 @@
+name: Automatic release description
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  update-release-description:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit messages and update release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const currentRelease = context.payload.release;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const tagName = currentRelease.tag_name;
+
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner,
+              repo,
+            });
+
+            const previousRelease = releases.find(r => r.id !== currentRelease.id && !r.draft);
+
+            let commits = [];
+            
+            if (previousRelease) {
+              const { data: comparison } = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: previousRelease.tag_name,
+                head: tagName,
+              });
+              commits = comparison.commits;
+            } else {
+              const { data: tagCommits } = await github.rest.repos.listCommits({
+                owner,
+                repo,
+                sha: tagName,
+              });
+              commits = tagCommits;
+            }
+
+            const typeOrder = ['feat', 'fix', 'chore'];
+
+            const counts = commits.reduce((acc, c) => {
+              const msg = c.commit.message.split('\n')[0];
+              acc[msg] = (acc[msg] || 0) + 1;
+              return acc;
+            }, {});
+
+            const getType = msg => {
+              const match = msg.match(/^\((\w+)\)/);
+              return match ? match[1] : 'other';
+            };
+
+            const messages = Object.entries(counts)
+              .sort(([a], [b]) => {
+                const ai = typeOrder.indexOf(getType(a));
+                const bi = typeOrder.indexOf(getType(b));
+                const an = ai === -1 ? typeOrder.length : ai;
+                const bn = bi === -1 ? typeOrder.length : bi;
+                return an - bn;
+              })
+              .map(([msg, count]) => `- ${msg}${count > 1 ? ` (x${count})` : ''}`)
+              .join('\n');
+
+            const body = `## Changes\n\n${messages}`;
+
+            await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: currentRelease.id,
+              body,
+            });
