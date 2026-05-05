@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Category {
-    #[serde(rename = "UI")]
+    #[serde(rename = "Quo")]
     Ui,
     #[serde(rename = "Server")]
     Server,
@@ -65,6 +65,14 @@ pub const SETTINGS: &[Setting] = &[
         description: "Show truncated version of large variable types.",
         default: DefaultValue::Bool(false),
         show_in_sidebar: true,
+    },
+    Setting {
+        id: "notifications",
+        category: Category::Ui,
+        label: "Notifications",
+        description: "Get a notification when a new payload was received by Quo.",
+        default: DefaultValue::Bool(false),
+        show_in_sidebar: false,
     },
     Setting {
         id: "server-port",

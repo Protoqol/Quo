@@ -25,7 +25,7 @@ pub fn SettingsModal(
     let set_truncate_large_var_types = settings.truncate_large_var_types;
     let all_settings = settings.all_settings;
 
-    let (active_category, set_active_category) = signal("UI".to_string());
+    let (active_category, set_active_category) = signal("Quo".to_string());
 
     Effect::new(move |_| {
         if show.get() {
