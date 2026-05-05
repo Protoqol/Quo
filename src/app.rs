@@ -573,7 +573,8 @@ pub fn App() -> impl IntoView {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <img
+                                            <img draggable="false"
+                                                oncontextmenu=move || false
                                                 src="/public/assets/icons/boat-animation.apng"
                                                 class="w-32 select-none"
                                             />

@@ -103,7 +103,10 @@ pub fn SideBar(
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
                 <div class="flex flex-row">
-                    <img src="/public/assets/icons/animated_icon.apng" class="quo-logo w-10" />
+                    <img draggable="false"
+                        oncontextmenu=move || false
+                        src="/public/assets/icons/animated_icon.apng"
+                        class="quo-logo w-10" />
                     <span class="quo-logo-text text-white">QUO</span>
                 </div>
                 <a
