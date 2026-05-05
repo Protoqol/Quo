@@ -71,3 +71,11 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  update-website:
+    runs-on: ubuntu-latest
+    needs: publish-tauri
+    steps:
+      - name: Make request
+        run: |
+          curl "${{ secrets.DEPLOY_URL }}" --header "Authorization: Token ${{ secrets.DEPLOY_API_TOKEN }}"
