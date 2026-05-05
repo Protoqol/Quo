@@ -13,7 +13,9 @@ pub struct SettingDto {
 
 #[tauri::command]
 pub fn get_settings(app: tauri::AppHandle) -> Result<Vec<SettingDto>, String> {
-    let store = app.store(QUO_CONFIG_STORE_NAME).map_err(|e| e.to_string())?;
+    let store = app
+        .store(QUO_CONFIG_STORE_NAME)
+        .map_err(|e| e.to_string())?;
     let dtos = SETTINGS
         .iter()
         .map(|s| {
@@ -48,7 +50,9 @@ pub fn set_setting(app: tauri::AppHandle, id: String, value: Value) -> Result<()
         return Err(format!("Type mismatch for setting: {id}"));
     }
 
-    let store = app.store(QUO_CONFIG_STORE_NAME).map_err(|e| e.to_string())?;
+    let store = app
+        .store(QUO_CONFIG_STORE_NAME)
+        .map_err(|e| e.to_string())?;
     store.set(&id, value);
     store.save().map_err(|e| e.to_string())
 }

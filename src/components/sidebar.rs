@@ -1,7 +1,8 @@
-use crate::app::{AppSettings, SettingDto};
 use crate::atoms::ToastType;
 use crate::components::LanguageIcon;
 use crate::toast;
+use crate::utils::analytics::track_event;
+use crate::utils::settings::{AppSettings, SettingDto};
 use codee::string::JsonSerdeCodec;
 use gloo_timers::callback::Timeout;
 use itertools::Itertools;
@@ -44,12 +45,13 @@ pub fn SideBar(
         if !payloads.get().is_empty() {
             set_clear_button_disabled.set(true);
             set_clear_button_txt.set("Clearing...".to_string());
-            
+
             if let Some(on_clear) = on_clear {
                 on_clear.run(());
             }
 
             set_payloads.set(vec![]);
+            track_event("dumps_cleared", None);
 
             let timeout = Timeout::new(3_000, move || {
                 set_clear_button_disabled.set(false);
@@ -59,6 +61,8 @@ pub fn SideBar(
             timeout.forget();
         } else {
             set_clear_button_txt.set("Nothing to delete".to_string());
+
+            track_event("no_dumps_cleared", None);
 
             let timeout = Timeout::new(3_000, move || {
                 set_clear_button_txt.set("Clear entries".to_string());
@@ -73,7 +77,11 @@ pub fn SideBar(
 
     // Derive the sidebar subset reactively from the shared signal (no separate fetch needed).
     let sidebar_settings = move || -> Vec<SettingDto> {
-        all_settings.get().into_iter().filter(|s| s.show_in_sidebar).collect()
+        all_settings
+            .get()
+            .into_iter()
+            .filter(|s| s.show_in_sidebar)
+            .collect()
     };
 
     let copy_address = move |server_host: String, server_port: String, is_supported: bool| {
@@ -84,6 +92,10 @@ pub fn SideBar(
 
         copy_fn(format!("{}:{}", server_host, server_port).as_str());
         toast!("Copied to clipboard", ToastType::Success);
+
+        track_event("sidebar_address_copied", Some(serde_json::json!({
+            "address": format!("{}:{}", server_host, server_port)
+        })));
     };
 
     // @TODO optimise lists
@@ -147,6 +159,9 @@ pub fn SideBar(
                                                 set_selected_group.set(None);
                                             } else {
                                                 set_selected_group.set(Some(group.clone()));
+                                                track_event("sidebar_group_selected", Some(serde_json::json!({
+                                                    "group": group
+                                                })));
                                             }
                                         }
                                     }
@@ -244,6 +259,11 @@ pub fn SideBar(
                                                     s.value = serde_json::json!(new_val);
                                                 }
                                             });
+
+                                            track_event("sidebar_setting_changed", Some(serde_json::json!({
+                                                "id": id,
+                                                "value": new_val
+                                            })));
 
                                             match id.as_str() {
                                                 "auto-group-dumps" => app_settings.auto_group.set(new_val),

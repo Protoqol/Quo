@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use crate::utils::formatter::format_by_language;
+use crate::utils::analytics::track_event;
 use leptos::prelude::*;
 use leptos::serde_json;
 use leptos::task::spawn_local;
@@ -78,7 +79,10 @@ pub fn DiffModal(
                         <h3 class="text-lg font-bold text-slate-200">"Payload Diff"</h3>
                         <button
                             class="text-slate-500 hover:text-slate-300"
-                            on:click=move |_| on_close.run(())
+                            on:click=move |_| {
+                                on_close.run(());
+                                track_event("diff_modal_closed", None);
+                            }
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -156,7 +160,10 @@ pub fn DiffModal(
                     <div class="p-4 border-t border-slate-800 flex justify-end">
                         <button
                             class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded font-bold transition-colors"
-                            on:click=move |_| on_close.run(())
+                            on:click=move |_| {
+                                on_close.run(());
+                                track_event("diff_modal_closed", None);
+                            }
                         >
                             "Close"
                         </button>

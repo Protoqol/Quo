@@ -3,7 +3,9 @@ use crate::components::SideBar;
 use crate::components::{DumpGroup, DumpItem};
 use crate::modals::DiffModal;
 use crate::toast;
+use crate::utils::analytics::track_event;
 use crate::utils::formatter::format_by_language;
+use crate::utils::settings::{AppSettings, SettingDto};
 use codee::string::JsonSerdeCodec;
 use gloo_net::http::Request;
 use leptos::ev;
@@ -15,7 +17,6 @@ use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
-use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -25,41 +26,6 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"])]
     async fn listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> JsValue;
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct SettingDto {
-    pub id: String,
-    pub category: String,
-    pub label: String,
-    pub description: String,
-    pub show_in_sidebar: bool,
-    pub value: serde_json::Value,
-}
-
-#[derive(Clone, Copy)]
-pub struct AppSettings {
-    pub all_settings: RwSignal<Vec<SettingDto>>,
-    pub auto_group: RwSignal<bool>,
-    pub long_file_path: RwSignal<bool>,
-    pub auto_expand: RwSignal<bool>,
-    pub truncate_large_var_types: RwSignal<bool>,
-    pub update_available: RwSignal<bool>,
-    pub latest_version: RwSignal<Option<String>>,
-}
-
-impl AppSettings {
-    pub fn new() -> Self {
-        Self {
-            all_settings: RwSignal::new(vec![]),
-            auto_group: RwSignal::new(true),
-            long_file_path: RwSignal::new(false),
-            auto_expand: RwSignal::new(true),
-            truncate_large_var_types: RwSignal::new(false),
-            update_available: RwSignal::new(false),
-            latest_version: RwSignal::new(None),
-        }
-    }
 }
 
 /// One entry in the grouped view-model: either a single payload or a
@@ -73,6 +39,10 @@ enum DumpEntry {
 #[component]
 pub fn App() -> impl IntoView {
     provide_toast_context();
+
+    track_event("app_started", Some(serde_json::json!({
+        "version": env!("CARGO_PKG_VERSION")
+    })));
 
     let search_input_ref = NodeRef::<html::Input>::new();
 
@@ -130,8 +100,13 @@ pub fn App() -> impl IntoView {
                         };
 
                         if is_update(current_version, &latest_version) {
-                            latest_version_signal.set(Some(latest_version));
+                            latest_version_signal.set(Some(latest_version.clone()));
                             update_available.set(true);
+
+                            track_event("update_detected", Some(serde_json::json!({
+                                "current_version": current_version,
+                                "latest_version": latest_version
+                            })));
                         }
                     }
                 }
@@ -281,6 +256,7 @@ pub fn App() -> impl IntoView {
         set_payloads.set(current);
 
         if (backup.len() - 1) == to_compare.len() {
+            track_event("dump_deleted", None);
             toast!("Dump was deleted", ToastType::Success)
         } else {
             // @TODO check why
@@ -340,8 +316,13 @@ pub fn App() -> impl IntoView {
                 Ok(event) => {
                     println!("{}", event.payload.meta.sender_origin);
                     let mut current = payloads.get_untracked();
-                    current.insert(0, event.payload);
+                    current.insert(0, event.payload.clone());
                     set_payloads.set(current);
+
+                    track_event("payload_received", Some(serde_json::json!({
+                        "language": event.payload.language,
+                        "origin": event.payload.meta.origin
+                    })));
                 }
                 Err(_e) => {
                     // @TODO error handle
@@ -367,9 +348,14 @@ pub fn App() -> impl IntoView {
                     } = event.payload;
 
                     if success {
-                        set_server_host.set(host);
+                        set_server_host.set(host.clone());
                         set_server_port.set(port.to_string());
-                        console_log("Connection established")
+                        console_log("Connection established");
+
+                        track_event("connection_established", Some(serde_json::json!({
+                            "host": host,
+                            "port": port
+                        })));
                     } else {
                         console_log("Connection NOT established")
                     }
@@ -453,7 +439,14 @@ pub fn App() -> impl IntoView {
                                 autocapitalize="none"
                                 spellcheck="false"
                                 on:input=move |ev| {
-                                    set_search_query.set(event_target_value(&ev));
+                                    let new_query = event_target_value(&ev);
+                                    set_search_query.set(new_query.clone());
+
+                                    if !new_query.is_empty() {
+                                        track_event("search_performed", Some(serde_json::json!({
+                                            "query_length": new_query.len()
+                                        })));
+                                    }
                                 }
                                 prop:value=search_query
                             />
@@ -487,7 +480,10 @@ pub fn App() -> impl IntoView {
                        <div class="absolute bottom-8 right-4 z-[70]">
                            <button
                                class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
-                               on:click=move |_| set_show_diff_modal.set(true)
+                               on:click=move |_| {
+                                   set_show_diff_modal.set(true);
+                                   track_event("diff_modal_opened", None);
+                               }
                            >
                                "Diff selected payloads"
                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -518,9 +514,11 @@ pub fn App() -> impl IntoView {
                                                 if is_all_expanded.get() {
                                                     set_collapse_all_command.update(|v| *v += 1);
                                                     set_is_all_expanded.set(false);
+                                                    track_event("collapse_all_clicked", None);
                                                 } else {
                                                     set_expand_all_command.update(|v| *v += 1);
                                                     set_is_all_expanded.set(true);
+                                                    track_event("expand_all_clicked", None);
                                                 }
                                             }
                                             title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
@@ -549,10 +547,15 @@ pub fn App() -> impl IntoView {
                                             if is_diff_mode.get() { "text-accent bg-slate-800" } else { "text-slate-500 hover:text-accent hover:bg-slate-800" }
                                         )
                                         on:click=move |_| {
-                                            set_is_diff_mode.update(|v| *v = !*v);
-                                            if !is_diff_mode.get() {
+                                            let new_state = !is_diff_mode.get_untracked();
+                                            set_is_diff_mode.set(new_state);
+                                            if !new_state {
                                                 set_selected_payload_uids.set(vec![]);
                                             }
+
+                                            track_event("diff_mode_toggled", Some(serde_json::json!({
+                                                "enabled": new_state
+                                            })));
                                         }
                                         title="Compare 2 payloads with eachother"
                                     >
@@ -572,7 +575,7 @@ pub fn App() -> impl IntoView {
                                         <div class="empty-state">
                                             <img
                                                 src="/public/assets/icons/boat-animation.apng"
-                                                class="w-32"
+                                                class="w-32 select-none"
                                             />
                                             <p class="text-white">Waiting for incoming payloads...</p>
                                             <span class="text-xs text-slate-400 mt-2">

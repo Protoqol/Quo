@@ -1,4 +1,5 @@
-use crate::app::{AppSettings, SettingDto};
+use crate::utils::settings::{AppSettings, SettingDto};
+use crate::utils::analytics::track_event;
 use leptos::prelude::*;
 use leptos::serde_json;
 use leptos::task::spawn_local;
@@ -77,8 +78,8 @@ pub fn SettingsModal(
                         <nav class="w-48 border-r border-slate-700 p-2 bg-slate-950">
                             <For
                                 each=categories
-                                key=|cat| cat.clone()
-                                children=move |cat| {
+                                key=|cat: &String| cat.clone()
+                                children=move |cat: String| {
                                     let categories_for_class = cat.clone();
                                     let categories_for_click = cat.clone();
                                     let categories_for_display = cat.clone();
@@ -89,7 +90,12 @@ pub fn SettingsModal(
                                                 "w-full text-left px-4 py-2 rounded-lg text-sm font-medium mb-1 transition-all border flex items-center justify-between {}",
                                                 if active_category.get() == categories_for_class { "bg-accent/10 text-accent border-accent/20" } else { "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-transparent" }
                                             )
-                                            on:click=move |_| set_active_category.set(categories_for_click.clone())
+                                            on:click=move |_| {
+                                                set_active_category.set(categories_for_click.clone());
+                                                track_event("settings_modal_category_changed", Some(serde_json::json!({
+                                                    "category": categories_for_click
+                                                })));
+                                            }
                                         >
                                             <span>{categories_for_display.clone()}</span>
                                             <Show when=move || categories_for_display == "About" && settings.update_available.get()>
@@ -109,8 +115,8 @@ pub fn SettingsModal(
                                 <div class="space-y-4">
                                     <For
                                         each=active_settings
-                                        key=|s| s.id.clone()
-                                        children=move |setting| {
+                                        key=|s: &SettingDto| s.id.clone()
+                                        children=move |setting: SettingDto| {
                                             let is_bool = setting.value.is_boolean();
                                             let stored_id = StoredValue::new(setting.id.clone());
                                             let checked = Memo::new(move |_| {
@@ -138,11 +144,16 @@ pub fn SettingsModal(
                                                                 let new_val = !checked.get_untracked();
                                                                 let id = stored_id.get_value();
                                                               
-                                                                all_settings.update(|list| {
+                                                                all_settings.update(|list: &mut Vec<SettingDto>| {
                                                                     if let Some(s) = list.iter_mut().find(|s| s.id == id) {
                                                                         s.value = serde_json::json!(new_val);
                                                                     }
                                                                 });
+
+                                                                track_event("settings_modal_setting_changed", Some(serde_json::json!({
+                                                                    "id": id,
+                                                                    "value": new_val
+                                                                })));
 
                                                                 match id.as_str() {
                                                                     "auto-group-dumps" => set_auto_group.set(new_val),

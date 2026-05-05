@@ -53,9 +53,7 @@ pub fn respond(
         }
     }
 
-    builder
-        .body(full(s))
-        .expect("Valid response body")
+    builder.body(full(s)).expect("Valid response body")
 }
 
 fn is_localhost(origin: &str) -> bool {

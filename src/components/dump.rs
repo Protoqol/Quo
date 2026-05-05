@@ -1,5 +1,6 @@
 use crate::components::LanguageIcon;
 use crate::utils::formatter::format_by_language;
+use crate::utils::analytics::track_event;
 use chrono::prelude::*;
 use chrono::{Duration, Locale};
 use leptos::prelude::*;
@@ -302,15 +303,20 @@ pub fn DumpItem(
 
     let open_in_editor = StoredValue::new(move |cmd: String| {
         let path = sender_origin.get_value();
+        let cmd_for_invoke = cmd.clone();
         spawn_local(async move {
             invoke(
                 "open_in_editor",
-                serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd, "path": path }))
+                serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd_for_invoke, "path": path }))
                     .unwrap(),
             )
             .await;
         });
         set_show_dropdown.set(false);
+
+        track_event("dump_open_in_editor", Some(serde_json::json!({
+            "editor": cmd
+        })));
     });
 
     let show_in_explorer = StoredValue::new(move || {
@@ -323,6 +329,8 @@ pub fn DumpItem(
             .await;
         });
         set_show_dropdown.set(false);
+
+        track_event("dump_show_in_explorer", None);
     });
 
     // let copy_to_clipboard = StoredValue::new(move |text: String| {
@@ -483,6 +491,9 @@ pub fn DumpItem(
                                             set_selected_group.set(None);
                                         } else {
                                             set_selected_group.set(Some(origin.clone()));
+                                            track_event("dump_filtered", Some(serde_json::json!({
+                                                "origin": origin
+                                            })));
                                         }
                                     }
                                 }
@@ -602,6 +613,7 @@ pub fn DumpItem(
                                         on:click=move |_| {
                                             delete_self.get_value()();
                                             set_show_dropdown.set(false);
+                                            track_event("dump_deleted", None);
                                         }
                                     >
                                         <svg
@@ -674,7 +686,10 @@ pub fn DumpItem(
                         <div class="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent flex items-end justify-center pb-3 z-10 pointer-events-none">
                             <button
                                 class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 transition-colors shadow-xl pointer-events-auto"
-                                on:click=move |_| set_manual_state.set(Some(true))
+                                on:click=move |_| {
+                                    set_manual_state.set(Some(true));
+                                    track_event("dump_expanded", None);
+                                }
                             >
                                 "Expand"
                             </button>
@@ -684,7 +699,10 @@ pub fn DumpItem(
                         <div class="sticky left-0 w-full flex justify-center pb-2 z-10">
                             <button
                                 class="bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700/50 opacity-50 hover:opacity-100 transition-all"
-                                on:click=move |_| set_manual_state.set(Some(false))
+                                on:click=move |_| {
+                                    set_manual_state.set(Some(false));
+                                    track_event("dump_collapsed", None);
+                                }
                             >
                                 "Collapse"
                             </button>

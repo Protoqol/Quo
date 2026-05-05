@@ -4,8 +4,10 @@
     "tailwindcss": "^3.4.19"
   },
   "dependencies": {
+    "@aptabase/tauri": "0.4.1",
     "@tailwindcss/cli": "^4.2.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
+    "@tauri-apps/plugin-notification": "^2.3.3",
     "@tauri-apps/plugin-store": "^2.4.2"
   }
 }

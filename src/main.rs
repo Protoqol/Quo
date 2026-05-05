@@ -5,7 +5,8 @@ pub mod atoms;
 pub mod utils;
 
 use crate::components::Taskbar;
-use app::{App, AppSettings};
+use crate::utils::settings::AppSettings;
+use app::App;
 use leptos::prelude::*;
 
 fn main() {
