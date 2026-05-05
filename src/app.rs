@@ -1,5 +1,5 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
-use crate::components::SideBar;
+use crate::layout::SideBar;
 use crate::components::{DumpGroup, DumpItem};
 use crate::modals::DiffModal;
 use crate::toast;
