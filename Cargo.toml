@@ -30,3 +30,6 @@ quo = { version = "0.1.95", package = "quo-rust" }
 
 [workspace]
 members = ["quo-common", "src-tauri"]
+
+[env]
+APTABASE_KEY = ""

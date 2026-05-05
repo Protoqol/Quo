@@ -44,7 +44,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(tauri_plugin_aptabase::Builder::new(option_env!("APTABASE_KEY").unwrap_or("").to_string()).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(option_env!("APTABASE_KEY").unwrap_or("")).build())
         .plugin(tauri_plugin_opener::init())
         .manage(ServerState(Mutex::new(
             ConnectionEstablishedEvent::default(),
