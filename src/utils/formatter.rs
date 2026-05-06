@@ -1,7 +1,7 @@
 use dprint_plugin_json::configuration::ConfigurationBuilder as JSONConfigBuilder;
 use dprint_plugin_typescript::configuration::ConfigurationBuilder as JSConfigBuilder;
 use dprint_plugin_typescript::FormatTextOptions;
-use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage, ERROR_IDENTIFIER_KEY};
 use rust_format::{Formatter, RustFmt};
 use std::path::Path;
 
@@ -247,18 +247,26 @@ fn add_json_colon_spaces(code: &str) -> String {
         .join("\n")
 }
 
-fn format_php(dump: &IncomingQuoPayload) -> String {
+fn format_php(payload: &IncomingQuoPayload) -> String {
+    if payload.meta.variable.var_type == ERROR_IDENTIFIER_KEY {
+        return format!(
+            "<span>{} <br/><br/>in <i>{}</i></span>",
+            payload.meta.variable.value,
+            payload.meta.sender_origin
+        );
+    }
+
     // @TODO find better way display type UI wise
     format!(
         "\n// @var {}\n{}{} = {}",
-        dump.meta.variable.var_type,
-        if dump.meta.variable.is_constant {
+        payload.meta.variable.var_type,
+        if payload.meta.variable.is_constant {
             "const "
         } else {
             ""
         },
-        dump.meta.variable.name,
-        format_js_ts(&dump.meta.variable.value),
+        payload.meta.variable.name,
+        format_js_ts(&payload.meta.variable.value), // @TODO use php formatter
     )
 }
 

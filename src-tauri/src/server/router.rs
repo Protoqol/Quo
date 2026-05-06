@@ -1,4 +1,4 @@
-use crate::server::controllers::handle_incoming_payload;
+use crate::server::controllers::{handle_clear_entries, handle_incoming_payload};
 use http_body_util::combinators::BoxBody;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
@@ -26,6 +26,7 @@ pub async fn router(
             origin,
         )),
         (&Method::POST, "/payload") => handle_incoming_payload(request, app, origin).await,
+        (&Method::DELETE, "/clear-entries") => handle_clear_entries(request, app, origin).await,
         _ => Ok(respond(
             "This route does not exist for Quo".to_string(),
             StatusCode::NOT_FOUND,

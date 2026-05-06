@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 
 // @TODO support for extra custom fields (eg CLI env/Laravel Jobs etc.)
 
+pub static ERROR_IDENTIFIER_KEY: &str = "quo-error-reporting-type";
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
-pub struct QuoPayloadVariable {
+pub struct QuoPayloadVariable { 
     pub var_type: String,
     pub name: String,
     pub value: String,
@@ -57,7 +59,7 @@ pub enum QuoPayloadLanguage {
     Ruby,
     Go,
     #[default]
-    Unknown
+    Unknown,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]

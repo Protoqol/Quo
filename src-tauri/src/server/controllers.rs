@@ -1,3 +1,4 @@
+use crate::events::clear_entries_received::send_clear_entries_request_to_frontend;
 use crate::events::payload_received::send_incoming_payload_to_frontend;
 use crate::server::router::respond;
 use http_body_util::combinators::BoxBody;
@@ -7,9 +8,7 @@ use hyper::{Request, Response, StatusCode};
 use quo_common::payloads::IncomingQuoPayload;
 use tauri::AppHandle;
 
-/*
- * Parses request, and emits payload received event to frontend.
- */
+/// Parses request, emits payload-received event, sends payload to frontend.
 pub async fn handle_incoming_payload(
     req: Request<hyper::body::Incoming>,
     app: AppHandle,
@@ -50,7 +49,16 @@ pub async fn handle_incoming_payload(
 
     send_incoming_payload_to_frontend(app, body_str);
 
-    println!("Payload received and sent to frontend");
+    Ok(respond("OK".to_string(), StatusCode::OK, origin))
+}
 
+/// Ability to clear all payloads via the API.
+/// Useful in case of a UI freeze
+pub async fn handle_clear_entries(
+    _req: Request<hyper::body::Incoming>,
+    app: AppHandle,
+    origin: Option<String>,
+) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
+    send_clear_entries_request_to_frontend(app);
     Ok(respond("OK".to_string(), StatusCode::OK, origin))
 }

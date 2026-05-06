@@ -1,13 +1,13 @@
 use crate::components::LanguageIcon;
-use crate::utils::formatter::format_by_language;
 use crate::utils::analytics::track_event;
+use crate::utils::formatter::format_by_language;
 use chrono::prelude::*;
 use chrono::{Duration, Locale};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos::{html, serde_json};
 use leptos_use::on_click_outside;
-use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage, ERROR_IDENTIFIER_KEY};
 use std::string::ToString;
 use std::sync::OnceLock;
 use syntect::highlighting::{Theme, ThemeSet};
@@ -307,16 +307,21 @@ pub fn DumpItem(
         spawn_local(async move {
             invoke(
                 "open_in_editor",
-                serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd_for_invoke, "path": path }))
-                    .unwrap(),
+                serde_wasm_bindgen::to_value(
+                    &serde_json::json!({ "cmd": cmd_for_invoke, "path": path }),
+                )
+                .unwrap(),
             )
             .await;
         });
         set_show_dropdown.set(false);
 
-        track_event("dump_open_in_editor", Some(serde_json::json!({
-            "editor": cmd
-        })));
+        track_event(
+            "dump_open_in_editor",
+            Some(serde_json::json!({
+                "editor": cmd
+            })),
+        );
     });
 
     let show_in_explorer = StoredValue::new(move || {
@@ -348,17 +353,20 @@ pub fn DumpItem(
     // Functions
     //
 
-    fn code_format(dump: &IncomingQuoPayload, formatted_code: &str) -> String {
+    fn code_syntax_highlighter(payload: &IncomingQuoPayload, formatted_code: &str) -> String {
+        if payload.meta.variable.var_type == ERROR_IDENTIFIER_KEY {
+            return formatted_code.to_string();
+        }
+
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
             let mut cursor = std::io::Cursor::new(CODE_THEME);
             ThemeSet::load_from_reader(&mut cursor).expect("Failed to load embedded theme")
         });
 
-        let resolved_file_extension_for_syntax = match dump.language {
+        let resolved_file_extension_for_syntax = match payload.language {
             QuoPayloadLanguage::Javascript => "js",
-            // @TODO TypeScript syntax highlighting
-            QuoPayloadLanguage::Typescript => "js",
+            QuoPayloadLanguage::Typescript => "js", // @TODO TypeScript syntax highlighting
             QuoPayloadLanguage::Rust => "rs",
             QuoPayloadLanguage::Php => "php",
             QuoPayloadLanguage::Python => "py",
@@ -367,17 +375,19 @@ pub fn DumpItem(
             QuoPayloadLanguage::Unknown => "txt",
         };
 
-        let syntax = ss.find_syntax_by_extension(resolved_file_extension_for_syntax).unwrap();
+        let syntax = ss
+            .find_syntax_by_extension(resolved_file_extension_for_syntax)
+            .unwrap();
 
-        let to_highlight = if dump.language == QuoPayloadLanguage::Php {
+        let to_highlight = if payload.language == QuoPayloadLanguage::Php {
             format!("<?php{}", formatted_code)
         } else {
             formatted_code.to_string()
         };
 
-        let html = highlighted_html_for_string(&to_highlight, &ss, syntax, theme).unwrap();
+        let html = highlighted_html_for_string(&to_highlight, ss, syntax, theme).unwrap();
 
-        if dump.language == QuoPayloadLanguage::Php {
+        if payload.language == QuoPayloadLanguage::Php {
             if let Some(pos) = html.find("&lt;?php") {
                 if let Some(start_span) = html[..pos].rfind("<span") {
                     if let Some(end_span) = html[pos..].find("</span>") {
@@ -472,8 +482,9 @@ pub fn DumpItem(
                 </span>
             </Show>
             <div class=move || format!(
-                "flex flex-row justify-between py-2 pl-4 pr-2 border-b border-slate-900/50 {}",
-                if is_grouped { "bg-slate-900/60 rounded-none" } else { "bg-slate-950 rounded-t" }
+                "flex flex-row justify-between py-2 pl-4 pr-2 border-b border-slate-900/50 {} {}",
+                if is_grouped { "bg-slate-900/60 rounded-none" } else { "bg-slate-950 rounded-t" },
+                if dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY { "!border-red-950 border-b-2" } else { "" }
             )>
                 <div
                     data-identifier="dump_header"
@@ -645,42 +656,26 @@ pub fn DumpItem(
                     if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "overflow-x-auto" }
                 )>
                     <div class="sticky left-0 top-0 h-0 z-10 pointer-events-none">
-                        <div class="absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <LanguageIcon
-                                lang=dump_stored.get_value().language.clone()
-                                class="w-10 h-10 text-slate-500".to_string()
-                            />
+                        <div class="absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity flex flex-row justify-center items-center gap-x-2">
+                           <LanguageIcon
+                               lang=dump_stored.get_value().language.clone()
+                               class="w-10 h-10 text-slate-500".to_string()
+                           />
+                            <Show when=move || dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY>
+                                <span class="flex flex-row justify-center items-center gap-x-2">
+                                    <p class="text-slate-500">error</p>
+                                    <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 19.9C15.2822 19.4367 17 17.419 17 15V12C17 11.299 16.8564 10.6219 16.5846 10H7.41538C7.14358 10.6219 7 11.299 7 12V15C7 17.419 8.71776 19.4367 11 19.9V14H13V19.9ZM5.5358 17.6907C5.19061 16.8623 5 15.9534 5 15H2V13H5V12C5 11.3573 5.08661 10.7348 5.2488 10.1436L3.0359 8.86602L4.0359 7.13397L6.05636 8.30049C6.11995 8.19854 6.18609 8.09835 6.25469 8H17.7453C17.8139 8.09835 17.88 8.19854 17.9436 8.30049L19.9641 7.13397L20.9641 8.86602L18.7512 10.1436C18.9134 10.7348 19 11.3573 19 12V13H22V15H19C19 15.9534 18.8094 16.8623 18.4642 17.6907L20.9641 19.134L19.9641 20.866L17.4383 19.4077C16.1549 20.9893 14.1955 22 12 22C9.80453 22 7.84512 20.9893 6.56171 19.4077L4.0359 20.866L3.0359 19.134L5.5358 17.6907ZM8 6C8 3.79086 9.79086 2 12 2C14.2091 2 16 3.79086 16 6H8Z"></path></svg>
+                                </span>
+                            </Show>
                         </div>
                     </div>
-                    // <span
-                    //     title="Copy code to clipboard"
-                    //     class="absolute bottom-0 right-4 z-10 text-slate-300 hover:text-white p-1.5 rounded-lg shadow-sm border border-slate-700/50 cursor-pointer transition-all opacity-50 group-hover:opacity-100"
-                    //     on:click={
-                    //         let content = code_format(&dump);
-                    //         move |_| copy_to_clipboard.get_value()(content.clone())
-                    //     }
-                    // >
-                    //     <svg
-                    //         xmlns="http://www.w3.org/2000/svg"
-                    //         width="24"
-                    //         height="24"
-                    //         viewBox="0 0 24 24"
-                    //         class="w-4 h-4 cursor-pointer "
-                    //     >
-                    //         <path
-                    //             fill="currentColor"
-                    //             d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2"
-                    //         />
-                    //         <path
-                    //             fill="currentColor"
-                    //             d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z"
-                    //         />
-                    //     </svg>
-                    // </span>
                     <code
                         node_ref=code_ref
-                        class="code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4"
-                        inner_html=move || code_format(&dump_stored.get_value(), &formatted_code.get())
+                        class=move || format!(
+                            "code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4 {}",
+                            if dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY { "text-white" } else { "" }
+                        )
+                        inner_html=move || code_syntax_highlighter(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
                     <Show when=move || is_collapsed.get()>

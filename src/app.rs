@@ -60,7 +60,6 @@ pub fn App() -> impl IntoView {
     let (server_port, set_server_port, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_port");
 
-    // Consume settings from the shared context provided by main.rs
     let settings = use_context::<AppSettings>().expect("AppSettings context missing");
     let auto_group = settings.auto_group;
     let long_file_path = settings.long_file_path;
@@ -326,7 +325,7 @@ pub fn App() -> impl IntoView {
                 }
                 Err(_e) => {
                     // @TODO error handle
-                    println!("Could not store incoming payload");
+                    eprintln!("Could not store incoming payload");
                 }
             };
         }) as Box<dyn FnMut(JsValue)>);
@@ -371,10 +370,21 @@ pub fn App() -> impl IntoView {
             //
         }) as Box<dyn FnMut(JsValue)>);
 
+        let handle_clear_entries_event = Closure::wrap(Box::new(move |_obj: JsValue| {
+            set_payloads.set(vec![]);
+            set_selected_payload_uids.set(vec![]);
+            set_is_diff_mode.set(false);
+            set_selected_group.set(None);
+            track_event("dumps_cleared_via_event", None);
+
+            let _ = window().location().reload();
+        }) as Box<dyn FnMut(JsValue)>);
+
         spawn_local(async move {
             listen("payload-received", &handle_payload_received_event).await;
             listen("connection-established", &handle_connection_established).await;
             listen("app-exit", &handle_app_exit).await;
+            listen("clear-entries", &handle_clear_entries_event).await;
 
             // Fetch initial connection info after listeners are set up
             let connection_info = invoke("get_connection_info", JsValue::NULL).await;
@@ -399,6 +409,7 @@ pub fn App() -> impl IntoView {
             handle_payload_received_event.forget();
             handle_connection_established.forget();
             handle_app_exit.forget();
+            handle_clear_entries_event.forget();
         });
     });
 
