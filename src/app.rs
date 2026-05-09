@@ -597,13 +597,10 @@ pub fn App() -> impl IntoView {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <img draggable="false"
-                                                oncontextmenu=move || false
-                                                src="/public/assets/icons/boat-animation.apng"
-                                            />
+                                            <div class="boat-animation" />
                                             <p>"Waiting for incoming payloads..."</p>
                                             <span class="hint">
-                                                "Dumps from your application will appear here automatically."
+                                                "Payloads from your application will appear here automatically."
                                             </span>
                                         </div>
                                     </div>

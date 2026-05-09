@@ -27,7 +27,6 @@ pub struct Setting {
     pub label: &'static str,
     pub description: &'static str,
     pub default: DefaultValue,
-    /// Whether this setting should appear in the sidebar quick-settings panel.
     pub show_in_sidebar: bool,
 }
 
@@ -98,7 +97,7 @@ pub const SETTINGS: &[Setting] = &[
         label: "Theme",
         description: "The theme to use for the Quo client",
         default: DefaultValue::Str("Quo (default)"),
-        show_in_sidebar: true,
+        show_in_sidebar: false,
     },
 ];
 
