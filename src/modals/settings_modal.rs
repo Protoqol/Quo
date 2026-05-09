@@ -1,3 +1,4 @@
+use quo_common::config::AVAILABLE_THEMES;
 use crate::utils::settings::{AppSettings, SettingDto};
 use crate::utils::analytics::track_event;
 use leptos::prelude::*;
@@ -27,7 +28,7 @@ pub fn SettingsModal(
     let set_theme = settings.theme;
 
     let (active_category, set_active_category) = signal("Quo".to_string());
-    let (available_themes, set_available_themes) = signal::<Vec<String>>(vec![]);
+    let (available_themes, _) = signal::<Vec<String>>(AVAILABLE_THEMES.iter().map(|&t| t.to_string()).collect());
 
     Effect::new(move |_| {
         if show.get() {
@@ -35,12 +36,6 @@ pub fn SettingsModal(
                 let result = invoke("get_settings", JsValue::NULL).await;
                 if let Ok(fresh) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
                     all_settings.set(fresh);
-                }
-            });
-            spawn_local(async move {
-                let result = invoke("get_available_themes", JsValue::NULL).await;
-                if let Ok(themes) = serde_wasm_bindgen::from_value::<Vec<String>>(result) {
-                    set_available_themes.set(themes);
                 }
             });
         }

@@ -31,6 +31,8 @@ pub struct Setting {
     pub show_in_sidebar: bool,
 }
 
+include!(concat!(env!("OUT_DIR"), "/available_themes.rs"));
+
 pub const CATEGORIES: &[Category] = &[Category::Ui, Category::Server, Category::Privacy, Category::About];
 
 pub const SETTINGS: &[Setting] = &[

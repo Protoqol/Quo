@@ -13,7 +13,7 @@
             @apply flex flex-row;
 
             .quo-logo {
-                @apply transition-transform duration-300 shrink-0 w-10 h-10;
+                @apply transition-transform duration-300 shrink-0 w-10 h-10 mr-1;
                 background-image: url("/public/assets/icons/animated_icon_neon_dreams.apng");
                 background-size: contain;
                 background-repeat: no-repeat;
@@ -24,6 +24,11 @@
             @apply text-3xl font-mono font-semibold uppercase mr-4 text-accent;
             text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
             animation: neon-pulse-strong 2s infinite alternate;
+
+            &:hover {
+                animation: neon-pulse-strong 2s infinite alternate;
+                color: var(--accent);
+            }
 
             &::after {
                 content: "//";
@@ -48,7 +53,7 @@
             @apply flex flex-col;
 
             .quo-sidebar-groups-title {
-                @apply text-base font-bold uppercase tracking-wider text-accent cursor-pointer hover:text-primary transition-colors;
+                @apply pl-4 text-base font-bold uppercase tracking-wider text-accent cursor-pointer hover:text-primary transition-colors;
 
                 .quo-sidebar-groups-subtitle {
                     @apply text-xs font-normal tracking-normal normal-case ml-2 text-muted;
@@ -194,6 +199,7 @@
         }
     }
 }
+
 
 .quo-sidebar-legacy {
     display: none;

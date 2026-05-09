@@ -119,3 +119,7 @@ body {
         @apply flex flex-col h-full;
     }
 }
+
+button {
+    @apply cursor-pointer;
+}

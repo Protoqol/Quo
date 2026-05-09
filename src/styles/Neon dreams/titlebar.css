@@ -1,15 +1,14 @@
 .titlebar {
-    @apply bg-transparent;
     @apply h-7.5;
     @apply select-none;
     @apply grid relative z-50;
     grid-template-columns: auto max-content;
 
     .titlebar-drag-region {
-        @apply bg-header;
+        content: "Quo variable inspector";
 
         .titlebar-left-container {
-            @apply w-64 h-7.5 bg-header flex items-center justify-between px-2;
+            @apply w-64 h-7.5 flex items-center justify-between px-2;
 
             .menu-button-container {
                 @apply relative flex items-center;
@@ -41,7 +40,7 @@
                     animation: neon-pulse-box 2s infinite alternate;
 
                     .menu-item {
-                        @apply !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-primary hover:!bg-main hover:!text-white transition-colors;
+                        @apply cursor-pointer !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-primary hover:!bg-main hover:!text-white transition-colors;
 
                         &.quit-item {
                             @apply !pl-[2.75rem];
@@ -73,13 +72,21 @@
     }
 
     > .controls {
-        @apply flex;
-        @apply bg-header;
+        @apply flex bg-header cursor-pointer;
+
+        button {
+            @apply cursor-pointer;
+
+            &:hover {
+                @apply bg-accent/50;
+            }
+
+        }
     }
 
     #titlebar-close {
         &:hover {
-            @apply bg-red-500;
+            @apply bg-red-500 cursor-pointer;
 
             svg {
                 @apply fill-white;

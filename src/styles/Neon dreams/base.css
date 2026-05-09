@@ -23,6 +23,17 @@
     animation: neon-pulse 2s infinite alternate;
 }
 
+[data-theme="Neon dreams"] *::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 5px var(--border-color);
+}
+
+[data-theme="Neon dreams"] *::-webkit-scrollbar-track {
+    background: #020102;
+    border-left: 1px solid rgba(208, 113, 56, 0.2);
+}
+
 [data-theme="Neon dreams"] :is(p, span, h1, h2, h3, h4, h5, h6, code, pre, label, li, a, button) {
     animation: neon-pulse 2s infinite alternate;
 }
@@ -31,6 +42,7 @@
     filter: drop-shadow(0 0 2px currentColor);
     animation: neon-pulse-filter 2s infinite alternate;
 }
+
 
 @keyframes neon-pulse {
     from {

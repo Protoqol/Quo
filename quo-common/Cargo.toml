@@ -4,6 +4,7 @@ version = "0.1.1"
 edition = "2021"
 authors = ["Protoqol <open-source@protoqol.nl"]
 license = "GPL-3"
+build = "build.rs"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

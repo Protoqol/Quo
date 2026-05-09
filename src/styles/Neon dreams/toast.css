@@ -34,7 +34,7 @@
             @apply w-6 h-6;
 
             &.success {
-                @apply text-green-500;
+                @apply text-accent;
             }
 
             &.info {
@@ -46,7 +46,7 @@
             }
 
             &.error {
-                @apply text-red-500;
+                @apply text-syntax-keyword;
             }
         }
     }

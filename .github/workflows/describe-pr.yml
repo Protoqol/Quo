@@ -31,8 +31,10 @@ jobs:
             const typeOrder = ['feat', 'fix', 'chore'];
 
             const counts = commits.reduce((acc, c) => {
-              const msg = c.commit.message.split('\n')[0];
-              acc[msg] = (acc[msg] || 0) + 1;
+              const firstLine = c.commit.message.split('\n')[0];
+              firstLine.split(' + ').forEach(msg => {
+                acc[msg] = (acc[msg] || 0) + 1;
+              });
               return acc;
             }, {});
 

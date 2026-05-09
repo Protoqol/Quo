@@ -4,6 +4,8 @@
 
 .modal-container {
     @apply bg-sidebar border border-border   shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col;
+    background: rgba(2, 1, 2, 0.9) !important;
+    backdrop-filter: blur(12px);
     box-shadow: 0 0 20px -10px var(--border-color);
     --pulse-glow-color: var(--border-color);
     animation: neon-pulse-box 3s infinite alternate;
@@ -65,11 +67,11 @@
             @apply px-2 py-0.5 flex justify-between items-baseline gap-4;
 
             &.added {
-                @apply text-green-400 bg-green-400/10;
+                @apply text-accent bg-accent/10;
             }
 
             &.removed {
-                @apply text-red-400 bg-red-400/10;
+                @apply text-syntax-keyword bg-syntax-keyword/10;
             }
 
             &.unchanged {

@@ -1,5 +1,5 @@
 .quo-layout {
-    @apply flex flex-row w-full flex-1 overflow-hidden;
+    @apply flex flex-row w-full flex-1 overflow-hidden relative;
     background-color: #020D05;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='11' cy='11' r='1' fill='rgba(0,255,100,0.08)'/%3E%3C/svg%3E");
     background-size: 22px 22px;
@@ -13,7 +13,7 @@
         box-shadow: 0 10px 15px -10px var(--border-color);
 
         .input-container {
-            @apply flex-1 max-w-2xl mt-1;
+            @apply flex-1 w-full mt-1;
 
             label {
                 @apply relative flex items-center;
@@ -85,7 +85,7 @@
             @apply absolute bottom-8 right-4 z-[70];
 
             .diff-button {
-                @apply bg-accent hover:bg-accent/75 text-header px-4 py-2   font-bold shadow-xl flex items-center gap-2 border-0 border-border hover:border transition-all;
+                @apply bg-accent/50 hover:bg-accent/75 text-header px-4 py-2 text-accent hover:text-primary font-bold shadow-xl flex items-center gap-2 border-0 border-border hover:border transition-all;
 
                 svg {
                     @apply w-4 h-4;
