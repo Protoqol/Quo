@@ -488,39 +488,39 @@ pub fn App() -> impl IntoView {
                 </header>
                 <div class="quo-body">
                    <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
-                       <div class="absolute bottom-8 right-4 z-[70]">
+                       <div class="diff-button-container">
                            <button
-                               class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
+                               class="diff-button"
                                on:click=move |_| {
                                    set_show_diff_modal.set(true);
                                    track_event("diff_modal_opened", None);
                                }
                            >
                                "Diff selected payloads"
-                               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
                                </svg>
                            </button>
                        </div>
                    </Show>
-                    <div id="quo" class="relative">
-                        <div class="flex items-center justify-between -mt-4 -mb-2">
+                    <div id="quo">
+                        <div class="quo-toolbar">
                             <Show
                                 when=move || !search_results_count().is_empty()
                                 fallback=|| {
                                     view! {
-                                        <span id="searchResult" class="opacity-0">-</span>
+                                        <span id="searchResult" class="search-status hidden">-</span>
                                     }
                                 }
                                 >
-                                <span id="searchResult" class="text-slate-600 text-xs font-bold uppercase tracking-wider">{search_results_count}</span>
+                                <span id="searchResult" class="search-status">{search_results_count}</span>
                             </Show>
 
                             <Show when=move || !payloads.get().is_empty()>
-                                <div class="flex items-center gap-x-2">
+                                <div class="toolbar-actions">
                                     <Show when=move || has_expandable_items.get()>
                                         <button
-                                            class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                            class="action-btn secondary"
                                             on:click=move |_| {
                                                 if is_all_expanded.get() {
                                                     set_collapse_all_command.update(|v| *v += 1);
@@ -538,14 +538,14 @@ pub fn App() -> impl IntoView {
                                                 when=move || is_all_expanded.get()
                                                 fallback=move || view! {
                                                     "Expand all"
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                                         <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
                                                         <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
                                                     </svg>
                                                 }
                                             >
                                                 "Collapse all"
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                                     <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
                                                     <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
                                                 </svg>
@@ -554,8 +554,8 @@ pub fn App() -> impl IntoView {
                                     </Show>
                                     <button
                                         class=move || format!(
-                                            "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 p-2 rounded-lg {}",
-                                            if is_diff_mode.get() { "text-accent bg-slate-800" } else { "text-slate-500 hover:text-accent hover:bg-slate-800" }
+                                            "action-btn {}",
+                                            if is_diff_mode.get() { "active" } else { "secondary" }
                                         )
                                         on:click=move |_| {
                                             let new_state = !is_diff_mode.get_untracked();
@@ -571,7 +571,7 @@ pub fn App() -> impl IntoView {
                                         title="Compare 2 payloads with eachother"
                                     >
                                         "Diff payloads"
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                                             <path fill="currentColor" d="M112 154a6 6 0 0 0-6 6v33.52l-41.07-41.08a9.93 9.93 0 0 1-2.93-7.07v-52a30 30 0 1 0-12 0v52a21.88 21.88 0 0 0 6.44 15.56L97.52 202H64a6 6 0 0 0 0 12h48a6 6 0 0 0 6-6v-48a6 6 0 0 0-6-6M38 64a18 18 0 1 1 18 18a18 18 0 0 1-18-18m168 98.6v-52a21.88 21.88 0 0 0-6.44-15.56L158.48 54H192a6 6 0 0 0 0-12h-48a6 6 0 0 0-6 6v48a6 6 0 0 0 12 0V62.48l41.07 41.08a9.93 9.93 0 0 1 2.93 7.07v52a30 30 0 1 0 12 0Zm-6 47.4a18 18 0 1 1 18-18a18 18 0 0 1-18 18"/>
                                         </svg>
                                     </button>
@@ -587,11 +587,10 @@ pub fn App() -> impl IntoView {
                                             <img draggable="false"
                                                 oncontextmenu=move || false
                                                 src="/public/assets/icons/boat-animation.apng"
-                                                class="w-32 select-none"
                                             />
-                                            <p class="text-white">Waiting for incoming payloads...</p>
-                                            <span class="text-xs text-slate-400 mt-2">
-                                                Dumps from your application will appear here automatically.
+                                            <p>"Waiting for incoming payloads..."</p>
+                                            <span class="hint">
+                                                "Dumps from your application will appear here automatically."
                                             </span>
                                         </div>
                                     </div>

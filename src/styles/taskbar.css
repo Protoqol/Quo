@@ -1,0 +1,110 @@
+.titlebar {
+  @apply bg-transparent;
+  @apply h-[30px];
+  @apply select-none;
+  @apply grid relative z-50;
+  grid-template-columns: auto max-content;
+
+  .titlebar-drag-region {
+      @apply bg-slate-950;
+
+      .titlebar-left-container {
+          @apply w-64 h-[30px] bg-slate-950 flex items-center justify-between px-2;
+
+          .menu-button-container {
+              @apply relative flex items-center;
+
+              .menu-button-wrapper {
+                  @apply relative;
+
+                  .menu-button {
+                      @apply w-5 h-5 fill-slate-500 hover:fill-slate-300 transition-colors cursor-pointer;
+                  }
+
+                  .update-ping {
+                      @apply absolute -top-0.5 -right-0.5 flex h-2 w-2;
+
+                      .ping-anim {
+                          @apply animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75;
+                      }
+
+                      .ping-dot {
+                          @apply relative inline-flex rounded-full h-2 w-2 bg-accent;
+                      }
+                  }
+              }
+
+              .taskbar-menu {
+                  @apply absolute top-[30px] left-2 w-56 bg-slate-900 border border-slate-800 rounded shadow-xl z-[100] overflow-hidden flex flex-col;
+
+                  .menu-item {
+                      @apply !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-slate-300 hover:!bg-slate-800 hover:!text-white transition-colors;
+
+                      &.quit-item {
+                          @apply !pl-[2.75rem];
+
+                          .quit-text {
+                              @apply !flex !gap-x-1;
+
+                              .pro-badge {
+                                  @apply text-slate-600 font-light group-hover:text-slate-500 transition-colors;
+                              }
+                          }
+                      }
+
+                      svg {
+                          @apply w-4 h-4 shrink-0 fill-current;
+                      }
+                  }
+
+                  hr {
+                      @apply border-slate-700 mx-2;
+                  }
+              }
+
+              .menu-overlay {
+                  @apply fixed inset-0 z-[90];
+              }
+          }
+      }
+  }
+
+  > .controls {
+    @apply flex;
+    @apply bg-slate-950;
+  }
+
+  #titlebar-close {
+    &:hover {
+      @apply bg-red-500;
+
+      svg {
+        @apply fill-white;
+      }
+    }
+  }
+
+  button {
+    @apply appearance-none;
+    @apply p-0;
+    @apply m-0;
+    @apply border-none;
+    @apply inline-flex;
+    @apply justify-center;
+    @apply items-center;
+    @apply w-[40px];
+    @apply bg-transparent transition-colors duration-200;
+
+    svg {
+      @apply fill-slate-400 transition-colors duration-200;
+    }
+
+    &:hover {
+      @apply bg-slate-900;
+
+      svg {
+        @apply fill-slate-400;
+      }
+    }
+  }
+}

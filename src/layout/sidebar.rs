@@ -102,18 +102,18 @@ pub fn SideBar(
     view! {
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
-                <div class="flex flex-row">
+                <div class="quo-logo-container">
                     <img draggable="false"
                         oncontextmenu=move || false
                         src="/public/assets/icons/animated_icon.apng"
-                        class="quo-logo w-10" />
-                    <span class="quo-logo-text text-white">QUO</span>
+                        class="quo-logo" />
+                    <span class="quo-logo-text">"QUO"</span>
                 </div>
                 <a
                     title="Visit protoqol.nl"
                     href="https://protoqol.nl?referer=quo-app"
                     target="_blank"
-                    class="text-accent font-semibold cursor-hover text-xs tracking-wider ml-6 -mt-2"
+                    class="quo-protoqol-link"
                 >
                     Protoqol
                 </a>
@@ -121,11 +121,11 @@ pub fn SideBar(
             <nav class="quo-nav">
                 <div id="quo-tabs-container" class="quo-origin-tabs">
                     <h2
-                        class="text-md font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-slate-400 transition-colors"
+                        class="quo-sidebar-groups-title"
                         on:click=move |_| set_selected_group.set(None)
                     >
                         Groups
-                        <small class="text-xs font-normal tracking-normal normal-case ml-2 text-slate-600">
+                        <small class="quo-sidebar-groups-subtitle">
                             Click to filter
                         </small>
                     </h2>
@@ -152,8 +152,8 @@ pub fn SideBar(
 
                             view! {
                                 <div
-                                    class=move || format!("flex flex-row justify-between items-center font-mono border-[1px] bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all {}",
-                                        if selected_group.get() == Some(group_for_style.clone()) { "border-accent" } else { "border-transparent text-slate-500 hover:text-slate-400" }
+                                    class=move || format!("quo-sidebar-group-item {}",
+                                        if selected_group.get() == Some(group_for_style.clone()) { "active" } else { "inactive" }
                                     )
                                     on:click={
                                         let group = group_for_click.clone();
@@ -169,11 +169,11 @@ pub fn SideBar(
                                         }
                                     }
                                 >
-                                    <span class="flex flex-row gap-x-2">
+                                    <span class="quo-sidebar-group-label">
                                         <LanguageIcon lang=language class="mt-[4px]".to_string() />
-                                        <p class="font-medium">{format!("{}", group)}</p>
+                                        <p>{format!("{}", group)}</p>
                                     </span>
-                                    <p class="text-sm align-middle">{format!("{}", items.len())}</p>
+                                    <p class="quo-sidebar-group-count">{format!("{}", items.len())}</p>
                                 </div>
                             }
                         }
@@ -182,15 +182,15 @@ pub fn SideBar(
             </nav>
             <div
                 title="Copy Quo address"
-                class="cursor-pointer flex flex-row justify-center items-center w-full"
+                class="quo-sidebar-address-container"
                 on:click=move |_| copy_address(
                     server_host.get(),
                     server_port.get(),
                     is_supported.get(),
                 )
             >
-                <div class="flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-slate-600 mb-4 bg-slate-950 rounded hover:text-slate-500">
-                    <pre class="cursor-pointer select-text">
+                <div class="quo-sidebar-address">
+                    <pre>
                         {move || {
                             let host = server_host.get();
                             let port = server_port.get();
@@ -206,7 +206,6 @@ pub fn SideBar(
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
-                        class="w-4 h-4 cursor-pointer "
                     >
                         <path
                             fill="currentColor"
@@ -220,9 +219,9 @@ pub fn SideBar(
                 </div>
             </div>
             <div class="quo-sidebar-footer">
-                <div class="settings-container mb-6 px-2">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <div class="settings-container">
+                    <div class="settings-header">
+                        <span>
                             Settings
                         </span>
                     </div>
@@ -242,16 +241,16 @@ pub fn SideBar(
                             });
                             view! {
                                 <label
-                                    class="flex items-center justify-between cursor-pointer group mb-3"
+                                    class="setting-label group"
                                     title=setting.description.clone()
                                 >
-                                    <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                                    <span>
                                         {setting.label.clone()}
                                     </span>
                                     <button
                                         class=move || format!(
-                                            "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {}",
-                                            if checked.get() { "bg-accent" } else { "bg-slate-600" }
+                                            "setting-toggle {}",
+                                            if checked.get() { "checked" } else { "unchecked" }
                                         )
                                         on:click=move |_| {
                                             let new_val = !checked.get_untracked();
@@ -285,8 +284,8 @@ pub fn SideBar(
                                         }
                                     >
                                         <span class=move || format!(
-                                            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out {}",
-                                            if checked.get() { "translate-x-4" } else { "translate-x-0" }
+                                            "toggle-dot {}",
+                                            if checked.get() { "translated" } else { "initial" }
                                         ) />
                                     </button>
                                 </label>
@@ -298,7 +297,7 @@ pub fn SideBar(
                     on:click=clear_dump_entries
                     type="button"
                     title="Clear all entries"
-                    class="quo-btn-clear cursor-hover"
+                    class="quo-btn-clear cursor-pointer"
                     disabled=clear_button_disabled
                 >
                     <svg

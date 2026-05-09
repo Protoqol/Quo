@@ -10,4 +10,4 @@ open = false
 ws_protocol = "ws"
 
 [tools]
-tailwindcss = "3.4.17"
+tailwindcss = "4.2.0"

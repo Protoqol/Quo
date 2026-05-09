@@ -73,7 +73,7 @@ pub fn Toast(message: ToastMessage) -> impl IntoView {
     let icon = match message.toast_type {
         ToastType::Success => view! {
             <svg
-                class="w-6 h-6 text-green-500"
+                class="success"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -92,7 +92,7 @@ pub fn Toast(message: ToastMessage) -> impl IntoView {
         },
         ToastType::Info => view! {
             <svg
-                class="w-6 h-6 text-blue-500"
+                class="info"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -111,7 +111,7 @@ pub fn Toast(message: ToastMessage) -> impl IntoView {
         },
         ToastType::Warning => view! {
             <svg
-                class="w-6 h-6 text-yellow-500"
+                class="warning"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -130,7 +130,7 @@ pub fn Toast(message: ToastMessage) -> impl IntoView {
         },
         ToastType::Error => view! {
             <svg
-                class="w-6 h-6 text-red-500"
+                class="error"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -152,36 +152,22 @@ pub fn Toast(message: ToastMessage) -> impl IntoView {
     view! {
         <div
             class=move || {
-                let base_class = "flex items-center w-full max-w-xs p-4 text-slate-300 bg-slate-900 rounded-lg shadow-lg border border-slate-800 transition-all duration-300 overflow-hidden mb-2";
-                if message.visible.get() {
-                    format!("{} animate-toast-in", base_class)
-                } else {
-                    format!("{} animate-toast-out", base_class)
-                }
-            }
-            style=move || {
-                if !message.visible.get() {
-                    "margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; max-height: 0; border: none; opacity: 0;"
-                        .to_string()
-                } else {
-                    "max-height: 200px;".to_string()
-                }
+                if message.visible.get() { "toast visible" } else { "toast hidden" }
             }
             role="alert"
         >
-            <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg">
+            <div class="toast-icon-container">
                 {icon}
             </div>
-            <div class="ms-3 text-sm font-normal">{text}</div>
+            <div class="toast-text">{text}</div>
             <button
                 type="button"
-                class="ms-auto -mx-1.5 -my-1.5 bg-transparent text-slate-500 hover:text-white rounded-lg focus:ring-2 focus:ring-slate-300 p-1.5 hover:bg-slate-800 inline-flex items-center justify-center h-8 w-8"
+                class="toast-close-btn"
                 on:click=move |_| remove_toast(id)
                 aria-label="Close"
             >
                 <span class="sr-only">Close</span>
                 <svg
-                    class="w-3 h-3"
                     aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -206,8 +192,8 @@ pub fn Toaster() -> impl IntoView {
         .expect("Toaster must be used within a ToastContext (provide_toast_context)");
 
     view! {
-        <div class="fixed top-[35px] right-4 z-50 flex flex-col pointer-events-none">
-            <div class="pointer-events-auto flex flex-col">
+        <div class="toaster-container">
+            <div class="toaster-content">
                 <For
                     each=move || toasts.get()
                     key=|toast| toast.id

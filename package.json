@@ -1,7 +1,7 @@
 {
   "license": "GPL-3.0",
   "devDependencies": {
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^4.0.0"
   },
   "dependencies": {
     "@aptabase/tauri": "0.4.1",

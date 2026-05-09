@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@import "./base.css";
+@import "./app.css";
+@import "./sidebar.css";
+@import "./taskbar.css";
+@import "./dump.css";
+@import "./language_icon.css";
+@import "./toast.css";
+@import "./diff_modal.css";
+@import "./settings_modal.css";
