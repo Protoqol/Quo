@@ -1,4 +1,4 @@
-![Quo Preview](https://cms.protoqol.nl/assets/2ecc5f44-5fe5-4f15-95d6-ba365f4fcd5c)
+![Quo Preview](https://cms.protoqol.nl/assets/2ecc5f44-5fe5-4f15-95d6-ba365f4fcd5c?v1)
 
 ![Latest Release](https://img.shields.io/github/v/release/Protoqol/Quo?style=flat-square&color=%23ec135b)
 

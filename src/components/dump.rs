@@ -1,4 +1,5 @@
 use crate::components::LanguageIcon;
+use crate::utils::analytics::track_event;
 use crate::utils::formatter::format_by_language;
 use chrono::prelude::*;
 use chrono::{Duration, Locale};
@@ -6,7 +7,7 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos::{html, serde_json};
 use leptos_use::on_click_outside;
-use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage};
+use quo_common::payloads::{IncomingQuoPayload, QuoPayloadLanguage, ERROR_IDENTIFIER_KEY};
 use std::string::ToString;
 use std::sync::OnceLock;
 use syntect::highlighting::{Theme, ThemeSet};
@@ -80,12 +81,12 @@ pub fn DumpGroup(
 
     view! {
         <div class=move || format!(
-            "quo-dump-group relative animate-slide-in-top {}",
-            if auto_group.get() { "rounded-lg border border-slate-700 bg-slate-950/40 overflow-hidden shadow-lg" } else { "" }
+            "quo-dump-group {}",
+            if auto_group.get() { "auto-grouped" } else { "" }
         )>
             <Show when=move || auto_group.get()>
                 <div
-                    class="flex items-center gap-x-2 px-4 py-2 bg-slate-950 rounded-t-lg border-b border-slate-700 cursor-pointer select-none hover:bg-slate-900/80 transition-colors"
+                    class="quo-dump-group-header"
                     on:click=move |_| set_collapsed.update(|v| *v = !*v)
                     title="Click to expand / collapse group"
                 >
@@ -93,8 +94,8 @@ pub fn DumpGroup(
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class=move || format!(
-                            "w-3 h-3 shrink-0 text-slate-500 transition-transform duration-200 {}",
-                            if collapsed.get() { "-rotate-90" } else { "rotate-0" }
+                            "chevron {}",
+                            if collapsed.get() { "collapsed" } else { "expanded" }
                         )
                         viewBox="0 0 24 24"
                         fill="currentColor"
@@ -103,17 +104,17 @@ pub fn DumpGroup(
                     </svg>
 
                     // Count badge
-                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold shrink-0">
+                    <span class="count-badge">
                         {count} " items"
                     </span>
 
                     // Variable names summary
-                    <span class="text-xs text-slate-400 font-medium font-mono truncate max-w-[50%]" title=move || var_names.get_value()>
+                    <span class="var-names" title=move || var_names.get_value()>
                         {move || var_names.get_value()}
                     </span>
 
                     // Call site (filename)
-                    <span class="text-xs text-slate-500 ml-auto font-mono shrink-0">
+                    <span class="call-site">
                         {move || call_site.get_value()}
                     </span>
                 </div>
@@ -121,7 +122,7 @@ pub fn DumpGroup(
 
             // Each dump inside the group, separated by a centered vertical line
             <Show when=move || !collapsed.get()>
-                <div class="flex flex-col">
+                <div class="items-container">
                     {move || {
                         let items = dumps_stored.get_value();
                         let last_idx = items.len().saturating_sub(1);
@@ -155,8 +156,8 @@ pub fn DumpGroup(
                                     />
                                     // Centered vertical line between consecutive items
                                     <Show when=move || i < last_idx && !auto_group.get()>
-                                        <div class="flex justify-center -mt-4 h-4">
-                                            <div class="w-[4px] bg-slate-600 h-full"></div>
+                                        <div class="item-separator">
+                                            <div class="line"></div>
                                         </div>
                                     </Show>
                                 }
@@ -302,15 +303,25 @@ pub fn DumpItem(
 
     let open_in_editor = StoredValue::new(move |cmd: String| {
         let path = sender_origin.get_value();
+        let cmd_for_invoke = cmd.clone();
         spawn_local(async move {
             invoke(
                 "open_in_editor",
-                serde_wasm_bindgen::to_value(&serde_json::json!({ "cmd": cmd, "path": path }))
-                    .unwrap(),
+                serde_wasm_bindgen::to_value(
+                    &serde_json::json!({ "cmd": cmd_for_invoke, "path": path }),
+                )
+                .unwrap(),
             )
             .await;
         });
         set_show_dropdown.set(false);
+
+        track_event(
+            "dump_open_in_editor",
+            Some(serde_json::json!({
+                "editor": cmd
+            })),
+        );
     });
 
     let show_in_explorer = StoredValue::new(move || {
@@ -323,6 +334,8 @@ pub fn DumpItem(
             .await;
         });
         set_show_dropdown.set(false);
+
+        track_event("dump_show_in_explorer", None);
     });
 
     // let copy_to_clipboard = StoredValue::new(move |text: String| {
@@ -340,17 +353,20 @@ pub fn DumpItem(
     // Functions
     //
 
-    fn code_format(dump: &IncomingQuoPayload, formatted_code: &str) -> String {
+    fn code_syntax_highlighter(payload: &IncomingQuoPayload, formatted_code: &str) -> String {
+        if payload.meta.variable.var_type == ERROR_IDENTIFIER_KEY {
+            return formatted_code.to_string();
+        }
+
         let ss = SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines);
         let theme = THEME.get_or_init(|| {
             let mut cursor = std::io::Cursor::new(CODE_THEME);
             ThemeSet::load_from_reader(&mut cursor).expect("Failed to load embedded theme")
         });
 
-        let resolved_file_extension_for_syntax = match dump.language {
+        let resolved_file_extension_for_syntax = match payload.language {
             QuoPayloadLanguage::Javascript => "js",
-            // @TODO TypeScript syntax highlighting
-            QuoPayloadLanguage::Typescript => "js",
+            QuoPayloadLanguage::Typescript => "js", // @TODO TypeScript syntax highlighting
             QuoPayloadLanguage::Rust => "rs",
             QuoPayloadLanguage::Php => "php",
             QuoPayloadLanguage::Python => "py",
@@ -359,17 +375,19 @@ pub fn DumpItem(
             QuoPayloadLanguage::Unknown => "txt",
         };
 
-        let syntax = ss.find_syntax_by_extension(resolved_file_extension_for_syntax).unwrap();
+        let syntax = ss
+            .find_syntax_by_extension(resolved_file_extension_for_syntax)
+            .unwrap();
 
-        let to_highlight = if dump.language == QuoPayloadLanguage::Php {
+        let to_highlight = if payload.language == QuoPayloadLanguage::Php {
             format!("<?php{}", formatted_code)
         } else {
             formatted_code.to_string()
         };
 
-        let html = highlighted_html_for_string(&to_highlight, &ss, syntax, theme).unwrap();
+        let html = highlighted_html_for_string(&to_highlight, ss, syntax, theme).unwrap();
 
-        if dump.language == QuoPayloadLanguage::Php {
+        if payload.language == QuoPayloadLanguage::Php {
             if let Some(pos) = html.find("&lt;?php") {
                 if let Some(start_span) = html[..pos].rfind("<span") {
                     if let Some(end_span) = html[pos..].find("</span>") {
@@ -434,12 +452,12 @@ pub fn DumpItem(
 
     view! {
         <div data-grouping-hash=move || format!("{}", dump_stored.get_value().meta.variable.grouping_hash.unwrap().to_string())
-            class="quo-dump-container relative animate-slide-in-top group/item transition-all duration-300">
+            class="quo-dump-container">
             <Show when=move || is_selectable.get()>
                 <div
                     class=move || format!(
-                        "absolute inset-0 z-[60] cursor-pointer transition-all duration-200 rounded {}",
-                        if selection_index.get().is_some() { "bg-accent/10 border-2 border-accent" } else { "hover:bg-accent/5 border-2 border-transparent" }
+                        "selection-overlay {}",
+                        if selection_index.get().is_some() { "selected" } else { "unselected" }
                     )
                     on:click=move |_| {
                         if let Some(on_select) = on_select {
@@ -447,10 +465,10 @@ pub fn DumpItem(
                         }
                     }
                 >
-                    <div class="absolute bottom-3 right-6">
+                    <div class="selection-badge-container">
                          <div class=move || format!(
-                            "w-auto px-2 h-5 rounded border-2 flex items-center justify-center transition-colors font-bold text-[10px] uppercase {}",
-                            if selection_index.get().is_some() { "bg-accent border-accent text-slate-950" } else { "border-slate-500 bg-transparent text-transparent" }
+                            "selection-badge {}",
+                            if selection_index.get().is_some() { "selected" } else { "unselected" }
                          )>
                             {move || selection_index.get().map(|i| if i == 0 { "Source" } else { "Comparison" }).unwrap_or_default()}
                          </div>
@@ -458,24 +476,25 @@ pub fn DumpItem(
                 </div>
             </Show>
             <Show when=move || is_fresh.get()>
-                <span class="absolute -top-1 -left-1 flex h-2.5 w-2.5 z-20">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent"></span>
+                <span class="fresh-indicator">
+                    <span class="ping"></span>
+                    <span class="dot"></span>
                 </span>
             </Show>
             <div class=move || format!(
-                "flex flex-row justify-between py-2 pl-4 pr-2 border-b border-slate-900/50 {}",
-                if is_grouped { "bg-slate-900/60 rounded-none" } else { "bg-slate-950 rounded-t" }
+                "dump-header {} {}",
+                if is_grouped { "grouped" } else { "not-grouped" },
+                if dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY { "error" } else { "" }
             )>
                 <div
                     data-identifier="dump_header"
-                    class="text-slate-500 font-normal w-full flex flex-row justify-between items-center"
+                    class="header-content"
                 >
-                    <div data-identifier="dump_project" class="flex-none flex items-center gap-x-3">
+                    <div data-identifier="dump_project" class="project-info">
                         <Show when=move || !is_grouped>
                             <span
                                 title="Filter dumps on this origin"
-                                class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-300 rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors"
+                                class="origin-badge"
                                 on:click={
                                     let origin = dump_stored.get_value().meta.origin.clone();
                                     move |_| {
@@ -483,6 +502,9 @@ pub fn DumpItem(
                                             set_selected_group.set(None);
                                         } else {
                                             set_selected_group.set(Some(origin.clone()));
+                                            track_event("dump_filtered", Some(serde_json::json!({
+                                                "origin": origin
+                                            })));
                                         }
                                     }
                                 }
@@ -490,18 +512,18 @@ pub fn DumpItem(
                                 {dump_stored.get_value().meta.origin.clone()}
                             </span>
                         </Show>
-                        <span class="text-xs font-mono text-accent/90 font-bold bg-accent/10 px-2 py-0.5 rounded">
+                        <span class="var-name">
                             {dump_stored.get_value().meta.variable.name.clone()}
                         </span>
                     </div>
                     <div
                         data-identifier="dump_location"
-                        class="flex-1 min-w-0 overflow-visible relative ml-4"
+                        class="location-info"
                     >
-                        <div class="flex flex-row justify-end items-center gap-x-2 relative">
+                        <div class="location-container">
                             <Show when=move || !is_grouped>
                                 <span
-                                    class="text-sm text-slate-500 text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-slate-300 transition-colors"
+                                    class="file-path"
                                     title=move || file_path_label.get()
                                     on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
                                 >
@@ -509,12 +531,11 @@ pub fn DumpItem(
                                 </span>
                             </Show>
                             <div
-                                class="p-1 rounded hover:bg-slate-800 cursor-pointer transition-colors"
+                                class="menu-trigger"
                                 on:click=move |_| set_show_dropdown.update(|v| *v = !*v)
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="w-4 h-4 text-slate-600 group-hover/item:text-slate-400 transition-colors"
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
                                 >
@@ -524,15 +545,14 @@ pub fn DumpItem(
                             <Show when=move || show_dropdown.get()>
                                 <div
                                     node_ref=dropdown_ref
-                                    class="absolute top-full right-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg z-[100] py-1 w-64 text-sm"
+                                    class="dropdown-menu"
                                 >
                                     <div
-                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                        class="menu-item"
                                         on:click=move |_| show_in_explorer.get_value()()
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4 opacity-70"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
@@ -541,12 +561,11 @@ pub fn DumpItem(
                                         "Show in explorer"
                                     </div>
                                     <div
-                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                        class="menu-item"
                                         on:click=move |_| open_default.get_value()()
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4 opacity-70"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
                                         >
@@ -562,6 +581,7 @@ pub fn DumpItem(
                                                 .and_then(|v| v.as_str())
                                                 .unwrap_or_default()
                                                 .to_string()
+                                                .clone()
                                         }
                                         children=move |editor| {
                                             let id = editor
@@ -584,11 +604,11 @@ pub fn DumpItem(
 
                                             view! {
                                                 <div
-                                                    class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-slate-700 cursor-pointer text-slate-200"
+                                                    class="menu-item"
                                                     on:click=move |_| open_in_editor.get_value()(cmd.clone())
                                                 >
-                                                    <img
-                                                        class="w-4 h-4 opacity-70"
+                                                    <img draggable="false"
+                                                        oncontextmenu=move || false
                                                         src=format!("/public/assets/editor_icons/{}.svg", id)
                                                     />
                                                     {format!("Open in {}", name)}
@@ -596,19 +616,19 @@ pub fn DumpItem(
                                             }
                                         }
                                     />
-                                    <div class="border-t border-slate-700 my-1"></div>
+                                    <div class="separator"></div>
                                     <div
-                                        class="flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-red-900/30 cursor-pointer text-red-400"
+                                        class="menu-item delete"
                                         on:click=move |_| {
                                             delete_self.get_value()();
                                             set_show_dropdown.set(false);
+                                            track_event("dump_deleted", None);
                                         }
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
-                                            class="w-4 h-4"
                                         >
                                             <path d="M7 6V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7ZM13.4142 13.9997L15.182 12.232L13.7678 10.8178L12 12.5855L10.2322 10.8178L8.81802 12.232L10.5858 13.9997L8.81802 15.7675L10.2322 17.1817L12 15.4139L13.7678 17.1817L15.182 15.7675L13.4142 13.9997ZM9 4V6H15V4H9Z" />
                                         </svg>
@@ -620,71 +640,60 @@ pub fn DumpItem(
                     </div>
                 </div>
             </div>
-            <div class="relative group bg-slate-900">
-                <div class="absolute right-4 top-1 z-10 flex flex-row items-center gap-x-2">
-                    <div class="flex flex-row items-center gap-x-1.5 backdrop-blur-sm px-2 py-1 text-[12px] text-slate-500 font-medium opacity-50 group-hover:opacity-100 transition-opacity">
+            <div class="dump-body group">
+                <div class="timestamp-container">
+                    <div class="timestamp">
                         {datetime_format(dump_stored.get_value().meta.time_epoch_ms).to_string()}
                     </div>
                 </div>
                 <div class=move || format!(
-                    "font-mono relative bg-slate-900 {} {}",
-                    if is_grouped { "rounded-none" } else { "rounded-b" },
-                    if is_collapsed.get() { "max-h-[150px] overflow-hidden" } else { "overflow-x-auto" }
+                    "code-container {} {} {}",
+                    if is_grouped { "grouped" } else { "not-grouped" },
+                    if is_collapsed.get() { "collapsed" } else { "expanded" },
+                    if dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY { "error" } else { "" }
                 )>
-                    <div class="sticky left-0 top-0 h-0 z-10 pointer-events-none">
-                        <div class="absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <LanguageIcon
-                                lang=dump_stored.get_value().language.clone()
-                                class="w-10 h-10 text-slate-500".to_string()
-                            />
+                    <div class="language-overlay">
+                        <div class="overlay-content">
+                           <LanguageIcon
+                               lang=dump_stored.get_value().language.clone()
+                               class="w-10 h-10 text-slate-500".to_string()
+                           />
+                            <Show when=move || dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY>
+                                <span class="error-badge">
+                                    <p>error</p>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 19.9C15.2822 19.4367 17 17.419 17 15V12C17 11.299 16.8564 10.6219 16.5846 10H7.41538C7.14358 10.6219 7 11.299 7 12V15C7 17.419 8.71776 19.4367 11 19.9V14H13V19.9ZM5.5358 17.6907C5.19061 16.8623 5 15.9534 5 15H2V13H5V12C5 11.3573 5.08661 10.7348 5.2488 10.1436L3.0359 8.86602L4.0359 7.13397L6.05636 8.30049C6.11995 8.19854 6.18609 8.09835 6.25469 8H17.7453C17.8139 8.09835 17.88 8.19854 17.9436 8.30049L19.9641 7.13397L20.9641 8.86602L18.7512 10.1436C18.9134 10.7348 19 11.3573 19 12V13H22V15H19C19 15.9534 18.8094 16.8623 18.4642 17.6907L20.9641 19.134L19.9641 20.866L17.4383 19.4077C16.1549 20.9893 14.1955 22 12 22C9.80453 22 7.84512 20.9893 6.56171 19.4077L4.0359 20.866L3.0359 19.134L5.5358 17.6907ZM8 6C8 3.79086 9.79086 2 12 2C14.2091 2 16 3.79086 16 6H8Z"></path></svg>
+                                </span>
+                            </Show>
                         </div>
                     </div>
-                    // <span
-                    //     title="Copy code to clipboard"
-                    //     class="absolute bottom-0 right-4 z-10 text-slate-300 hover:text-white p-1.5 rounded-lg shadow-sm border border-slate-700/50 cursor-pointer transition-all opacity-50 group-hover:opacity-100"
-                    //     on:click={
-                    //         let content = code_format(&dump);
-                    //         move |_| copy_to_clipboard.get_value()(content.clone())
-                    //     }
-                    // >
-                    //     <svg
-                    //         xmlns="http://www.w3.org/2000/svg"
-                    //         width="24"
-                    //         height="24"
-                    //         viewBox="0 0 24 24"
-                    //         class="w-4 h-4 cursor-pointer "
-                    //     >
-                    //         <path
-                    //             fill="currentColor"
-                    //             d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2"
-                    //         />
-                    //         <path
-                    //             fill="currentColor"
-                    //             d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z"
-                    //         />
-                    //     </svg>
-                    // </span>
                     <code
                         node_ref=code_ref
-                        class="code_dump select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4"
-                        inner_html=move || code_format(&dump_stored.get_value(), &formatted_code.get())
+                        class=move || format!(
+                            "code_dump {}",
+                            if dump_stored.get_value().meta.variable.var_type == ERROR_IDENTIFIER_KEY { "error" } else { "" }
+                        )
+                        inner_html=move || code_syntax_highlighter(&dump_stored.get_value(), &formatted_code.get())
                     >
                     </code>
                     <Show when=move || is_collapsed.get()>
-                        <div class="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent flex items-end justify-center pb-3 z-10 pointer-events-none">
+                        <div class="expand-overlay">
                             <button
-                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700 transition-colors shadow-xl pointer-events-auto"
-                                on:click=move |_| set_manual_state.set(Some(true))
+                                on:click=move |_| {
+                                    set_manual_state.set(Some(true));
+                                    track_event("dump_expanded", None);
+                                }
                             >
                                 "Expand"
                             </button>
                         </div>
                     </Show>
                     <Show when=move || { !is_collapsed.get() && content_lines.get() > 6 }>
-                        <div class="sticky left-0 w-full flex justify-center pb-2 z-10">
+                        <div class="collapse-trigger">
                             <button
-                                class="bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-slate-700/50 opacity-50 hover:opacity-100 transition-all"
-                                on:click=move |_| set_manual_state.set(Some(false))
+                                on:click=move |_| {
+                                    set_manual_state.set(Some(false));
+                                    track_event("dump_collapsed", None);
+                                }
                             >
                                 "Collapse"
                             </button>

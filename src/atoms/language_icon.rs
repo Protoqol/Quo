@@ -11,7 +11,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="currentColor"
@@ -26,7 +26,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="currentColor"
@@ -41,7 +41,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 256 256"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <g fill="none">
                     <rect width="256" height="256" fill="#000" rx="60" />
@@ -59,7 +59,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="currentColor"
@@ -74,7 +74,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="currentColor"
@@ -89,7 +89,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 16 16"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <g fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
                     <path d="M12.375 4.5c.81-.029.904-.007 1.074.052v-.008c.67.235 1.14.93 1.424 2.107c.114.47.152 1.036.11 1.641c-.06.888-.177 1.397-.451 1.962c-.147.302-.207.388-.415.601c-.264.27-.536.428-.866.505c-.125.03-.816.044-2.74.057l-2.574.018v.399l3.37.023l.018.069c.029.11.02 1.178-.012 1.492c-.05.479-.149.732-.383.986c-.168.182-.53.367-.889.454c-.516.126-.75.142-2.09.142c-1.354 0-1.697-.024-2.087-.144c-.534-.163-1.081-.667-1.244-1.144c-.104-.309-.12-.625-.12-2.36c0-1.84-.038-2.072.13-2.388c.177-.335.206-.319.614-.473c.17-.063.575-.047 2.319-.053c1.88-.013 3.132.022 3.45-.078c.472-.148.977-.358 1.187-.787c.199-.408.16-.673.175-1.76zm-2.258 8.293a.69.69 0 0 0-.608.048c-.201.136-.27.27-.27.528c0 .198.01.237.092.356a.63.63 0 0 0 .824.204c.464-.242.442-.908-.037-1.136" />
@@ -104,7 +104,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 height="24"
                 viewBox="0 0 512 512"
                 fill="currentColor"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="currentColor"
@@ -121,7 +121,7 @@ pub fn LanguageIcon(lang: QuoPayloadLanguage, #[prop(optional)] class: String) -
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-                class=format!("w-4 h-4 {}", class)
+                class=format!("language-icon {}", class)
             >
                 <path
                     fill="none"

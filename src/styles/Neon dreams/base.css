@@ -1,0 +1,90 @@
+[data-theme="Neon dreams"] {
+    --accent: #56e39c;
+    --main-bg: #020102;
+    --header-bg: #020102;
+    --sidebar-bg: #020102;
+    --border-color: #d07138;
+    --input-bg: #260536;
+    --secondary-bg: #4d0099;
+    --text-primary: #ffffff;
+    --text-muted: #d07138;
+    --text-contrast: #1a0033;
+    --syntax-keyword: #ff00ff;
+    --syntax-string: #00ff00;
+    --syntax-number: #00ffff;
+    --syntax-boolean: #ff9900;
+    --syntax-null: #999999;
+    --syntax-function: #6600ff;
+    --syntax-property: #ffff00;
+    --font-family-sans: "ShareTechMono", "Inter", sans-serif;
+    --font-family-mono: "Google-Sans", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace";
+
+    text-shadow: 0 0 2px currentColor, 0 0 4px currentColor;
+    animation: neon-pulse 2s infinite alternate;
+}
+
+[data-theme="Neon dreams"] *::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 5px var(--border-color);
+}
+
+[data-theme="Neon dreams"] *::-webkit-scrollbar-track {
+    background: #020102;
+    border-left: 1px solid rgba(208, 113, 56, 0.2);
+}
+
+[data-theme="Neon dreams"] :is(p, span, h1, h2, h3, h4, h5, h6, code, pre, label, li, a, button) {
+    animation: neon-pulse 2s infinite alternate;
+}
+
+[data-theme="Neon dreams"] svg {
+    filter: drop-shadow(0 0 2px currentColor);
+    animation: neon-pulse-filter 2s infinite alternate;
+}
+
+
+@keyframes neon-pulse {
+    from {
+        text-shadow: 0 0 2px currentColor, 0 0 4px currentColor;
+    }
+    to {
+        text-shadow: 0 0 4px currentColor, 0 0 8px currentColor;
+    }
+}
+
+@keyframes neon-pulse-strong {
+    from {
+        text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
+    }
+    to {
+        text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
+    }
+}
+
+@keyframes neon-pulse-accent-muted {
+    from {
+        text-shadow: 0 0 5px #d07138;
+    }
+    to {
+        text-shadow: 0 0 8px #d07138;
+    }
+}
+
+@keyframes neon-pulse-filter {
+    from {
+        filter: drop-shadow(0 0 2px currentColor);
+    }
+    to {
+        filter: drop-shadow(0 0 4px currentColor);
+    }
+}
+
+@keyframes neon-pulse-box {
+    from {
+        box-shadow: 0 0 8px -2px var(--pulse-glow-color, var(--border-color));
+    }
+    to {
+        box-shadow: 0 0 16px 0px var(--pulse-glow-color, var(--border-color));
+    }
+}

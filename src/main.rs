@@ -3,9 +3,11 @@ mod components;
 mod modals;
 pub mod atoms;
 pub mod utils;
+pub mod layout;
 
-use crate::components::Taskbar;
-use app::{App, AppSettings};
+use crate::layout::Taskbar;
+use crate::utils::settings::AppSettings;
+use app::App;
 use leptos::prelude::*;
 
 fn main() {

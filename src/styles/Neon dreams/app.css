@@ -1,0 +1,159 @@
+.quo-layout {
+    @apply flex flex-row w-full flex-1 overflow-hidden relative;
+    background-color: #020D05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='11' cy='11' r='1' fill='rgba(0,255,100,0.08)'/%3E%3C/svg%3E");
+    background-size: 22px 22px;
+}
+
+.quo-main {
+    @apply flex-1 flex flex-col h-full min-w-0;
+
+    .quo-main-header {
+        @apply h-16 border-b border-border flex items-center px-8 z-10;
+        box-shadow: 0 10px 15px -10px var(--border-color);
+
+        .input-container {
+            @apply flex-1 w-full mt-1;
+
+            label {
+                @apply relative flex items-center;
+
+                &:focus-within .search-icon {
+                    filter: none;
+                    animation: none;
+                }
+
+                .search-icon {
+                    @apply absolute left-3 text-muted;
+                    pointer-events: none;
+                }
+
+                input {
+                    @apply w-full pl-10 pr-10 py-2 bg-input border border-transparent   text-sm transition-all duration-200 text-muted;
+                    @apply focus:bg-white focus:text-contrast focus:border-accent focus:ring-4 focus:ring-accent/10 outline-none;
+
+                    &:focus {
+                        text-shadow: none;
+                        filter: none;
+                        animation: none;
+                    }
+
+                    &::placeholder {
+                        @apply text-muted;
+                    }
+                }
+
+                .clear-button {
+                    @apply absolute right-3 text-muted transition-colors flex items-center justify-center;
+                    @apply focus:outline-none;
+
+                    &:hover {
+                        @apply text-primary;
+                    }
+                }
+
+                /* Ensure clear button is visible and has good contrast when input is focused (white background) */
+
+                input:focus ~ .clear-button {
+                    @apply text-muted;
+                    text-shadow: none;
+                    filter: none;
+                    animation: none;
+
+                    &:hover {
+                        @apply text-contrast;
+                    }
+
+                    svg {
+                        filter: none;
+                        animation: none;
+                    }
+                }
+            }
+
+            #searchResult {
+                @apply ml-4 text-xs font-medium text-muted whitespace-nowrap;
+            }
+        }
+    }
+
+    .quo-body {
+        @apply flex-1 overflow-y-auto p-8 relative;
+        scrollbar-gutter: stable;
+
+        .diff-button-container {
+            @apply absolute bottom-8 right-4 z-[70];
+
+            .diff-button {
+                @apply bg-accent/50 hover:bg-accent/75 text-header px-4 py-2 text-accent hover:text-primary font-bold shadow-xl flex items-center gap-2 border-0 border-border hover:border transition-all;
+
+                svg {
+                    @apply w-4 h-4;
+                }
+            }
+        }
+
+        #quo {
+            @apply w-full mx-auto flex flex-col gap-y-4 relative;
+
+            .quo-toolbar {
+                @apply flex items-center justify-between -mt-4 -mb-2;
+
+                .search-status {
+                    @apply text-muted text-xs font-bold uppercase tracking-wider;
+
+                    &.hidden {
+                        @apply opacity-0;
+                    }
+                }
+
+                .toolbar-actions {
+                    @apply flex items-center gap-x-2;
+
+                    .action-btn {
+                        @apply text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 p-2  ;
+
+                        &.secondary {
+                            @apply text-muted hover:text-accent hover:bg-main;
+
+                            &:hover {
+                                text-shadow: 0 0 5px var(--accent);
+                                animation: neon-pulse-strong 2s infinite alternate;
+                            }
+                        }
+
+                        &.active {
+                            @apply text-accent bg-main;
+                            text-shadow: 0 0 5px var(--accent);
+                            animation: neon-pulse-strong 2s infinite alternate;
+                        }
+
+                        svg {
+                            @apply w-4 h-4;
+                        }
+                    }
+                }
+            }
+
+            .empty-state {
+                @apply flex flex-col items-center justify-center h-64 text-center;
+
+                img {
+                    @apply w-32 select-none;
+                }
+
+                p {
+                    @apply text-white font-medium;
+                }
+
+                .hint {
+                    @apply text-xs text-muted mt-2;
+                }
+
+                svg {
+                    @apply mb-4 text-primary;
+                }
+            }
+        }
+    }
+}

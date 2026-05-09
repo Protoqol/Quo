@@ -1,0 +1,368 @@
+.quo-dump-group {
+    @apply relative;
+    animation: slideInTop 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
+
+    &.auto-grouped {
+        @apply rounded-lg border border-border bg-header/40 overflow-hidden shadow-lg;
+    }
+
+    .quo-dump-group-header {
+        @apply flex items-center gap-x-2 px-4 py-2 bg-header rounded-t-lg border-b border-border cursor-pointer select-none hover:bg-sidebar/80 transition-colors;
+
+        .chevron {
+            @apply w-3 h-3 shrink-0 text-muted transition-transform duration-200;
+
+            &.collapsed {
+                @apply -rotate-90;
+            }
+
+            &.expanded {
+                @apply rotate-0;
+            }
+        }
+
+        .count-badge {
+            @apply inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-main text-muted text-[10px] font-bold shrink-0;
+        }
+
+        .var-names {
+            @apply text-xs text-muted font-medium font-mono truncate max-w-[50%];
+        }
+
+        .call-site {
+            @apply text-xs text-muted ml-auto font-mono shrink-0;
+        }
+    }
+
+    .items-container {
+        @apply flex flex-col;
+
+        .item-separator {
+            @apply flex justify-center -mt-4 h-4;
+
+            .line {
+                @apply w-[4px] bg-secondary h-full;
+            }
+        }
+    }
+}
+
+.quo-dump-container {
+    @apply relative transition-all duration-300;
+    @apply flex flex-col rounded-2xl mb-4 shadow-sm;
+    animation: slideInTop 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
+
+    &:hover {
+        @apply shadow-md border-border;
+    }
+
+    .selection-overlay {
+        @apply absolute inset-0 z-[60] cursor-pointer transition-all duration-200 rounded;
+
+        &.selected {
+            @apply bg-accent/10 border-2 border-accent;
+        }
+
+        &.unselected {
+            @apply hover:bg-accent/5 border-2 border-transparent;
+        }
+
+        .selection-badge-container {
+            @apply absolute bottom-3 right-6;
+
+            .selection-badge {
+                @apply w-auto px-2 h-5 rounded border-2 flex items-center justify-center transition-colors font-bold text-[10px] uppercase;
+
+                &.selected {
+                    @apply bg-accent border-accent text-contrast;
+                }
+
+                &.unselected {
+                    @apply border-muted bg-transparent text-transparent;
+                }
+            }
+        }
+    }
+
+    .fresh-indicator {
+        @apply absolute -top-1 -left-1 flex h-2.5 w-2.5 z-20;
+
+        .ping {
+            @apply animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75;
+        }
+
+        .dot {
+            @apply relative inline-flex rounded-full h-2.5 w-2.5 bg-accent;
+        }
+    }
+
+    .dump-header {
+        @apply flex flex-row justify-between py-2 pl-4 pr-2 border-b border-sidebar/50;
+
+        &.grouped {
+            @apply bg-sidebar/60 rounded-none;
+        }
+
+        &.not-grouped {
+            @apply bg-header rounded-t;
+        }
+
+        &.error {
+            @apply !border-red-950 border-b-2;
+        }
+
+        .header-content {
+            @apply text-muted font-normal w-full flex flex-row justify-between items-center;
+
+            .project-info {
+                @apply flex-none flex items-center gap-x-3;
+
+                .origin-badge {
+            @apply bg-sidebar hover:bg-main text-muted hover:text-primary rounded px-2 py-0.5 flex flex-row items-center justify-center gap-x-2 cursor-pointer w-fit text-xs font-medium transition-colors;
+                }
+
+                .var-name {
+                    @apply text-xs font-mono text-accent/90 font-bold bg-accent/10 px-2 py-0.5 rounded;
+                }
+            }
+
+            .location-info {
+                @apply flex-1 min-w-0 overflow-visible relative ml-4;
+
+                .location-container {
+                    @apply flex flex-row justify-end items-center gap-x-2 relative;
+
+                    .file-path {
+                        @apply text-sm text-muted text-nowrap truncate [direction:rtl] text-left cursor-pointer hover:text-primary transition-colors;
+                    }
+
+                    .menu-trigger {
+                        @apply p-1 rounded hover:bg-main cursor-pointer transition-colors;
+
+                        svg {
+                            @apply w-4 h-4 text-muted group-hover/item:text-muted transition-colors;
+                        }
+                    }
+
+                    .dropdown-menu {
+                        @apply absolute top-full right-0 mt-1 bg-main border border-border rounded shadow-lg z-[100] py-1 w-64 text-sm;
+
+                        .menu-item {
+                            @apply flex flex-row items-center gap-x-2 px-4 py-2 hover:bg-secondary cursor-pointer text-primary;
+
+                            svg, img {
+                                @apply w-4 h-4 opacity-70;
+                            }
+
+                            &.delete {
+                                @apply hover:bg-red-900/30 text-red-400;
+                            }
+                        }
+
+                        .separator {
+                            @apply border-t border-border my-1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .dump-body {
+        @apply relative bg-sidebar;
+
+        .timestamp-container {
+            @apply absolute right-4 top-1 z-10 flex flex-row items-center gap-x-2;
+
+            .timestamp {
+                @apply flex flex-row items-center gap-x-1.5 backdrop-blur-sm px-2 py-1 text-[12px] text-muted font-medium opacity-50 group-hover:opacity-100 transition-opacity;
+            }
+        }
+
+        .code-container {
+            @apply font-mono relative bg-sidebar;
+
+            &.grouped {
+                @apply rounded-none;
+            }
+
+            &.not-grouped {
+                @apply rounded-b;
+            }
+
+            &.collapsed {
+                @apply max-h-[150px] overflow-hidden;
+            }
+
+            &.expanded {
+                @apply overflow-x-auto;
+            }
+
+            .language-overlay {
+                @apply sticky left-0 top-0 h-0 z-10 pointer-events-none;
+
+                .overlay-content {
+                    @apply absolute left-4 top-2 opacity-50 group-hover:opacity-100 transition-opacity flex flex-row justify-center items-center gap-x-2;
+
+                    .error-badge {
+                        @apply flex flex-row justify-center items-center gap-x-2;
+
+                        p {
+                            @apply text-muted;
+                        }
+
+                        svg {
+                            @apply w-4 h-4 text-muted;
+                        }
+                    }
+                }
+            }
+
+            .code_dump {
+                @apply select-text inline-block min-w-full pl-4 pr-12 pt-9 pb-4;
+
+                &.error {
+                    @apply text-white;
+                }
+
+                pre {
+                    @apply bg-transparent;
+                    background: transparent !important;
+                    background-color: transparent !important;
+                }
+            }
+
+            .expand-overlay {
+                @apply absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-sidebar via-sidebar/90 to-transparent flex items-end justify-center pb-3 z-10 pointer-events-none;
+
+                button {
+                    @apply bg-main hover:bg-secondary text-primary text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-border transition-colors shadow-xl pointer-events-auto;
+                }
+            }
+
+            .collapse-trigger {
+                @apply sticky left-0 w-full flex justify-center pb-2 z-10;
+
+                button {
+                    @apply bg-main/50 hover:bg-secondary text-muted hover:text-primary text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded border border-border/50 opacity-50 hover:opacity-100 transition-all;
+                }
+            }
+        }
+    }
+
+    /* Legacy/Extra styles from styles.css */
+
+    .time {
+        @apply flex justify-between items-center px-6 py-3 bg-header border-b border-border;
+        @apply text-[10px] font-bold text-muted uppercase tracking-wider;
+
+        a {
+            @apply text-accent hover:opacity-80 transition-colors lowercase font-mono text-xs;
+        }
+    }
+
+    .quo-actual-dump {
+        @apply p-6;
+
+        .quo-title {
+            @apply mb-4;
+
+            .file {
+                @apply flex flex-col gap-3;
+
+                .backtrace {
+                    @apply flex items-center w-max px-3 py-1.5 bg-main rounded-lg text-xs font-mono text-muted;
+
+                    svg {
+                        @apply mr-2 text-muted;
+                    }
+                }
+
+                .passed {
+                    @apply flex items-center text-sm;
+
+                    span {
+                        @apply font-bold text-primary;
+                        font-family: var(--font-mono) !important;
+                    }
+
+                    svg {
+                        @apply mr-2 text-accent;
+                    }
+                }
+            }
+        }
+
+        .dumps {
+            @apply rounded-xl bg-sidebar border border-border overflow-hidden;
+
+            .grouped-dump-wrapper {
+                @apply border-b border-sidebar/50 last:border-0;
+
+                &.animate-slide-in-top {
+                    animation: slideInTop 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
+                }
+
+                .quo-title {
+                    @apply flex px-4 pt-4 mb-0;
+
+                    .file {
+                        @apply flex-row items-center gap-3;
+
+                        .backtrace {
+                            @apply bg-sidebar/50 border-border/50 text-muted py-1 px-2;
+                            font-size: 9px;
+                            @apply uppercase tracking-tighter font-bold;
+
+                            svg {
+                                @apply w-3 h-3 text-muted;
+                            }
+                        }
+
+                        .passed {
+                            @apply text-xs opacity-90;
+
+                            span {
+                                @apply text-accent;
+                                font-family: var(--font-mono) !important;
+                            }
+
+                            svg {
+                                @apply w-4 h-4 text-accent/50;
+                            }
+                        }
+                    }
+                }
+
+                .quo-dump {
+                    @apply p-4 pt-2 text-[13px] leading-relaxed text-primary relative;
+                    font-family: var(--font-mono) !important;
+
+                    .quo-title {
+                        @apply hidden;
+                    }
+
+                    [class*='type-'] {
+                        @apply absolute right-4 top-2 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded opacity-40 select-none tracking-widest;
+                    }
+
+                    .type-string {
+                        @apply bg-syntax-string/20 text-syntax-string;
+                    }
+                    .type-boolean {
+                        @apply bg-syntax-boolean/20 text-syntax-boolean;
+                    }
+                    .type-integer {
+                        @apply bg-syntax-number/20 text-syntax-number;
+                    }
+                    .type-stdClass {
+                        @apply bg-syntax-function/20 text-syntax-function;
+                    }
+                    .type-array {
+                        @apply bg-syntax-property/20 text-syntax-property;
+                    }
+                }
+            }
+        }
+    }
+}

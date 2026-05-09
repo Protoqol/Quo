@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Category {
-    #[serde(rename = "UI")]
+    #[serde(rename = "Quo")]
     Ui,
     #[serde(rename = "Server")]
     Server,
@@ -30,6 +30,8 @@ pub struct Setting {
     /// Whether this setting should appear in the sidebar quick-settings panel.
     pub show_in_sidebar: bool,
 }
+
+include!(concat!(env!("OUT_DIR"), "/available_themes.rs"));
 
 pub const CATEGORIES: &[Category] = &[Category::Ui, Category::Server, Category::Privacy, Category::About];
 
@@ -67,6 +69,14 @@ pub const SETTINGS: &[Setting] = &[
         show_in_sidebar: true,
     },
     Setting {
+        id: "notifications",
+        category: Category::Ui,
+        label: "Notifications",
+        description: "Get a notification when a new payload was received by Quo.",
+        default: DefaultValue::Bool(false),
+        show_in_sidebar: false,
+    },
+    Setting {
         id: "server-port",
         category: Category::Server,
         label: "Listening port",
@@ -81,6 +91,14 @@ pub const SETTINGS: &[Setting] = &[
         description: "Help improve Quo by sending anonymous usage data",
         default: DefaultValue::Bool(false),
         show_in_sidebar: false,
+    },
+    Setting {
+        id: "theme",
+        category: Category::Ui,
+        label: "Theme",
+        description: "The theme to use for the Quo client",
+        default: DefaultValue::Str("Quo (default)"),
+        show_in_sidebar: true,
     },
 ];
 

@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use crate::utils::formatter::format_by_language;
+use crate::utils::analytics::track_event;
 use leptos::prelude::*;
 use leptos::serde_json;
 use leptos::task::spawn_local;
@@ -72,49 +73,52 @@ pub fn DiffModal(
 
     view! {
         <Show when=move || show.get()>
-            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
-                    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                        <h3 class="text-lg font-bold text-slate-200">"Payload Diff"</h3>
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>"Payload Diff"</h3>
                         <button
-                            class="text-slate-500 hover:text-slate-300"
-                            on:click=move |_| on_close.run(())
+                            class="close-btn"
+                            on:click=move |_| {
+                                on_close.run(());
+                                track_event("diff_modal_closed", None);
+                            }
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
                     <Show when=move || diff.get().is_some()>
-                        <div class="px-6 py-3 border-b border-slate-800 bg-slate-900/50 flex flex-row justify-between gap-8 items-center shrink-0">
-                            <div class="flex items-center gap-3 text-xs font-mono">
-                                <span class="px-2 h-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap">"Source"</span>
+                        <div class="diff-info-bar">
+                            <div class="info-group">
+                                <span class="badge">"Source"</span>
                                 {move || p1_info.get().map(|p| view! {
-                                    <div class="flex flex-col">
-                                        <span class="text-slate-200 font-bold">{p.meta.variable.name.clone()}</span>
-                                        <span class="text-slate-500">{p.meta.origin.clone()} " - " {format_time(p.meta.time_epoch_ms)}</span>
+                                    <div class="info-text">
+                                        <span class="name">{p.meta.variable.name.clone()}</span>
+                                        <span class="origin">{p.meta.origin.clone()} " - " {format_time(p.meta.time_epoch_ms)}</span>
                                     </div>
                                 })}
                             </div>
 
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8"><path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="diff-arrow"><path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path></svg>
 
-                            <div class="flex items-center gap-3 text-xs font-mono">
+                            <div class="info-group">
                                 {move || p2_info.get().map(|p| view! {
-                                    <div class="flex flex-col">
-                                        <span class="text-slate-200 font-bold">{p.meta.variable.name.clone()}</span>
-                                        <span class="text-slate-500">{p.meta.origin.clone()} " - " {format_time(p.meta.time_epoch_ms)}</span>
+                                    <div class="info-text">
+                                        <span class="name">{p.meta.variable.name.clone()}</span>
+                                        <span class="origin">{p.meta.origin.clone()} " - " {format_time(p.meta.time_epoch_ms)}</span>
                                     </div>
                                 })}
-                                <span class="px-2 h-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap">"Comparison"</span>
+                                <span class="badge">"Comparison"</span>
                             </div>
                         </div>
                     </Show>
-                    <div class="select-text p-4 overflow-auto font-mono text-sm whitespace-pre-wrap flex-grow">
+                    <div class="modal-content">
                         {move || {
                             if is_loading.get() {
                                 view! {
-                                    <div class="flex items-center justify-center h-full text-slate-500 italic">
+                                    <div class="empty-state">
                                         "Calculating diff..."
                                     </div>
                                 }.into_any()
@@ -123,12 +127,12 @@ pub fn DiffModal(
                                 let len = lines.len();
 
                                 lines.into_iter().enumerate().map(|(i, mut line)| {
-                                    let (label, color) = if line.starts_with('+') {
-                                        ("Comparison", "text-green-400 bg-green-400/10")
+                                    let (label, type_class) = if line.starts_with('+') {
+                                        ("Comparison", "added")
                                     } else if line.starts_with('-') {
-                                        ("Source", "text-red-400 bg-red-400/10")
+                                        ("Source", "removed")
                                     } else {
-                                        ("", "text-slate-400")
+                                        ("", "unchanged")
                                     };
 
                                     if i == 0 || i == len - 1 {
@@ -136,27 +140,30 @@ pub fn DiffModal(
                                     }
 
                                     view! {
-                                        <div class=format!("px-2 py-0.5 rounded flex justify-between items-baseline gap-4 {}", color)>
+                                        <div class=format!("diff-line {}", type_class)>
                                             <span>{line}</span>
                                             <Show when=move || !label.is_empty()>
-                                                <span class="opacity-50 font-bold text-[10px] uppercase shrink-0">{label}</span>
+                                                <span class="line-label">{label}</span>
                                             </Show>
                                         </div>
                                     }
                                 }).collect_view().into_any()
                             } else {
                                 view! {
-                                    <div class="flex items-center justify-center h-full text-slate-500 italic">
+                                    <div class="empty-state">
                                         "No diff available"
                                     </div>
                                 }.into_any()
                             }
                         }}
                     </div>
-                    <div class="p-4 border-t border-slate-800 flex justify-end">
+                    <div class="modal-footer">
                         <button
-                            class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded font-bold transition-colors"
-                            on:click=move |_| on_close.run(())
+                            class="footer-btn"
+                            on:click=move |_| {
+                                on_close.run(());
+                                track_event("diff_modal_closed", None);
+                            }
                         >
                             "Close"
                         </button>

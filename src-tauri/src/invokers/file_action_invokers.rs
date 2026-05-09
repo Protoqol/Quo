@@ -1,3 +1,5 @@
+use tauri_plugin_opener::OpenerExt;
+
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct Editor {
     id: String,
@@ -17,7 +19,7 @@ fn create_command(cmd: &str) -> tokio::process::Command {
 }
 
 #[tauri::command]
-pub async fn open_file(path: String) {
+pub async fn open_file(app: tauri::AppHandle, path: String) {
     let file_path = if let Some(last_colon) = path.rfind(':') {
         if last_colon > 1 {
             &path[..last_colon]
@@ -28,31 +30,11 @@ pub async fn open_file(path: String) {
         &path
     };
 
-    #[cfg(target_os = "windows")]
-    {
-        let _ = create_command("cmd")
-            .arg("/c")
-            .arg("start")
-            .arg("")
-            .arg(file_path.replace("/", "\\"))
-            .spawn();
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let _ = tokio::process::Command::new("open").arg(file_path).spawn();
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        let _ = tokio::process::Command::new("xdg-open")
-            .arg(file_path)
-            .spawn();
-    }
+    let _ = app.opener().open_path(file_path, None::<&str>);
 }
 
 #[tauri::command]
-pub async fn show_in_explorer(path: String) {
+pub async fn show_in_explorer(app: tauri::AppHandle, path: String) {
     let file_path = if let Some(last_colon) = path.rfind(':') {
         if last_colon > 1 {
             &path[..last_colon]
@@ -63,28 +45,7 @@ pub async fn show_in_explorer(path: String) {
         &path
     };
 
-    #[cfg(target_os = "windows")]
-    {
-        let _ = create_command("explorer")
-            .arg("/select,")
-            .arg(file_path.replace("/", "\\"))
-            .spawn();
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let _ = tokio::process::Command::new("open")
-            .arg("-R")
-            .arg(file_path)
-            .spawn();
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        if let Some(parent) = std::path::Path::new(file_path).parent() {
-            let _ = tokio::process::Command::new("xdg-open").arg(parent).spawn();
-        }
-    }
+    let _ = app.opener().reveal_item_in_dir(file_path);
 }
 
 #[tauri::command]
@@ -255,32 +216,14 @@ pub async fn get_available_editors() -> Vec<Editor> {
 }
 
 #[tauri::command]
-pub async fn open_in_editor(cmd: String, path: String) {
+pub async fn open_in_editor(app: tauri::AppHandle, cmd: String, path: String) {
     if cmd.ends_with(':') {
         let protocol = cmd.trim_end_matches(':');
         if protocol == "vscode" {
             // vscode://file/{full path to file}:line:column
             let url = format!("vscode://file/{}", path.replace("\\", "/"));
 
-            #[cfg(target_os = "windows")]
-            {
-                let _ = create_command("cmd")
-                    .arg("/c")
-                    .arg("start")
-                    .arg("")
-                    .arg(url)
-                    .spawn();
-            }
-
-            #[cfg(target_os = "macos")]
-            {
-                let _ = tokio::process::Command::new("open").arg(url).spawn();
-            }
-
-            #[cfg(target_os = "linux")]
-            {
-                let _ = tokio::process::Command::new("xdg-open").arg(url).spawn();
-            }
+            let _ = app.opener().open_url(url, None::<&str>);
         }
     } else {
         let mut command = create_command(cmd.as_str());

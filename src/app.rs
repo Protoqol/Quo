@@ -1,9 +1,11 @@
 use crate::atoms::{provide_toast_context, ToastType, Toaster};
-use crate::components::SideBar;
+use crate::layout::SideBar;
 use crate::components::{DumpGroup, DumpItem};
 use crate::modals::DiffModal;
 use crate::toast;
+use crate::utils::analytics::track_event;
 use crate::utils::formatter::format_by_language;
+use crate::utils::settings::{AppSettings, SettingDto};
 use codee::string::JsonSerdeCodec;
 use gloo_net::http::Request;
 use leptos::ev;
@@ -15,7 +17,6 @@ use leptos::task::spawn_local;
 use leptos_use::storage::use_local_storage;
 use quo_common::events::ConnectionEstablishedEvent;
 use quo_common::payloads::IncomingQuoPayload;
-use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -25,41 +26,6 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"])]
     async fn listen(event: &str, handler: &Closure<dyn FnMut(JsValue)>) -> JsValue;
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct SettingDto {
-    pub id: String,
-    pub category: String,
-    pub label: String,
-    pub description: String,
-    pub show_in_sidebar: bool,
-    pub value: serde_json::Value,
-}
-
-#[derive(Clone, Copy)]
-pub struct AppSettings {
-    pub all_settings: RwSignal<Vec<SettingDto>>,
-    pub auto_group: RwSignal<bool>,
-    pub long_file_path: RwSignal<bool>,
-    pub auto_expand: RwSignal<bool>,
-    pub truncate_large_var_types: RwSignal<bool>,
-    pub update_available: RwSignal<bool>,
-    pub latest_version: RwSignal<Option<String>>,
-}
-
-impl AppSettings {
-    pub fn new() -> Self {
-        Self {
-            all_settings: RwSignal::new(vec![]),
-            auto_group: RwSignal::new(true),
-            long_file_path: RwSignal::new(false),
-            auto_expand: RwSignal::new(true),
-            truncate_large_var_types: RwSignal::new(false),
-            update_available: RwSignal::new(false),
-            latest_version: RwSignal::new(None),
-        }
-    }
 }
 
 /// One entry in the grouped view-model: either a single payload or a
@@ -73,6 +39,10 @@ enum DumpEntry {
 #[component]
 pub fn App() -> impl IntoView {
     provide_toast_context();
+
+    track_event("app_started", Some(serde_json::json!({
+        "version": env!("CARGO_PKG_VERSION")
+    })));
 
     let search_input_ref = NodeRef::<html::Input>::new();
 
@@ -90,12 +60,12 @@ pub fn App() -> impl IntoView {
     let (server_port, set_server_port, _) =
         use_local_storage::<String, JsonSerdeCodec>("server_port");
 
-    // Consume settings from the shared context provided by main.rs
     let settings = use_context::<AppSettings>().expect("AppSettings context missing");
     let auto_group = settings.auto_group;
     let long_file_path = settings.long_file_path;
     let auto_expand = settings.auto_expand;
     let truncate_large_var_types = settings.truncate_large_var_types;
+    let theme = settings.theme;
     let all_settings = settings.all_settings;
     let update_available = settings.update_available;
     let latest_version_signal = settings.latest_version;
@@ -130,8 +100,13 @@ pub fn App() -> impl IntoView {
                         };
 
                         if is_update(current_version, &latest_version) {
-                            latest_version_signal.set(Some(latest_version));
+                            latest_version_signal.set(Some(latest_version.clone()));
                             update_available.set(true);
+
+                            track_event("update_detected", Some(serde_json::json!({
+                                "current_version": current_version,
+                                "latest_version": latest_version
+                            })));
                         }
                     }
                 }
@@ -185,9 +160,21 @@ pub fn App() -> impl IntoView {
                         truncate_large_var_types.set(v);
                     }
                 }
+                if let Some(s) = all.iter().find(|s| s.id == "theme") {
+                    if let Some(v) = s.value.as_str() {
+                        theme.set(v.to_string());
+                    }
+                }
                 all_settings.set(all);
             }
         });
+    });
+
+    Effect::new(move |_| {
+        let theme_name = theme.get();
+        let document = document();
+        let el = document.document_element().expect("html not found");
+        el.set_attribute("data-theme", &theme_name).unwrap();
     });
 
     let filtered_payloads = move || {
@@ -281,6 +268,7 @@ pub fn App() -> impl IntoView {
         set_payloads.set(current);
 
         if (backup.len() - 1) == to_compare.len() {
+            track_event("dump_deleted", None);
             toast!("Dump was deleted", ToastType::Success)
         } else {
             // @TODO check why
@@ -340,12 +328,17 @@ pub fn App() -> impl IntoView {
                 Ok(event) => {
                     println!("{}", event.payload.meta.sender_origin);
                     let mut current = payloads.get_untracked();
-                    current.insert(0, event.payload);
+                    current.insert(0, event.payload.clone());
                     set_payloads.set(current);
+
+                    track_event("payload_received", Some(serde_json::json!({
+                        "language": event.payload.language,
+                        "origin": event.payload.meta.origin
+                    })));
                 }
                 Err(_e) => {
                     // @TODO error handle
-                    println!("Could not store incoming payload");
+                    eprintln!("Could not store incoming payload");
                 }
             };
         }) as Box<dyn FnMut(JsValue)>);
@@ -367,9 +360,14 @@ pub fn App() -> impl IntoView {
                     } = event.payload;
 
                     if success {
-                        set_server_host.set(host);
+                        set_server_host.set(host.clone());
                         set_server_port.set(port.to_string());
-                        console_log("Connection established")
+                        console_log("Connection established");
+
+                        track_event("connection_established", Some(serde_json::json!({
+                            "host": host,
+                            "port": port
+                        })));
                     } else {
                         console_log("Connection NOT established")
                     }
@@ -385,10 +383,21 @@ pub fn App() -> impl IntoView {
             //
         }) as Box<dyn FnMut(JsValue)>);
 
+        let handle_clear_entries_event = Closure::wrap(Box::new(move |_obj: JsValue| {
+            set_payloads.set(vec![]);
+            set_selected_payload_uids.set(vec![]);
+            set_is_diff_mode.set(false);
+            set_selected_group.set(None);
+            track_event("dumps_cleared_via_event", None);
+
+            let _ = window().location().reload();
+        }) as Box<dyn FnMut(JsValue)>);
+
         spawn_local(async move {
             listen("payload-received", &handle_payload_received_event).await;
             listen("connection-established", &handle_connection_established).await;
             listen("app-exit", &handle_app_exit).await;
+            listen("clear-entries", &handle_clear_entries_event).await;
 
             // Fetch initial connection info after listeners are set up
             let connection_info = invoke("get_connection_info", JsValue::NULL).await;
@@ -413,6 +422,7 @@ pub fn App() -> impl IntoView {
             handle_payload_received_event.forget();
             handle_connection_established.forget();
             handle_app_exit.forget();
+            handle_clear_entries_event.forget();
         });
     });
 
@@ -453,7 +463,14 @@ pub fn App() -> impl IntoView {
                                 autocapitalize="none"
                                 spellcheck="false"
                                 on:input=move |ev| {
-                                    set_search_query.set(event_target_value(&ev));
+                                    let new_query = event_target_value(&ev);
+                                    set_search_query.set(new_query.clone());
+
+                                    if !new_query.is_empty() {
+                                        track_event("search_performed", Some(serde_json::json!({
+                                            "query_length": new_query.len()
+                                        })));
+                                    }
                                 }
                                 prop:value=search_query
                             />
@@ -484,43 +501,48 @@ pub fn App() -> impl IntoView {
                 </header>
                 <div class="quo-body">
                    <Show when=move || is_diff_mode.get() && selected_payload_uids.get().len() == 2>
-                       <div class="absolute bottom-8 right-4 z-[70]">
+                       <div class="diff-button-container">
                            <button
-                               class="bg-accent hover:bg-accent/75 text-slate-950 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 border-0 border-slate-400 hover:border-1 transition-all"
-                               on:click=move |_| set_show_diff_modal.set(true)
+                               class="diff-button"
+                               on:click=move |_| {
+                                   set_show_diff_modal.set(true);
+                                   track_event("diff_modal_opened", None);
+                               }
                            >
                                "Diff selected payloads"
-                               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
                                </svg>
                            </button>
                        </div>
                    </Show>
-                    <div id="quo" class="relative">
-                        <div class="flex items-center justify-between -mt-4 -mb-2">
+                    <div id="quo">
+                        <div class="quo-toolbar">
                             <Show
                                 when=move || !search_results_count().is_empty()
                                 fallback=|| {
                                     view! {
-                                        <span id="searchResult" class="opacity-0">-</span>
+                                        <span id="searchResult" class="search-status hidden">-</span>
                                     }
                                 }
                                 >
-                                <span id="searchResult" class="text-slate-600 text-xs font-bold uppercase tracking-wider">{search_results_count}</span>
+                                <span id="searchResult" class="search-status">{search_results_count}</span>
                             </Show>
 
                             <Show when=move || !payloads.get().is_empty()>
-                                <div class="flex items-center gap-x-2">
+                                <div class="toolbar-actions">
                                     <Show when=move || has_expandable_items.get()>
                                         <button
-                                            class="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-accent transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-800"
+                                            class="action-btn secondary"
                                             on:click=move |_| {
                                                 if is_all_expanded.get() {
                                                     set_collapse_all_command.update(|v| *v += 1);
                                                     set_is_all_expanded.set(false);
+                                                    track_event("collapse_all_clicked", None);
                                                 } else {
                                                     set_expand_all_command.update(|v| *v += 1);
                                                     set_is_all_expanded.set(true);
+                                                    track_event("expand_all_clicked", None);
                                                 }
                                             }
                                             title=move || if is_all_expanded.get() { "Collapse all" } else { "Expand all" }
@@ -529,14 +551,14 @@ pub fn App() -> impl IntoView {
                                                 when=move || is_all_expanded.get()
                                                 fallback=move || view! {
                                                     "Expand all"
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                                         <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z"/>
                                                         <path d="M12 18.172l4.95-4.95 1.414 1.414L12 21 5.636 14.636 7.05 13.222z"/>
                                                     </svg>
                                                 }
                                             >
                                                 "Collapse all"
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                                     <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/>
                                                     <path d="M12 5.828l-4.95 4.95-1.414-1.414L12 3l6.364 6.364-1.414 1.414z"/>
                                                 </svg>
@@ -545,19 +567,24 @@ pub fn App() -> impl IntoView {
                                     </Show>
                                     <button
                                         class=move || format!(
-                                            "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 p-2 rounded-lg {}",
-                                            if is_diff_mode.get() { "text-accent bg-slate-800" } else { "text-slate-500 hover:text-accent hover:bg-slate-800" }
+                                            "action-btn {}",
+                                            if is_diff_mode.get() { "active" } else { "secondary" }
                                         )
                                         on:click=move |_| {
-                                            set_is_diff_mode.update(|v| *v = !*v);
-                                            if !is_diff_mode.get() {
+                                            let new_state = !is_diff_mode.get_untracked();
+                                            set_is_diff_mode.set(new_state);
+                                            if !new_state {
                                                 set_selected_payload_uids.set(vec![]);
                                             }
+
+                                            track_event("diff_mode_toggled", Some(serde_json::json!({
+                                                "enabled": new_state
+                                            })));
                                         }
                                         title="Compare 2 payloads with eachother"
                                     >
                                         "Diff payloads"
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                                             <path fill="currentColor" d="M112 154a6 6 0 0 0-6 6v33.52l-41.07-41.08a9.93 9.93 0 0 1-2.93-7.07v-52a30 30 0 1 0-12 0v52a21.88 21.88 0 0 0 6.44 15.56L97.52 202H64a6 6 0 0 0 0 12h48a6 6 0 0 0 6-6v-48a6 6 0 0 0-6-6M38 64a18 18 0 1 1 18 18a18 18 0 0 1-18-18m168 98.6v-52a21.88 21.88 0 0 0-6.44-15.56L158.48 54H192a6 6 0 0 0 0-12h-48a6 6 0 0 0-6 6v48a6 6 0 0 0 12 0V62.48l41.07 41.08a9.93 9.93 0 0 1 2.93 7.07v52a30 30 0 1 0 12 0Zm-6 47.4a18 18 0 1 1 18-18a18 18 0 0 1-18 18"/>
                                         </svg>
                                     </button>
@@ -570,13 +597,13 @@ pub fn App() -> impl IntoView {
                                 view! {
                                     <div id="quoNoRequestsMessage">
                                         <div class="empty-state">
-                                            <img
+                                            <img draggable="false"
+                                                oncontextmenu=move || false
                                                 src="/public/assets/icons/boat-animation.apng"
-                                                class="w-32"
                                             />
-                                            <p class="text-white">Waiting for incoming payloads...</p>
-                                            <span class="text-xs text-slate-400 mt-2">
-                                                Dumps from your application will appear here automatically.
+                                            <p>"Waiting for incoming payloads..."</p>
+                                            <span class="hint">
+                                                "Dumps from your application will appear here automatically."
                                             </span>
                                         </div>
                                     </div>

@@ -1,10 +1,12 @@
-name: 'publish'
+name: Build Quo for specified targets
+
 on:
   push:
     branches:
-      - release
+      - main
+
 jobs:
-  publish-tauri:
+  build-binaries:
     permissions:
       contents: write
     strategy:
@@ -63,10 +65,20 @@ jobs:
         uses: tauri-apps/tauri-action@v0.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APTABASE_KEY: ${{ secrets.APTABASE_KEY }}
         with:
           tagName: quo-v__VERSION__
           releaseName: 'Quo v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: ''
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  update-website:
+    runs-on: ubuntu-latest
+    needs: build-binaries
+    permissions: {}
+    steps:
+      - name: Make request
+        run: |
+          curl "${{ secrets.DEPLOY_URL }}" --header "Authorization: Token ${{ secrets.DEPLOY_API_TOKEN }}"
