@@ -134,7 +134,7 @@ quo(userId, username);
 window.quo(userId, username);
 ```
 
-## Screenshots
+## Themes / preview
 
 ### General overview
 ![General overview](https://cms.protoqol.nl/assets/c5f1e6d0-eec3-4919-abbe-54baea1024ac)
@@ -147,6 +147,12 @@ window.quo(userId, username);
 
 ### Payload diffing
 ![Payload diffing](https://cms.protoqol.nl/assets/3d04a881-c0c4-4f8d-b2b7-1f112b4376bf)
+
+### Neon Dreams theme (no payloads)
+![Neon Dreams theme (no payloads)](https://cms.protoqol.nl/assets/194147be-c546-4b47-bc3b-cdbb99e3e680)
+
+### Neon Dreams theme (with payloads)
+![Neon Dreams theme (with payloads)](https://cms.protoqol.nl/assets/de7e8052-3662-46ae-a290-839a535023ed)
 
 ## License
 
