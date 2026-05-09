@@ -65,6 +65,7 @@ pub fn App() -> impl IntoView {
     let long_file_path = settings.long_file_path;
     let auto_expand = settings.auto_expand;
     let truncate_large_var_types = settings.truncate_large_var_types;
+    let theme = settings.theme;
     let all_settings = settings.all_settings;
     let update_available = settings.update_available;
     let latest_version_signal = settings.latest_version;
@@ -159,9 +160,21 @@ pub fn App() -> impl IntoView {
                         truncate_large_var_types.set(v);
                     }
                 }
+                if let Some(s) = all.iter().find(|s| s.id == "theme") {
+                    if let Some(v) = s.value.as_str() {
+                        theme.set(v.to_string());
+                    }
+                }
                 all_settings.set(all);
             }
         });
+    });
+
+    Effect::new(move |_| {
+        let theme_name = theme.get();
+        let document = document();
+        let el = document.document_element().expect("html not found");
+        el.set_attribute("data-theme", &theme_name).unwrap();
     });
 
     let filtered_payloads = move || {

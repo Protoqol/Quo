@@ -90,6 +90,14 @@ pub const SETTINGS: &[Setting] = &[
         default: DefaultValue::Bool(false),
         show_in_sidebar: false,
     },
+    Setting {
+        id: "theme",
+        category: Category::Ui,
+        label: "Theme",
+        description: "The theme to use for the Quo client",
+        default: DefaultValue::Str("Quo (default)"),
+        show_in_sidebar: true,
+    },
 ];
 
 pub fn settings_for(category: Category) -> impl Iterator<Item = &'static Setting> {

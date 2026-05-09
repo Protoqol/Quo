@@ -6,10 +6,10 @@
   grid-template-columns: auto max-content;
 
   .titlebar-drag-region {
-      @apply bg-slate-950;
+      @apply bg-header;
 
       .titlebar-left-container {
-          @apply w-64 h-[30px] bg-slate-950 flex items-center justify-between px-2;
+          @apply w-64 h-[30px] bg-header flex items-center justify-between px-2;
 
           .menu-button-container {
               @apply relative flex items-center;
@@ -18,7 +18,7 @@
                   @apply relative;
 
                   .menu-button {
-                      @apply w-5 h-5 fill-slate-500 hover:fill-slate-300 transition-colors cursor-pointer;
+                      @apply w-5 h-5 fill-muted hover:fill-primary transition-colors cursor-pointer;
                   }
 
                   .update-ping {
@@ -35,10 +35,10 @@
               }
 
               .taskbar-menu {
-                  @apply absolute top-[30px] left-2 w-56 bg-slate-900 border border-slate-800 rounded shadow-xl z-[100] overflow-hidden flex flex-col;
+                  @apply absolute top-[30px] left-2 w-56 bg-sidebar border border-border rounded shadow-xl z-[100] overflow-hidden flex flex-col;
 
                   .menu-item {
-                      @apply !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-slate-300 hover:!bg-slate-800 hover:!text-white transition-colors;
+                      @apply !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-primary hover:!bg-main hover:!text-white transition-colors;
 
                       &.quit-item {
                           @apply !pl-[2.75rem];
@@ -47,7 +47,7 @@
                               @apply !flex !gap-x-1;
 
                               .pro-badge {
-                                  @apply text-slate-600 font-light group-hover:text-slate-500 transition-colors;
+                                  @apply text-muted font-light group-hover:text-muted transition-colors;
                               }
                           }
                       }
@@ -58,7 +58,7 @@
                   }
 
                   hr {
-                      @apply border-slate-700 mx-2;
+                      @apply border-border mx-2;
                   }
               }
 
@@ -71,7 +71,7 @@
 
   > .controls {
     @apply flex;
-    @apply bg-slate-950;
+    @apply bg-header;
   }
 
   #titlebar-close {
@@ -96,14 +96,14 @@
     @apply bg-transparent transition-colors duration-200;
 
     svg {
-      @apply fill-slate-400 transition-colors duration-200;
+      @apply fill-muted transition-colors duration-200;
     }
 
     &:hover {
-      @apply bg-slate-900;
+      @apply bg-sidebar;
 
       svg {
-        @apply fill-slate-400;
+        @apply fill-muted;
       }
     }
   }

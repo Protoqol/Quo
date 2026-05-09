@@ -1,0 +1,200 @@
+.quo-sidebar {
+    @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 text-primary flex flex-col select-none border-r border-accent/50;
+
+    @media (max-width: 720px) {
+        display: none !important;
+    }
+
+    .quo-sidebar-header {
+        @apply h-[94px] pt-[32px] flex flex-col items-center justify-center border-b border-border border-r-0;
+        /*box-shadow: 0 0 18px 4px var(--border-color);*/
+
+        .quo-logo-container {
+            @apply flex flex-row;
+
+            .quo-logo {
+                @apply transition-transform duration-300 shrink-0 w-10 h-10;
+                background-image: url("/public/assets/icons/animated_icon_neon_dreams.apng");
+                background-size: contain;
+                background-repeat: no-repeat;
+            }
+        }
+
+        .quo-logo-text {
+            @apply text-3xl font-mono font-semibold uppercase mr-4 text-accent;
+            text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
+            animation: neon-pulse-strong 2s infinite alternate;
+
+            &::after {
+                content: "//";
+                color: #d07138;
+                text-shadow: 0 0 5px #d07138;
+                animation: neon-pulse-accent-muted 2s infinite alternate;
+            }
+        }
+
+        .quo-protoqol-link {
+            @apply hidden;
+        }
+    }
+
+    .quo-nav {
+        @apply flex-1 overflow-y-auto py-4;
+        scrollbar-gutter: stable;
+
+        .quo-origin-tabs {
+            /* Don't know why w-full doesn't just fill the entire sidebar */
+            width: 103% !important;
+            @apply flex flex-col;
+
+            .quo-sidebar-groups-title {
+                @apply text-base font-bold uppercase tracking-wider text-accent cursor-pointer hover:text-primary transition-colors;
+
+                .quo-sidebar-groups-subtitle {
+                    @apply text-xs font-normal tracking-normal normal-case ml-2 text-muted;
+                }
+            }
+
+            .quo-sidebar-separator {
+                @apply mt-2 border-accent/75;
+            }
+
+            .quo-origin-tab {
+                @apply flex items-center justify-between px-3 py-2   cursor-pointer transition-all duration-200 text-sm font-medium;
+                @apply text-muted hover:bg-main hover:text-primary;
+
+                span {
+                    @apply truncate mr-2 flex-1;
+                    pointer-events: none;
+                }
+
+                &.active-tab {
+                    @apply bg-accent/10 text-accent border border-accent/20;
+                }
+
+                #closeTab {
+                    @apply opacity-0 transition-opacity duration-200 w-4 h-4 p-0.5 hover:bg-main hover:text-accent shrink-0;
+                }
+
+                &:hover #closeTab {
+                    @apply opacity-100;
+                }
+            }
+
+            .quo-sidebar-group-item {
+                @apply flex flex-row justify-between items-center font-mono border-[1px] hover:border-border px-2 py-2 cursor-pointer transition-all;
+                background-color: rgba(86, 227, 156, 0.05);
+
+                &.active {
+                    @apply border-accent;
+                }
+
+                &.inactive {
+                    @apply border-transparent text-accent/75 hover:text-accent;
+                }
+
+                .quo-sidebar-group-label {
+                    @apply flex flex-row gap-x-2;
+
+                    p {
+                        @apply font-medium;
+                    }
+                }
+
+                .quo-sidebar-group-count {
+                    @apply text-sm align-middle border h-6 w-6 text-center;
+                }
+            }
+        }
+    }
+
+    .quo-sidebar-address-container {
+        @apply cursor-pointer flex flex-row justify-center items-center w-full;
+
+        .quo-sidebar-address {
+            @apply flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-muted mb-4 bg-header hover:text-primary;
+
+            pre {
+                @apply cursor-pointer select-text;
+            }
+
+            svg {
+                @apply w-4 h-4 cursor-pointer;
+            }
+        }
+    }
+
+    .quo-sidebar-footer {
+        @apply p-4 border-t border-border bg-header;
+
+        .settings-container {
+            @apply mb-6 px-2;
+
+            .settings-header {
+                @apply flex items-center justify-between mb-3;
+
+                span {
+                    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+                }
+            }
+
+            .setting-label {
+                @apply flex items-center justify-between cursor-pointer mb-3;
+
+                span {
+                    @apply text-sm text-muted group-hover:text-primary transition-colors;
+                }
+            }
+
+            .setting-toggle {
+                @apply relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer   border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none;
+
+                &.checked {
+                    @apply bg-accent;
+                }
+
+                &.unchecked {
+                    @apply bg-secondary;
+                }
+
+                .toggle-dot {
+                    @apply inline-block h-4 w-4 transform   bg-white shadow transition duration-200 ease-in-out;
+
+                    &.translated {
+                        @apply translate-x-4;
+                    }
+
+                    &.initial {
+                        @apply translate-x-0;
+                    }
+                }
+            }
+        }
+
+        .loader-container {
+            @apply flex items-center gap-3 mb-4 px-2;
+
+            .loader svg {
+                @apply text-accent;
+            }
+
+            .loader-text {
+                @apply text-xs font-medium text-muted italic;
+            }
+        }
+
+        .quo-btn-clear {
+            @apply flex items-center justify-center gap-2 w-full py-2 px-4  ;
+            @apply bg-main text-primary text-sm font-medium border border-border;
+            @apply transition-all duration-200 hover:bg-secondary hover:text-primary hover:border-secondary;
+
+            svg {
+                @apply fill-current;
+            }
+        }
+    }
+}
+
+.quo-sidebar-legacy {
+    display: none;
+}

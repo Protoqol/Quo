@@ -24,8 +24,10 @@ pub fn SettingsModal(
     let set_auto_expand = settings.auto_expand;
     let set_truncate_large_var_types = settings.truncate_large_var_types;
     let all_settings = settings.all_settings;
+    let set_theme = settings.theme;
 
     let (active_category, set_active_category) = signal("Quo".to_string());
+    let (available_themes, set_available_themes) = signal::<Vec<String>>(vec![]);
 
     Effect::new(move |_| {
         if show.get() {
@@ -33,6 +35,12 @@ pub fn SettingsModal(
                 let result = invoke("get_settings", JsValue::NULL).await;
                 if let Ok(fresh) = serde_wasm_bindgen::from_value::<Vec<SettingDto>>(result) {
                     all_settings.set(fresh);
+                }
+            });
+            spawn_local(async move {
+                let result = invoke("get_available_themes", JsValue::NULL).await;
+                if let Ok(themes) = serde_wasm_bindgen::from_value::<Vec<String>>(result) {
+                    set_available_themes.set(themes);
                 }
             });
         }
@@ -118,6 +126,7 @@ pub fn SettingsModal(
                                         key=|s: &SettingDto| s.id.clone()
                                         children=move |setting: SettingDto| {
                                             let is_bool = setting.value.is_boolean();
+                                            let is_str = setting.value.is_string();
                                             let stored_id = StoredValue::new(setting.id.clone());
                                             let checked = Memo::new(move |_| {
                                                 all_settings
@@ -126,6 +135,14 @@ pub fn SettingsModal(
                                                     .find(|s| s.id == stored_id.get_value())
                                                     .and_then(|s| s.value.as_bool())
                                                     .unwrap_or(false)
+                                            });
+                                            let string_value = Memo::new(move |_| {
+                                                all_settings
+                                                    .get()
+                                                    .into_iter()
+                                                    .find(|s| s.id == stored_id.get_value())
+                                                    .and_then(|s| s.value.as_str().map(|v| v.to_string()))
+                                                    .unwrap_or_default()
                                             });
 
                                             view! {
@@ -175,6 +192,52 @@ pub fn SettingsModal(
                                                                 if checked.get() { "translated" } else { "initial" }
                                                             ) />
                                                         </button>
+                                                    </Show>
+                                                    <Show when=move || is_str>
+                                                        <select
+                                                            class="setting-select"
+                                                            on:change=move |ev| {
+                                                                let new_val = event_target_value(&ev);
+                                                                let id = stored_id.get_value();
+
+                                                                all_settings.update(|list: &mut Vec<SettingDto>| {
+                                                                    if let Some(s) = list.iter_mut().find(|s| s.id == id) {
+                                                                        s.value = serde_json::json!(new_val);
+                                                                    }
+                                                                });
+
+                                                                track_event("settings_modal_setting_changed", Some(serde_json::json!({
+                                                                    "id": id,
+                                                                    "value": new_val
+                                                                })));
+
+                                                                match id.as_str() {
+                                                                    "theme" => set_theme.set(new_val.clone()),
+                                                                    _ => {}
+                                                                }
+
+                                                                spawn_local(async move {
+                                                                    let args = serde_wasm_bindgen::to_value(
+                                                                        &serde_json::json!({ "id": id, "value": new_val })
+                                                                    ).unwrap();
+                                                                    invoke("set_setting", args).await;
+                                                                });
+                                                            }
+                                                        >
+                                                            <For
+                                                                each=move || available_themes.get()
+                                                                key=|t| t.clone()
+                                                                children=move |theme| {
+                                                                    let is_selected = theme == string_value.get();
+                                                                    let theme_name = theme.clone();
+                                                                    view! {
+                                                                        <option value=theme_name selected=is_selected>
+                                                                            {theme}
+                                                                        </option>
+                                                                    }
+                                                                }
+                                                            />
+                                                        </select>
                                                     </Show>
                                                 </div>
                                             }

@@ -103,9 +103,8 @@ pub fn SideBar(
         <div class="quo-sidebar">
             <div class="quo-sidebar-header">
                 <div class="quo-logo-container">
-                    <img draggable="false"
+                    <div
                         oncontextmenu=move || false
-                        src="/public/assets/icons/animated_icon.apng"
                         class="quo-logo" />
                     <span class="quo-logo-text">"QUO"</span>
                 </div>
@@ -129,7 +128,7 @@ pub fn SideBar(
                             Click to filter
                         </small>
                     </h2>
-                    <hr class="mt-2 mb-4 border-slate-700" />
+                    <hr class="quo-sidebar-separator" />
                     <For
                         each=move || {
                             let mut sorted_payloads = payloads.get().clone();

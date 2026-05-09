@@ -1,0 +1,92 @@
+.modal-overlay {
+    @apply fixed inset-0 bg-header/80 backdrop-blur-sm z-100 flex items-center justify-center p-4;
+}
+
+.modal-container {
+    @apply bg-sidebar border border-border   shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col;
+    box-shadow: 0 0 20px -10px var(--border-color);
+    --pulse-glow-color: var(--border-color);
+    animation: neon-pulse-box 3s infinite alternate;
+
+    .modal-header {
+        @apply p-4 border-b border-border flex items-center justify-between;
+
+        h3 {
+            @apply text-lg font-bold text-primary;
+        }
+
+        .close-btn {
+            @apply text-muted hover:text-primary;
+
+            svg {
+                @apply w-4 h-4;
+            }
+        }
+    }
+
+    .diff-info-bar {
+        @apply px-6 py-3 border-b border-border bg-sidebar/50 flex flex-row justify-between gap-8 items-center shrink-0;
+
+        .info-group {
+            @apply flex items-center gap-3 text-xs font-mono;
+
+            .badge {
+                @apply px-2 h-6 bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold whitespace-nowrap;
+                text-shadow: 0 0 5px var(--accent);
+                animation: neon-pulse-strong 2s infinite alternate;
+            }
+
+            .info-text {
+                @apply flex flex-col;
+
+                .name {
+                    @apply text-primary font-bold;
+                }
+
+                .origin {
+                    @apply text-muted;
+                }
+            }
+        }
+
+        .diff-arrow {
+            @apply w-8 h-8;
+        }
+    }
+
+    .modal-content {
+        @apply select-text p-4 overflow-auto font-mono text-sm whitespace-pre-wrap grow;
+
+        .empty-state {
+            @apply flex items-center justify-center h-full text-muted italic;
+        }
+
+        .diff-line {
+            @apply px-2 py-0.5 flex justify-between items-baseline gap-4;
+
+            &.added {
+                @apply text-green-400 bg-green-400/10;
+            }
+
+            &.removed {
+                @apply text-red-400 bg-red-400/10;
+            }
+
+            &.unchanged {
+                @apply text-muted;
+            }
+
+            .line-label {
+                @apply opacity-50 font-bold text-[10px] uppercase shrink-0;
+            }
+        }
+    }
+
+    .modal-footer {
+        @apply p-4 border-t border-border flex justify-end;
+
+        .footer-btn {
+            @apply bg-main hover:bg-secondary text-primary px-4 py-2 font-bold transition-colors;
+        }
+    }
+}

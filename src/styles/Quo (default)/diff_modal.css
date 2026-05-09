@@ -1,19 +1,19 @@
 .modal-overlay {
-    @apply fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4;
+    @apply fixed inset-0 bg-header/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4;
 }
 
 .modal-container {
-    @apply bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col;
+    @apply bg-sidebar border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col;
 
     .modal-header {
-        @apply p-4 border-b border-slate-800 flex items-center justify-between;
+        @apply p-4 border-b border-border flex items-center justify-between;
 
         h3 {
-            @apply text-lg font-bold text-slate-200;
+            @apply text-lg font-bold text-primary;
         }
 
         .close-btn {
-            @apply text-slate-500 hover:text-slate-300;
+            @apply text-muted hover:text-primary;
 
             svg {
                 @apply w-4 h-4;
@@ -22,7 +22,7 @@
     }
 
     .diff-info-bar {
-        @apply px-6 py-3 border-b border-slate-800 bg-slate-900/50 flex flex-row justify-between gap-8 items-center shrink-0;
+        @apply px-6 py-3 border-b border-border bg-sidebar/50 flex flex-row justify-between gap-8 items-center shrink-0;
 
         .info-group {
             @apply flex items-center gap-3 text-xs font-mono;
@@ -34,8 +34,8 @@
             .info-text {
                 @apply flex flex-col;
 
-                .name { @apply text-slate-200 font-bold; }
-                .origin { @apply text-slate-500; }
+                .name { @apply text-primary font-bold; }
+                .origin { @apply text-muted; }
             }
         }
 
@@ -48,7 +48,7 @@
         @apply select-text p-4 overflow-auto font-mono text-sm whitespace-pre-wrap flex-grow;
 
         .empty-state {
-            @apply flex items-center justify-center h-full text-slate-500 italic;
+            @apply flex items-center justify-center h-full text-muted italic;
         }
 
         .diff-line {
@@ -56,7 +56,7 @@
 
             &.added { @apply text-green-400 bg-green-400/10; }
             &.removed { @apply text-red-400 bg-red-400/10; }
-            &.unchanged { @apply text-slate-400; }
+            &.unchanged { @apply text-muted; }
 
             .line-label {
                 @apply opacity-50 font-bold text-[10px] uppercase shrink-0;
@@ -65,10 +65,10 @@
     }
 
     .modal-footer {
-        @apply p-4 border-t border-slate-800 flex justify-end;
+        @apply p-4 border-t border-border flex justify-end;
 
         .footer-btn {
-            @apply bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded font-bold transition-colors;
+            @apply bg-main hover:bg-secondary text-primary px-4 py-2 rounded font-bold transition-colors;
         }
     }
 }

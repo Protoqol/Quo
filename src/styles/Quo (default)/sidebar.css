@@ -1,18 +1,21 @@
 .quo-sidebar {
-  @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 bg-slate-900 text-slate-300 flex flex-col select-none;
+  @apply relative w-64 shrink-0 -top-[30px] h-screen z-10 bg-sidebar text-primary flex flex-col select-none;
 
   @media (max-width: 720px) {
     display: none !important;
   }
 
   .quo-sidebar-header {
-    @apply h-[94px] pt-[32px] flex flex-col items-center justify-center border-b bg-slate-950 border-slate-800 border-r-0;
+    @apply h-[94px] pt-[32px] flex flex-col items-center justify-center border-b bg-header border-border border-r-0;
 
     .quo-logo-container {
         @apply flex flex-row;
 
         .quo-logo {
-          @apply transition-transform duration-300 shrink-0 w-10;
+          @apply transition-transform duration-300 shrink-0 w-10 h-10;
+          background-image: url("/public/assets/icons/animated_icon.apng");
+          background-size: contain;
+          background-repeat: no-repeat;
         }
     }
 
@@ -33,16 +36,20 @@
       @apply flex flex-col gap-1 px-3;
 
       .quo-sidebar-groups-title {
-          @apply text-base font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-slate-400 transition-colors;
+          @apply text-base font-bold uppercase tracking-wider text-muted cursor-pointer hover:text-primary transition-colors;
 
           .quo-sidebar-groups-subtitle {
-              @apply text-xs font-normal tracking-normal normal-case ml-2 text-slate-600;
+              @apply text-xs font-normal tracking-normal normal-case ml-2 text-muted;
           }
+      }
+
+      .quo-sidebar-separator {
+          @apply mt-2 mb-4 border-border;
       }
 
       .quo-origin-tab {
         @apply flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-sm font-medium;
-        @apply text-slate-400 hover:bg-slate-800 hover:text-slate-200;
+        @apply text-muted hover:bg-main hover:text-primary;
 
         span {
           @apply truncate mr-2 flex-1;
@@ -54,7 +61,7 @@
         }
 
         #closeTab {
-          @apply opacity-0 transition-opacity duration-200 w-4 h-4 p-0.5 rounded hover:bg-slate-700 hover:text-red-400 shrink-0;
+          @apply opacity-0 transition-opacity duration-200 w-4 h-4 p-0.5 rounded hover:bg-main hover:text-accent shrink-0;
         }
 
         &:hover #closeTab {
@@ -63,14 +70,14 @@
       }
 
       .quo-sidebar-group-item {
-          @apply flex flex-row justify-between items-center font-mono border-[1px] bg-slate-950 hover:border-slate-700 rounded px-2 py-2 cursor-pointer transition-all;
+          @apply flex flex-row justify-between items-center font-mono border-[1px] bg-accent/25 hover:border-border rounded px-2 py-2 cursor-pointer transition-all;
 
           &.active {
               @apply border-accent;
           }
 
           &.inactive {
-              @apply border-transparent text-slate-500 hover:text-slate-400;
+              @apply border-transparent text-muted hover:text-primary;
           }
 
           .quo-sidebar-group-label {
@@ -92,7 +99,7 @@
       @apply cursor-pointer flex flex-row justify-center items-center w-full;
 
       .quo-sidebar-address {
-          @apply flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-slate-600 mb-4 bg-slate-950 rounded hover:text-slate-500;
+          @apply flex px-2 py-2 gap-x-2 flex-row justify-center items-center text-sm text-muted mb-4 bg-header rounded hover:text-primary;
 
           pre {
               @apply cursor-pointer select-text;
@@ -105,7 +112,7 @@
   }
 
   .quo-sidebar-footer {
-    @apply p-4 border-t border-slate-800 bg-slate-950/50;
+    @apply p-4 border-t border-border bg-header;
 
     .settings-container {
         @apply mb-6 px-2;
@@ -114,7 +121,7 @@
             @apply flex items-center justify-between mb-3;
 
             span {
-                @apply text-xs font-semibold uppercase tracking-wider text-slate-500;
+                @apply text-xs font-semibold uppercase tracking-wider text-muted;
             }
         }
 
@@ -122,7 +129,7 @@
             @apply flex items-center justify-between cursor-pointer mb-3;
 
             span {
-                @apply text-sm text-slate-400 group-hover:text-slate-200 transition-colors;
+                @apply text-sm text-muted group-hover:text-primary transition-colors;
             }
         }
 
@@ -134,7 +141,7 @@
             }
 
             &.unchecked {
-                @apply bg-slate-600;
+                @apply bg-secondary;
             }
 
             .toggle-dot {
@@ -159,14 +166,14 @@
       }
 
       .loader-text {
-        @apply text-xs font-medium text-slate-500 italic;
+        @apply text-xs font-medium text-muted italic;
       }
     }
 
     .quo-btn-clear {
       @apply flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg;
-      @apply bg-slate-800 text-slate-300 text-sm font-medium border border-slate-700;
-      @apply transition-all duration-200 hover:bg-slate-700 hover:text-white hover:border-slate-600;
+      @apply bg-main text-primary text-sm font-medium border border-border;
+      @apply transition-all duration-200 hover:bg-secondary hover:text-primary hover:border-secondary;
 
       svg {
         @apply fill-current;

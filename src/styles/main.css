@@ -1,11 +1,32 @@
 @import "tailwindcss";
 
-@import "./base.css";
-@import "./app.css";
-@import "./sidebar.css";
-@import "./taskbar.css";
-@import "./dump.css";
-@import "./language_icon.css";
-@import "./toast.css";
-@import "./diff_modal.css";
-@import "./settings_modal.css";
+@theme {
+    --color-accent: var(--accent);
+    --color-main: var(--main-bg);
+    --color-header: var(--header-bg);
+    --color-sidebar: var(--sidebar-bg);
+    --color-border: var(--border-color);
+    --color-input: var(--input-bg);
+    --color-secondary: var(--secondary-bg);
+    --color-primary: var(--text-primary);
+    --color-muted: var(--text-muted);
+    --color-contrast: var(--text-contrast);
+    --color-syntax-keyword: var(--syntax-keyword);
+    --color-syntax-string: var(--syntax-string);
+    --color-syntax-number: var(--syntax-number);
+    --color-syntax-boolean: var(--syntax-boolean);
+    --color-syntax-null: var(--syntax-null);
+    --color-syntax-function: var(--syntax-function);
+    --color-syntax-property: var(--syntax-property);
+
+    --font-sans: var(--font-family-sans);
+    --font-mono: var(--font-family-mono);
+}
+
+@import "./global.css";
+
+/* Quo (default) is the default base */
+@import "./Quo (default)/main.css";
+
+/* Overrides for other themes */
+@import "./Neon dreams/main.css";

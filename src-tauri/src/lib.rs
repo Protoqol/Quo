@@ -3,7 +3,7 @@ mod invokers;
 mod server;
 mod stores;
 
-use crate::invokers::config_invokers::{get_settings, set_setting};
+use crate::invokers::config_invokers::{get_available_themes, get_settings, set_setting};
 use crate::invokers::file_action_invokers::{
     get_available_editors, open_file, open_in_editor, show_in_explorer,
 };
@@ -57,6 +57,7 @@ pub fn run() {
             open_in_editor,
             get_settings,
             set_setting,
+            get_available_themes,
             get_diff_for_snippets
         ])
         .setup(|app| setup(app))

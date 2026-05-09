@@ -1,0 +1,121 @@
+@font-face {
+    font-family: "Inter";
+    src: url("/public/fonts/Inter-Variable.ttf");
+}
+
+@font-face {
+    font-family: "Google-Sans";
+    src: url("/public/fonts/Google-Sans-Variable.ttf");
+}
+
+@font-face {
+    font-family: "Michroma";
+    src: url("/public/fonts/Michroma-Regular.ttf");
+}
+
+@font-face {
+    font-family: "ShareTechMono";
+    src: url("/public/fonts/ShareTechMono-Regular.ttf");
+}
+
+@keyframes slide-in-right {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes slideInTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@utility animate-toast-in {
+    animation: slide-in-right 0.3s ease-out forwards;
+}
+
+@utility animate-toast-out {
+    animation: fade-out 0.3s ease-in forwards;
+}
+
+:root {
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+
+    @apply transition-all;
+}
+
+* {
+    --sb-track-color: var(--sidebar-bg);
+    --sb-thumb-color: var(--accent);
+    --sb-size: 8px;
+}
+
+*::-webkit-scrollbar {
+    width: var(--sb-size);
+    height: var(--sb-size);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--sb-track-color);
+    @apply rounded;
+}
+
+*::-webkit-scrollbar-thumb {
+    @apply bg-border;
+    @apply border-none;
+    @apply rounded;
+
+
+    &:hover {
+        @apply bg-secondary;
+    }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    }
+}
+
+html {
+    @apply bg-header;
+    @apply select-none;
+    @apply h-screen;
+}
+
+body {
+    @apply flex;
+    @apply flex-col;
+    @apply antialiased;
+    @apply overflow-hidden;
+    @apply text-primary;
+    @apply h-screen;
+
+    & > div {
+        @apply flex flex-col h-full;
+    }
+}

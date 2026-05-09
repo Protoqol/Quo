@@ -1,0 +1,113 @@
+.titlebar {
+    @apply bg-transparent;
+    @apply h-7.5;
+    @apply select-none;
+    @apply grid relative z-50;
+    grid-template-columns: auto max-content;
+
+    .titlebar-drag-region {
+        @apply bg-header;
+
+        .titlebar-left-container {
+            @apply w-64 h-7.5 bg-header flex items-center justify-between px-2;
+
+            .menu-button-container {
+                @apply relative flex items-center;
+
+                .menu-button-wrapper {
+                    @apply relative;
+
+                    .menu-button {
+                        @apply w-5 h-5 fill-muted hover:fill-primary transition-colors cursor-pointer;
+                    }
+
+                    .update-ping {
+                        @apply absolute -top-0.5 -right-0.5 flex h-2 w-2;
+
+                        .ping-anim {
+                            @apply animate-ping absolute inline-flex h-full w-full   bg-accent opacity-75;
+                        }
+
+                        .ping-dot {
+                            @apply relative inline-flex   h-2 w-2 bg-accent;
+                        }
+                    }
+                }
+
+                .taskbar-menu {
+                    @apply absolute top-[30px] left-2 w-56 bg-sidebar border border-border shadow-xl z-[100] overflow-hidden flex flex-col;
+                    box-shadow: 0 0 15px -5px var(--border-color);
+                    --pulse-glow-color: var(--border-color);
+                    animation: neon-pulse-box 2s infinite alternate;
+
+                    .menu-item {
+                        @apply !w-full !flex !justify-start !items-center !gap-x-3 !px-4 !py-2.5 text-sm text-primary hover:!bg-main hover:!text-white transition-colors;
+
+                        &.quit-item {
+                            @apply !pl-[2.75rem];
+
+                            .quit-text {
+                                @apply !flex !gap-x-1;
+
+                                .pro-badge {
+                                    @apply text-muted font-light group-hover:text-muted transition-colors;
+                                }
+                            }
+                        }
+
+                        svg {
+                            @apply w-4 h-4 shrink-0 fill-current;
+                        }
+                    }
+
+                    hr {
+                        @apply border-border mx-2;
+                    }
+                }
+
+                .menu-overlay {
+                    @apply fixed inset-0 z-[90];
+                }
+            }
+        }
+    }
+
+    > .controls {
+        @apply flex;
+        @apply bg-header;
+    }
+
+    #titlebar-close {
+        &:hover {
+            @apply bg-red-500;
+
+            svg {
+                @apply fill-white;
+            }
+        }
+    }
+
+    button {
+        @apply appearance-none;
+        @apply p-0;
+        @apply m-0;
+        @apply border-none;
+        @apply inline-flex;
+        @apply justify-center;
+        @apply items-center;
+        @apply w-[40px];
+        @apply bg-transparent transition-colors duration-200;
+
+        svg {
+            @apply fill-muted transition-colors duration-200;
+        }
+
+        &:hover {
+            @apply bg-sidebar;
+
+            svg {
+                @apply fill-muted;
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+@import "./base.css";
+
+[data-theme="Neon dreams"] {
+    @import "./app.css";
+    @import "./sidebar.css";
+    @import "./titlebar.css";
+    @import "./dump.css";
+    @import "./language_icon.css";
+    @import "./toast.css";
+    @import "./diff_modal.css";
+    @import "./settings_modal.css";
+}
