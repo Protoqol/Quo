@@ -2,7 +2,7 @@
   "$schema"    : "https://schema.tauri.app/config/2",
   "productName": "Quo debugger",
   "version"    : "0.1.4",
-  "identifier" : "protoqol.quo-client.com",
+  "identifier" : "com.protoqol.quo-client",
   "build"      : {
     "beforeDevCommand"  : "trunk serve",
     "devUrl"            : "http://localhost:1420",
@@ -13,6 +13,7 @@
     "withGlobalTauri": true,
     "windows"        : [
       {
+        "label"      : "main",
         "fullscreen" : false,
         "title"      : "Quo debugger",
         "width"      : 1600,

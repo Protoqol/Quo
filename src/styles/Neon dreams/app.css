@@ -138,8 +138,13 @@
             .empty-state {
                 @apply flex flex-col items-center justify-center h-64 text-center;
 
-                img {
-                    @apply w-32 select-none;
+                .boat-animation {
+                    @apply w-32 h-32 select-none;
+                    background-image: url("/public/assets/icons/blocks.apng");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    filter: drop-shadow(2px 4px 6px #56e39c);
                 }
 
                 p {
